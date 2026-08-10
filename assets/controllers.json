@@ -1,0 +1,31 @@
+{
+    "controllers": {
+        "@ehyiah/ux-quill": {
+            "quill": {
+                "enabled": true,
+                "fetch": "eager",
+                "autoimport": {
+                    "quill/dist/quill.snow.css": true,
+                    "quill/dist/quill.bubble.css": true,
+                    "quill-table-better/dist/quill-table-better.css": true,
+                    "quill2-emoji/dist/style.css": true,
+                    "highlight.js/styles/atom-one-dark.css": true,
+                    "katex/dist/katex.min.css": true,
+                    "@ehyiah/ux-quill/dist/styles/html-edit/html-edit.css": true,
+                    "@ehyiah/ux-quill/dist/styles/gallery/gallery.css": true
+                }
+            }
+        },
+        "@symfony/ux-turbo": {
+            "turbo-core": {
+                "enabled": true,
+                "fetch": "eager"
+            },
+            "mercure-turbo-stream": {
+                "enabled": false,
+                "fetch": "eager"
+            }
+        }
+    },
+    "entrypoints": []
+}
