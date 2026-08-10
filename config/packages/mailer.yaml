@@ -1,0 +1,7 @@
+framework:
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
+        envelope:
+            sender: 'info@adnews.fun'
+        headers:
+            from: 'AdNews.FUN <info@adnews.fun>'

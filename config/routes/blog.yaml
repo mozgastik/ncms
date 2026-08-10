@@ -1,0 +1,159 @@
+# config/routes/blog.yaml
+
+### Публічні маршрути (вже є) ###
+blog_index:
+    path: /blog
+    controller: App\Controller\Blog\BlogController::index
+    methods: GET
+
+blog_show:
+    path: /blog/{slug}
+    controller: App\Controller\Blog\BlogController::show
+    methods: GET
+
+blog_category:
+    path: /blog/category/{slug}
+    controller: App\Controller\Blog\BlogController::category
+    methods: GET
+
+blog_tag:
+    path: /blog/tag/{slug}
+    controller: App\Controller\Blog\BlogController::tag
+    methods: GET
+
+blog_search:
+    path: /blog/search
+    controller: App\Controller\Blog\BlogController::search
+    methods: GET
+
+blog_like:
+    path: /blog/{id}/like
+    controller: App\Controller\Blog\BlogController::like
+    methods: POST
+    requirements:
+        id: \d+
+
+blog_dislike:
+    path: /blog/{id}/dislike
+    controller: App\Controller\Blog\BlogController::dislike
+    methods: POST
+    requirements:
+        id: \d+
+
+blog_bookmark:
+    path: /blog/{id}/bookmark
+    controller: App\Controller\Blog\BlogController::bookmark
+    methods: POST
+    requirements:
+        id: \d+
+
+blog_share:
+    path: /blog/{id}/share
+    controller: App\Controller\Blog\BlogController::share
+    methods: POST
+    requirements:
+        id: \d+
+
+blog_rss:
+    path: /blog/rss
+    controller: App\Controller\Blog\BlogController::rss
+    methods: GET
+
+blog_sitemap:
+    path: /blog/sitemap
+    controller: App\Controller\Blog\BlogController::sitemap
+    methods: GET
+
+blog_popular_json:
+    path: /blog/popular/json
+    controller: App\Controller\Blog\BlogController::popularJson
+    methods: GET
+
+blog_comment:
+    path: /blog/{slug}/comment
+    controller: App\Controller\Blog\BlogController::addComment
+    methods: POST
+    requirements:
+        slug: '[a-zA-Z0-9\-]+'
+
+blog_comments_latest:
+    path: /blog/comments/latest
+    controller: App\Controller\Blog\BlogController::latestComments
+    methods: GET
+
+### Маршрути для користувача ###
+user_blog_index:
+    path: /user/blog
+    controller: App\Controller\User\BlogController::index
+    methods: GET
+
+user_blog_new:
+    path: /user/blog/new
+    controller: App\Controller\User\BlogController::new
+    methods: [GET, POST]
+
+user_blog_edit:
+    path: /user/blog/{id}/edit
+    controller: App\Controller\User\BlogController::edit
+    methods: [GET, POST]
+    requirements:
+        id: \d+
+
+user_blog_show:
+    path: /user/blog/{id}
+    controller: App\Controller\User\BlogController::show
+    methods: GET
+    requirements:
+        id: \d+
+
+user_blog_delete:
+    path: /user/blog/{id}
+    controller: App\Controller\User\BlogController::delete
+    methods: DELETE
+    requirements:
+        id: \d+
+
+user_blog_status:
+    path: /user/blog/{id}/status/{status}
+    controller: App\Controller\User\BlogController::changeStatus
+    methods: POST
+    requirements:
+        id: \d+
+
+user_blog_drafts:
+    path: /user/blog/drafts
+    controller: App\Controller\User\BlogController::drafts
+    methods: GET
+
+user_blog_pending:
+    path: /user/blog/pending
+    controller: App\Controller\User\BlogController::pending
+    methods: GET
+
+user_blog_published:
+    path: /user/blog/published
+    controller: App\Controller\User\BlogController::published
+    methods: GET
+
+user_blog_rejected:
+    path: /user/blog/rejected
+    controller: App\Controller\User\BlogController::rejected
+    methods: GET
+
+user_blog_upload_image:
+    path: /user/blog/upload-image
+    controller: App\Controller\User\BlogController::uploadImage
+    methods: POST
+
+user_blog_delete_image:
+    path: /user/blog/image/{id}/delete
+    controller: App\Controller\User\BlogController::deleteImage
+    methods: DELETE
+    requirements:
+        id: \d+
+
+### API маршрути ###
+blog_tags_json:
+    path: /api/blog/tags
+    controller: App\Controller\Api\BlogController::tags
+    methods: GET

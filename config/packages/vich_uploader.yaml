@@ -1,0 +1,42 @@
+# config/packages/vich_uploader.yaml
+vich_uploader:
+    db_driver: orm
+    metadata:
+        type: attribute
+
+    mappings:
+        # Аватари користувачів
+        user_avatars:
+            uri_prefix: /uploads/avatars
+            upload_destination: '%kernel.project_dir%/public/uploads/avatars'
+            namer: Vich\UploaderBundle\Naming\UniqidNamer
+            delete_on_remove: true
+            delete_on_update: true
+            inject_on_load: true
+
+        # Зображення статей (обкладинки)
+        article_images:
+            uri_prefix: /uploads/articles
+            upload_destination: '%kernel.project_dir%/public/uploads/articles'
+            namer: Vich\UploaderBundle\Naming\UniqidNamer
+            delete_on_remove: true
+            delete_on_update: true
+            inject_on_load: true
+
+        # Галерея зображень
+        gallery_images:
+            uri_prefix: /uploads/gallery
+            upload_destination: '%kernel.project_dir%/public/uploads/gallery'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer
+            delete_on_remove: true
+            delete_on_update: true
+            inject_on_load: true
+
+        # Блоги (якщо є)
+        blog_images:
+            uri_prefix: /uploads/blogs
+            upload_destination: '%kernel.project_dir%/public/uploads/blogs'
+            namer: Vich\UploaderBundle\Naming\UniqidNamer
+            delete_on_remove: true
+            delete_on_update: true
+            inject_on_load: true

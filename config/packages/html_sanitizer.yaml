@@ -1,0 +1,172 @@
+# config/packages/html_sanitizer.yaml
+framework:
+    html_sanitizer:
+        sanitizers:
+            # Основний санітайзер для статей
+            article_content:
+                allow_safe_elements: true
+                allow_elements:
+                    # Базові елементи
+                    - p
+                    - br
+                    - strong
+                    - em
+                    - u
+                    - s
+                    - h1
+                    - h2
+                    - h3
+                    - h4
+                    - h5
+                    - h6
+                    - ul
+                    - ol
+                    - li
+                    - a
+                    - img
+                    # ЦИТАТИ - важливо!
+                    - blockquote
+                    - cite
+                    - footer
+                    # Код та преформатований текст
+                    - pre
+                    - code
+                    # Таблиці
+                    - table
+                    - thead
+                    - tbody
+                    - tr
+                    - th
+                    - td
+                    # Медіа та контейнери
+                    - figure
+                    - figcaption
+                    - div
+                    - span
+                    - iframe
+                    # Додаткові елементи для форматування
+                    - abbr
+                    - address
+                    - q
+                    - sub
+                    - sup
+                    - small
+                    - time
+                    - hr
+                    - dl
+                    - dt
+                    - dd
+                    - section
+                    - article
+                
+                # Дозволені атрибути
+                allow_attributes:
+                    # Базові атрибути
+                    - href
+                    - src
+                    - alt
+                    - title
+                    - class
+                    - id
+                    # Атрибути для iframe
+                    - allow
+                    - frameborder
+                    - allowfullscreen
+                    - loading
+                    - sandbox
+                    - width
+                    - height
+                    # Атрибути для зображень
+                    - loading
+                    - decoding
+                    - srcset
+                    - sizes
+                    # Атрибути для цитат
+                    - cite  # ← для blockquote
+                    - datetime  # ← для time
+                    # Атрибути для таблиць
+                    - colspan
+                    - rowspan
+                    - scope
+                    - abbr
+                
+                # Дозволені протоколи для посилань
+                allowed_media_schemes:
+                    - 'https'
+                    - 'http'
+                    - 'mailto'
+                    - 'tel'
+                
+                # Елементи, які будуть повністю видалені з їх вмістом
+                block_elements: []
+                
+                # Атрибути, які будуть видалені
+                drop_attributes:
+                    - style
+                    - onclick
+                    - onload
+                    - onerror
+                    - onmouseover
+                    - onmouseout
+                    - onkeydown
+                    - onkeyup
+                    - onsubmit
+                    - onreset
+                    - onfocus
+                    - onblur
+                    - onchange
+                    - onselect
+                    - onunload
+                    - onresize
+                    - onscroll
+                    - ondrag
+                    - ondrop
+                    - oncontextmenu
+                
+                # Дозволені класи (якщо потрібно)
+                # Або використовуйте allow_attributes: ['class'] з переліком дозволених класів
+                # allow_attributes:
+                #     - class
+                # allowed_classes:
+                #     - 'ql-*'
+                #     - 'article-*'
+                #     - 'text-*'
+                #     - 'bg-*'
+                #     - 'border-*'
+                #     - 'flex'
+                #     - 'grid'
+                #     - 'prose'
+                #     - 'dark:prose-invert'
+            
+            # Спеціальний санітайзер для коментарів
+            comment_content:
+                allow_safe_elements: true
+                allow_elements:
+                    - p
+                    - br
+                    - strong
+                    - em
+                    - u
+                    - s
+                    - a
+                    - blockquote
+                    - code
+                    - pre
+                    - span
+                    - ul
+                    - ol
+                    - li
+                allow_attributes:
+                    - href
+                    - title
+                    - class
+                    - cite
+                allowed_media_schemes:
+                    - 'https'
+                    - 'http'
+                    - 'mailto'
+                drop_attributes:
+                    - style
+                    - onclick
+                    - onload
+                    - onerror

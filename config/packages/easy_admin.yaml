@@ -1,0 +1,13 @@
+# config/packages/easy_admin.yaml
+easy_admin:
+    entities:
+        Article:
+            class: App\Entity\Article
+            form:
+                fields:
+                    - 'title'
+                    - 'author'  # Додайте це поле
+                    - 'content'
+                    - 'category'
+                    - { property: 'status', type: 'choice', type_options: { choices: Article::getStatuses() } }
+                    - { property: 'priority', type: 'choice', type_options: { choices: Article::getPriorities() } }

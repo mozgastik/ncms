@@ -1,0 +1,190 @@
+# ========== МАРШРУТИ КОРИСТУВАЧА ДЛЯ ВІДЕО ==========
+user_video_index:
+    path: /user/videos
+    controller: App\Controller\User\UserVideoController::index
+    methods: GET
+
+user_video_new:
+    path: /user/videos/new
+    controller: App\Controller\User\UserVideoController::new
+    methods: [GET, POST]
+
+user_video_edit:
+    path: /user/videos/{id}/edit
+    controller: App\Controller\User\UserVideoController::edit
+    methods: [GET, POST]
+    requirements:
+        id: \d+
+
+user_video_delete:
+    path: /user/videos/{id}/delete
+    controller: App\Controller\User\UserVideoController::delete
+    methods: POST
+    requirements:
+        id: \d+
+
+user_video_stats:
+    path: /user/videos/{id}/stats
+    controller: App\Controller\User\UserVideoController::stats
+    methods: GET
+    requirements:
+        id: \d+
+
+# ============================================
+# МАРШРУТИ ДЛЯ СТАТЕЙ КОРИСТУВАЧА
+# ============================================
+
+user_articles:
+    path: /user/articles
+    controller: App\Controller\User\UserArticleController::myArticles
+    methods: ['GET']
+
+user_article_new:
+    path: /user/article/new
+    controller: App\Controller\User\UserArticleController::new
+    methods: ['GET', 'POST']
+
+user_article_edit:
+    path: /user/article/{id}/edit
+    controller: App\Controller\User\UserArticleController::edit
+    methods: ['GET', 'POST']
+    requirements:
+        id: '\d+'
+
+user_article_delete:
+    path: /user/article/delete/{id}
+    controller: App\Controller\User\UserArticleController::delete
+    methods: ['POST']
+    requirements:
+        id: '\d+'
+
+user_article_show:
+    path: /user/article/{id}
+    controller: App\Controller\User\UserArticleController::show
+    methods: ['GET']
+    requirements:
+        id: '\d+'
+
+# ============================================
+# API МАРШРУТИ ДЛЯ ЗОБРАЖЕНЬ
+# ============================================
+
+user_article_image_upload:
+    path: /user/articles/image/upload
+    controller: App\Controller\User\UserArticleController::uploadImage
+    methods: ['POST']
+
+user_article_image_delete:
+    path: /user/articles/image/delete/{id}
+    controller: App\Controller\User\UserArticleController::deleteImage
+    methods: ['DELETE']
+    requirements:
+        id: '\d+'
+
+user_article_image_list:
+    path: /user/articles/image/list
+    controller: App\Controller\User\UserArticleController::listImages
+    methods: ['GET']
+# ==================== User Routes ====================
+
+# Головний маршрут /user - перенаправляє на dashboard
+user_index:
+    path: /user
+    controller: App\Controller\User\UserController::index
+    methods: ['GET']
+
+# Dashboard користувача
+user_dashboard:
+    path: /user/dashboard
+    controller: App\Controller\User\UserController::dashboard
+    methods: ['GET']
+
+# Профіль користувача (редагування)
+user_profile:
+    path: /user/profile
+    controller: App\Controller\User\UserController::profile
+    methods: ['GET', 'POST']
+
+# Оновлення окремого поля профілю (AJAX)
+user_profile_update_field:
+    path: /user/profile/update-field
+    controller: App\Controller\User\UserController::updateField
+    methods: ['POST']
+
+# Завантаження аватара (AJAX)
+user_upload_avatar:
+    path: /user/profile/upload-avatar
+    controller: App\Controller\User\UserController::uploadAvatar
+    methods: ['POST']
+
+# Коментарі користувача
+user_comments:
+    path: /user/comments
+    controller: App\Controller\User\UserController::comments
+    methods: ['GET']
+
+# Зміна пароля
+user_change_password:
+    path: /user/change-password
+    controller: App\Controller\User\UserController::changePassword
+    methods: ['GET', 'POST']
+
+# Обране (список)
+user_favorites:
+    path: /user/favorites
+    controller: App\Controller\User\UserController::favorites
+    methods: ['GET']
+
+# Додати в обране (AJAX)
+user_favorites_add:
+    path: /user/favorites/add
+    controller: App\Controller\User\UserController::addFavorite
+    methods: ['POST']
+
+# Видалити з обраного (AJAX) - загальний
+user_favorites_remove:
+    path: /user/favorites/remove
+    controller: App\Controller\User\UserController::removeFavorite
+    methods: ['POST']
+
+# Видалити статтю з обраного (AJAX)
+user_favorites_article_remove:
+    path: /user/favorites/article/{id}/remove
+    controller: App\Controller\User\UserController::removeArticleFavorite
+    methods: ['POST']
+    requirements:
+        id: '\d+'
+
+# Видалити блог з обраного (AJAX)
+user_favorites_blog_remove:
+    path: /user/favorites/blog/{id}/remove
+    controller: App\Controller\User\UserController::removeBlogFavorite
+    methods: ['POST']
+    requirements:
+        id: '\d+'
+
+# Сповіщення користувача
+user_notifications:
+    path: /user/notifications
+    controller: App\Controller\User\UserController::notifications
+    methods: ['GET']
+
+# API маршрути для статей користувача
+api_user_articles:
+    path: /api/user/articles
+    controller: App\Controller\Api\UserArticleApiController::getArticles
+    methods: ['GET']
+
+api_user_article_submit:
+    path: /api/user/article/{id}/submit
+    controller: App\Controller\Api\UserArticleApiController::submitArticle
+    methods: ['POST']
+    requirements:
+        id: '\d+'
+
+api_user_article_delete:
+    path: /api/user/article/{id}/delete
+    controller: App\Controller\Api\UserArticleApiController::deleteArticle
+    methods: ['POST']
+    requirements:
+        id: '\d+'

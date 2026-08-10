@@ -1,0 +1,186 @@
+# ========== ОСНОВНІ МАРШРУТИ ==========
+controllers:
+    resource: ../src/Controller/
+    type: attribute
+# ========== API МАРШРУТИ ==========
+api_settings_public:
+    path: /api/settings/public
+    controller: App\Controller\Admin\SettingsController::publicApi
+    methods: GET
+
+api_settings_get:
+    path: /api/settings/{key}
+    controller: App\Controller\Admin\SettingsController::getApi
+    methods: GET
+    requirements:
+        key: '[a-zA-Z0-9_]+'
+
+api_weather_city:
+    path: /api/weather/city
+    controller: App\Controller\Api\WeatherController::getWeatherByCity
+    methods: [GET]
+
+api_weather_coordinates:
+    path: /api/weather/coordinates
+    controller: App\Controller\Api\WeatherController::getWeatherByCoordinates
+    methods: [GET]
+
+api_image_upload:
+    path: /api/images/upload
+    controller: App\Controller\Api\ImageController::upload
+    methods: [POST]
+
+api_images_list:
+    path: /api/images/list
+    controller: App\Controller\Api\ImageController::list
+    methods: [GET]
+
+api_image_delete:
+    path: /api/images/delete/{id}
+    controller: App\Controller\Api\ImageController::delete
+    methods: [DELETE]
+
+# ==================== API Routes ====================
+
+# API - Список тегів
+api_tags_list:
+    path: /api/tags/list
+    controller: App\Controller\Api\TagController::list
+    methods: ['GET']
+    options:
+        expose: true
+
+# API - Створення нового тегу (опціонально)
+api_tags_create:
+    path: /api/tags/create
+    controller: App\Controller\Api\TagController::create
+    methods: ['POST']
+    options:
+        expose: true
+
+# API - Оновлення тегу (опціонально)
+api_tags_update:
+    path: /api/tags/{id}/update
+    controller: App\Controller\Api\TagController::update
+    methods: ['PUT', 'PATCH']
+    requirements:
+        id: '\d+'
+    options:
+        expose: true
+
+# API - Видалення тегу (опціонально)
+api_tags_delete:
+    path: /api/tags/{id}/delete
+    controller: App\Controller\Api\TagController::delete
+    methods: ['DELETE']
+    requirements:
+        id: '\d+'
+    options:
+        expose: true
+
+# API - Пошук тегів (опціонально)
+api_tags_search:
+    path: /api/tags/search
+    controller: App\Controller\Api\TagController::search
+    methods: ['GET']
+    options:
+        expose: true
+      
+# ========== МАРШРУТИ ЛАЙКІВ ==========
+app_article_like:
+    path: /article/{id}/like
+    controller: App\Controller\Article\ArticleLikeController::like
+    methods: POST
+    requirements:
+        id: \d+
+
+app_article_likes_info:
+    path: /article/{id}/likes
+    controller: App\Controller\Article\ArticleLikeController::getLikesInfo
+    methods: GET
+    requirements:
+        id: \d+
+
+# ========== МАРШРУТИ ВІДЕО ==========
+app_video_index:
+    path: /video
+    controller: App\Controller\Front\VideoController::index
+    methods: GET
+
+app_video_show:
+    path: /video/{id}
+    controller: App\Controller\Front\VideoController::show
+    methods: GET
+    requirements:
+        id: \d+
+
+app_video_category:
+    path: /video/category/{id}
+    controller: App\Controller\Front\VideoController::category
+    methods: GET
+    requirements:
+        id: \d+
+
+app_video_search:
+    path: /video/search
+    controller: App\Controller\Front\VideoController::search
+    methods: GET
+
+app_video_latest:
+    path: /video/latest/{limit}
+    controller: App\Controller\Front\VideoController::latest
+    methods: GET
+    defaults:
+        limit: 6
+    requirements:
+        limit: \d+
+
+app_video_popular:
+    path: /video/popular/{limit}
+    controller: App\Controller\Front\VideoController::popular
+    methods: GET
+    defaults:
+        limit: 6
+    requirements:
+        limit: \d+
+
+# ========== ДОПОМІЖНІ МАРШРУТИ ==========
+app_home:
+    path: /
+    controller: App\Controller\Front\HomeController::index
+    methods: GET
+
+app_about:
+    path: /about
+    controller: App\Controller\Front\HomeController::about
+    methods: GET
+
+app_contact:
+    path: /contact
+    controller: App\Controller\Front\HomeController::contact
+    methods: [GET, POST]
+
+app_search:
+    path: /search
+    controller: App\Controller\Front\SearchController::index
+    methods: GET
+
+app_sitemap:
+    path: /sitemap.xml
+    controller: App\Controller\Front\SitemapController::index
+    methods: GET
+
+app_rss:
+    path: /rss
+    controller: App\Controller\Front\RssController::index
+    methods: GET
+
+app_category_index:
+    path: /category
+    controller: App\Controller\Front\CategoryController::index
+    methods: GET
+
+app_page_show:
+    path: /page/{slug}
+    controller: App\Controller\Front\PageController::show
+    methods: GET

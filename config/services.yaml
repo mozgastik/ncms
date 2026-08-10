@@ -1,0 +1,125 @@
+parameters:
+    app.upload_directory: '%kernel.project_dir%/public/uploads'
+    blog_upload_directory: '%kernel.project_dir%/public/uploads/blogs'
+    avatars_directory: '%kernel.project_dir%/public/uploads/avatars'
+    articles_directory: '%kernel.project_dir%/public/uploads/articles'
+    app.upload_public_path: '/uploads'
+    app.max_file_size: 5242880
+    vapid_public_key: '%env(VAPID_PUBLIC_KEY)%'
+    vapid_private_key: '%env(VAPID_PRIVATE_KEY)%'
+    vapid_subject: '%env(VAPID_SUBJECT)%'
+    app.allowed_image_types:
+        - 'image/jpeg'
+        - 'image/png'
+        - 'image/gif'
+        - 'image/webp'
+        - 'image/svg+xml'
+    open_weather_api_key: '%env(OPEN_WEATHER_API_KEY)%'
+    google_api_key: '%env(GOOGLE_API_KEY)%'
+    
+
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Service\MaintenanceService:
+        autowire: true
+
+    App\Service\ImageUploader:
+        arguments:
+            $targetDirectory: '%blog_upload_directory%'
+        autowire: true
+        
+    App\Service\SettingsManager:
+        autowire: true
+        calls:
+            - ['clearCache', []]
+        tags:
+            - { name: kernel.reset, method: clearCache }
+
+    App\Service\ArticleService:
+        autowire: true
+
+    App\Repository\SettingRepository:
+        autowire: true
+        tags: ['doctrine.repository_service']
+
+    # ============================================
+    # IMAGE SERVICE
+    # ============================================
+    App\Service\ImageService:
+        arguments:
+            $uploadDir: '%app.upload_directory%'
+    # ============================================
+    # PUSH SERVICE
+    # ============================================
+    App\Service\Notification\PushNotificationService:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
+            $vapidPrivateKey: '%env(VAPID_PRIVATE_KEY)%'
+            $vapidSubject: '%env(VAPID_SUBJECT)%'
+
+    App\Twig\NotificationExtension:
+        autowire: true
+        tags: ['twig.extension']
+    # ============================================
+    # SETTINGS SERVICE
+    # ============================================
+    App\Twig\SettingsExtension:
+        autowire: true
+        tags: ['twig.extension']
+
+    App\Twig\AppExtension:
+        autowire: true
+        tags: ['twig.extension']
+    # ============================================
+    # Quote SERVICE
+    # ============================================
+    App\Twig\QuoteExtension:
+        autowire: true
+        tags: ['twig.extension']
+    # ============================================
+    # ADS SERVICE
+    # ============================================
+    App\Controller\Admin\AdZoneController:
+        autowire: true
+        autoconfigure: true
+    # ============================================
+    # Date SERVICE
+    # ============================================
+    App\Twig\DateExtension:
+        arguments:
+            $locale: '%env(APP_LOCALE)%'
+        tags: ['twig.extension']
+    # ============================================
+    # Loader SERVICE
+    # ============================================
+    # ============================================
+    # VICH UPLOADER COMMANDS
+    # ============================================
+    App\Command\MigrateImagesToVichCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags: ['console.command']
+
+    App\Command\CleanupOldImagesCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags: ['console.command']
+
+   
+    # ============================================
+    # ALIASES
+    # ============================================
+    # ВИДАЛІТЬ АБО ЗАКОМЕНТУЙТЕ ЦІ РЯДКИ:
+    # file_uploader: '@App\Service\FileUploader'
+    # image_service: '@App\Service\ImageService'
