@@ -1,0 +1,295 @@
+{# templates/components/weather_widget.html.twig #}
+
+<div class="relative" 
+     x-data="weatherWidget()" 
+     x-init="init()" 
+     @click.outside="dropdownOpen = false"
+     x-cloak>
+    
+    <!-- Кнопка погоди -->
+<button @click="dropdownOpen = !dropdownOpen" 
+            class="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-300 border border-gray-200/30 dark:border-gray-700/30 group min-w-[70px] justify-center">
+
+<template x-if="loading">
+    <div class="flex items-center gap-2">
+        <div class="flex gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 animate-bounce" 
+                  style="animation-delay: 0s; animation-duration: 0.6s;"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 animate-bounce" 
+                  style="animation-delay: 0.2s; animation-duration: 0.6s;"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 animate-bounce" 
+                  style="animation-delay: 0.4s; animation-duration: 0.6s;"></span>
+        </div>
+    </div>
+</template>
+
+        
+        <!-- Іконка погоди (показується коли є дані) -->
+        <template x-if="weather && !loading">
+            <div class="flex items-center gap-1.5">
+                <img :src="weather.icon_url" 
+                     alt="Погода" 
+                     class="w-6 h-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+                     loading="lazy"
+                     @error="weather.icon_url = 'https://openweathermap.org/img/wn/01d@2x.png'">
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 min-w-[30px]" 
+                      x-text="weather.temperature + (weather.temperature_unit || '°C')"></span>
+            </div>
+        </template>
+        
+        <!-- Заглушка (коли немає даних і не завантажується) -->
+        <template x-if="!weather && !loading && !error">
+            <div class="flex items-center gap-1.5">
+                <svg class="w-5 h-5 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                </svg>
+                <span class="text-sm text-gray-500 dark:text-gray-400">--°C</span>
+            </div>
+        </template>
+        
+        <!-- Місто -->
+        <template x-if="weather && weather.city && !loading">
+            <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline max-w-[80px] truncate" 
+                  x-text="weather.city"></span>
+        </template>
+        
+    </button>
+    
+    <!-- Dropdown -->
+    <div x-show="dropdownOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+         x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+         class="fixed left-3 right-3 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden z-50 max-h-[80vh] overflow-y-auto">
+        
+        <!-- Завантаження -->
+        <template x-if="loading">
+            <div class="p-6 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Завантаження погоди...</p>
+            </div>
+        </template>
+        
+        <!-- Помилка -->
+        <template x-if="error && !loading">
+            <div class="p-6 text-center">
+                <svg class="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <p class="text-sm text-gray-600 dark:text-gray-400" x-text="errorMessage || 'Не вдалося отримати погоду'"></p>
+                <button @click="refreshWeather()" class="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                    Спробувати ще раз
+                </button>
+            </div>
+        </template>
+        
+        <!-- Дані погоди -->
+        <template x-if="weather && !loading && !error">
+            <div>
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 text-white sticky top-0 z-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-semibold text-sm flex items-center gap-2">
+                                <i class="fas fa-map-pin text-white/80 text-xs"></i>
+                                <span x-text="weather.city || 'Невідомо'"></span>
+                            </h4>
+                            <p class="text-xs text-white/80" x-text="weather.country || ''"></p>
+                            <p class="text-[10px] text-white/60 mt-1" x-text="'Провайдер: ' + (weather.provider || '—')"></p>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center gap-2">
+                                <img :src="weather.icon_url" 
+                                     alt="Погода" 
+                                     class="w-10 h-10"
+                                     @error="weather.icon_url = 'https://openweathermap.org/img/wn/01d@2x.png'">
+                                <div>
+                                    <div class="text-xl font-bold" x-text="(weather.temperature || 0) + (weather.temperature_unit || '°C')"></div>
+                                    <p class="text-xs text-white/80 capitalize" x-text="weather.description || ''"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 space-y-3">
+                    <!-- Поточні дані -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Відчувається як</p>
+                            <p class="font-semibold text-gray-800 dark:text-white text-sm" x-text="(weather.feels_like || 0) + (weather.temperature_unit || '°C')"></p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Вологість</p>
+                            <p class="font-semibold text-gray-800 dark:text-white text-sm" x-text="(weather.humidity || 0) + '%'"></p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Вітер</p>
+                            <p class="font-semibold text-gray-800 dark:text-white text-sm" x-text="(weather.wind_speed || 0) + ' км/год'"></p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Тиск</p>
+                            <p class="font-semibold text-gray-800 dark:text-white text-sm" x-text="(weather.pressure || 0) + ' мм'"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Прогноз -->
+                    <template x-if="weather.forecast && weather.forecast.length > 0">
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                            <p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-2">📅 Прогноз на 3 дні</p>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <template x-for="day in weather.forecast" :key="day.date">
+                                    <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 text-center">
+                                        <p class="text-[9px] text-gray-500 dark:text-gray-400" x-text="new Date(day.date).toLocaleDateString('uk-UA', { weekday: 'short' })"></p>
+                                        <img :src="'https://openweathermap.org/img/wn/' + day.icon + '@2x.png'" 
+                                             alt="Погода" 
+                                             class="w-8 h-8 mx-auto"
+                                             @error="day.icon = '01d'">
+                                        <p class="text-xs font-semibold text-gray-800 dark:text-white">
+                                            <span x-text="day.max_temp"></span>° / <span x-text="day.min_temp"></span>°
+                                        </p>
+                                        <p class="text-[8px] text-gray-500 dark:text-gray-400 truncate" x-text="day.description"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <!-- Оновлення -->
+                    <div class="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 pt-2">
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-location-dot"></i>
+                            <span x-text="weather.coords || '—'"></span>
+                        </span>
+                        <button @click="refreshWeather()" 
+                                class="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+                            <svg class="w-3 h-3" :class="{ 'animate-spin': refreshing }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span>Оновити</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
+<script>
+function weatherWidget() {
+    return {
+        weather: null,
+        loading: true,  // За замовчуванням true, щоб одразу показувати завантаження
+        refreshing: false,
+        error: false,
+        errorMessage: '',
+        dropdownOpen: false,
+        retryCount: 0,
+        
+        init() {
+            this.getLocation();
+        },
+        
+        getLocation() {
+            this.loading = true;
+            this.error = false;
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        this.fetchWeather(position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        console.warn('Geolocation error:', error.message);
+                        this.fetchWeatherByCity('Kyiv');
+                    }
+                );
+            } else {
+                this.fetchWeatherByCity('Kyiv');
+            }
+        },
+        
+        async fetchWeather(lat, lon) {
+            this.loading = true;
+            this.error = false;
+            this.errorMessage = '';
+            
+            try {
+                const url = '/api/weather/coordinates?lat=' + lat + '&lon=' + lon;
+                console.log('Fetching weather from:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Weather response:', data);
+                
+                if (data.success) {
+                    this.weather = {
+                        ...data.data,
+                        coords: lat.toFixed(4) + ', ' + lon.toFixed(4)
+                    };
+                    this.error = false;
+                    this.retryCount = 0;
+                } else {
+                    this.error = true;
+                    this.errorMessage = data.message || 'Помилка отримання даних';
+                    console.error('Weather API error:', data.message);
+                }
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                this.error = true;
+                this.errorMessage = 'Помилка: ' + (error.message || 'невідома помилка');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async fetchWeatherByCity(city) {
+            this.loading = true;
+            this.error = false;
+            this.errorMessage = '';
+            
+            try {
+                const url = '/api/weather/city?city=' + encodeURIComponent(city);
+                console.log('Fetching weather from:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Weather response:', data);
+                
+                if (data.success) {
+                    this.weather = data.data;
+                    this.error = false;
+                    this.retryCount = 0;
+                } else {
+                    this.error = true;
+                    this.errorMessage = data.message || 'Помилка отримання даних';
+                    console.error('Weather API error:', data.message);
+                }
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                this.error = true;
+                this.errorMessage = 'Помилка: ' + (error.message || 'невідома помилка');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async refreshWeather() {
+            this.refreshing = true;
+            this.loading = true;
+            
+            if (this.weather && this.weather.city) {
+                await this.fetchWeatherByCity(this.weather.city);
+            } else {
+                this.getLocation();
+            }
+            
+            this.refreshing = false;
+        }
+    };
+}
+</script>

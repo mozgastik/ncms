@@ -1,0 +1,13 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+{% set files = field.formattedValue %}
+{% if files is not iterable %}
+    {% set files = [files] %}
+{% endif %}
+
+{% set allow_risky_inline_render = field.customOptions.get('riskyInlineRender')|default(false) %}
+{% for file in files %}
+    <a href="{{ asset(file) }}" {% if not allow_risky_inline_render and file|ea_force_download %}download="{{ file|split('/')|last }}" rel="noopener"{% endif %}><twig:ea:Icon name="filetypes:{{ file|split('/')|last|ea_filetype_icon }}" /> {{ file|split('/')|last }}</a>
+    {% if not loop.last %}<br>{% endif %}
+{% endfor %}

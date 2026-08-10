@@ -1,0 +1,332 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Мої блоги{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <!-- Заголовок і кнопка -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    Мої блоги
+                </h1>
+                <p class="text-lg text-gray-600">
+                    Керуйте своїми блогами тут
+                </p>
+            </div>
+            <a href="{{ path('user_blog_new') }}" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus text-lg mr-3"></i>
+                <span class="text-lg">Написати новий блог</span>
+            </a>
+        </div>
+
+        <!-- Статистика -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Всього блогів -->
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 text-center text-white">
+                    <div class="text-4xl font-bold mb-2">{{ stats.total }}</div>
+                    <p class="text-lg font-medium opacity-90">Всього блогів</p>
+                    <div class="mt-4 pt-4 border-t border-blue-400/50">
+                        <div class="flex justify-center items-center gap-2 text-sm">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Усі ваші публікації</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Опубліковано -->
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 text-center text-white">
+                    <div class="text-4xl font-bold mb-2">{{ stats.published }}</div>
+                    <p class="text-lg font-medium opacity-90">Опубліковано</p>
+                    <div class="mt-4 pt-4 border-t border-green-400/50">
+                        <div class="flex justify-center items-center gap-2 text-sm">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Доступні для читачів</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- На модерації -->
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 text-center text-white">
+                    <div class="text-4xl font-bold mb-2">{{ stats.pending }}</div>
+                    <p class="text-lg font-medium opacity-90">На модерації</p>
+                    <div class="mt-4 pt-4 border-t border-yellow-400/50">
+                        <div class="flex justify-center items-center gap-2 text-sm">
+                            <i class="fas fa-clock"></i>
+                            <span>Очікують перевірки</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Чернетки -->
+            <div class="bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 text-center text-white">
+                    <div class="text-4xl font-bold mb-2">{{ stats.drafts }}</div>
+                    <p class="text-lg font-medium opacity-90">Чернетки</p>
+                    <div class="mt-4 pt-4 border-t border-gray-500/50">
+                        <div class="flex justify-center items-center gap-2 text-sm">
+                            <i class="fas fa-edit"></i>
+                            <span>В процесі написання</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Навігація та фільтри -->
+        <div class="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
+            <div class="border-b border-gray-200">
+                <div class="flex flex-wrap">
+                    <a href="{{ path('user_blog_index') }}" 
+                       class="px-6 py-4 font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 border-b-2 border-transparent hover:border-blue-500 {{ app.request.attributes.get('_route') == 'user_blog_index' ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
+                        <i class="fas fa-layer-group mr-2"></i>
+                        Всі
+                    </a>
+                    <a href="{{ path('user_blog_published') }}" 
+                       class="px-6 py-4 font-medium text-gray-600 hover:text-green-600 hover:bg-green-50 transition-all duration-200 border-b-2 border-transparent hover:border-green-500 {{ app.request.attributes.get('_route') == 'user_blog_published' ? 'text-green-600 border-green-500 bg-green-50' : '' }}">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Опубліковані
+                    </a>
+                    <a href="{{ path('user_blog_pending') }}" 
+                       class="px-6 py-4 font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 transition-all duration-200 border-b-2 border-transparent hover:border-yellow-500 {{ app.request.attributes.get('_route') == 'user_blog_pending' ? 'text-yellow-600 border-yellow-500 bg-yellow-50' : '' }}">
+                        <i class="fas fa-clock mr-2"></i>
+                        На модерації
+                    </a>
+                    <a href="{{ path('user_blog_drafts') }}" 
+                       class="px-6 py-4 font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 transition-all duration-200 border-b-2 border-transparent hover:border-gray-500 {{ app.request.attributes.get('_route') == 'user_blog_drafts' ? 'text-gray-700 border-gray-500 bg-gray-50' : '' }}">
+                        <i class="fas fa-edit mr-2"></i>
+                        Чернетки
+                    </a>
+                    <a href="{{ path('user_blog_rejected') }}" 
+                       class="px-6 py-4 font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200 border-b-2 border-transparent hover:border-red-500 {{ app.request.attributes.get('_route') == 'user_blog_rejected' ? 'text-red-600 border-red-500 bg-red-50' : '' }}">
+                        <i class="fas fa-times-circle mr-2"></i>
+                        Відхилені
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблиця блогів -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {% if posts|length > 0 %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Заголовок
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Статус
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Переглядів
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Дата створення
+                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Дії
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for post in posts %}
+                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <div class="font-medium text-gray-900 group">
+                                                <a href="{{ post.status == 'published' ? path('blog_show', {'slug': post.slug}) : '#' }}" 
+                                                   class="hover:text-blue-600 transition-colors duration-200 {{ post.status != 'published' ? 'cursor-default' : '' }}"
+                                                   {% if post.status == 'published' %}target="_blank"{% endif %}>
+                                                    {{ post.title }}
+                                                    {% if post.status == 'published' %}
+                                                        <i class="fas fa-external-link-alt ml-2 text-xs text-gray-400 group-hover:text-blue-400"></i>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            {% if post.category %}
+                                                <div class="mt-1">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                        <i class="fas fa-tag mr-1 text-xs"></i>
+                                                        {{ post.category.name }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% set statusColors = {
+                                            'draft': 'gray',
+                                            'pending': 'yellow',
+                                            'published': 'green',
+                                            'rejected': 'red'
+                                        } %}
+                                        {% set statusText = {
+                                            'draft': 'Чернетка',
+                                            'pending': 'На модерації',
+                                            'published': 'Опубліковано',
+                                            'rejected': 'Відхилено'
+                                        } %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-{{ statusColors[post.status] }}-100 text-{{ statusColors[post.status] }}-800">
+                                            <i class="fas fa-{{ post.status == 'published' ? 'check-circle' : (post.status == 'pending' ? 'clock' : (post.status == 'rejected' ? 'times-circle' : 'edit')) }} mr-1.5"></i>
+                                            {{ statusText[post.status] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-eye text-gray-400 mr-2"></i>
+                                            <span class="font-medium text-gray-900">{{ post.viewCount }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
+                                            {{ post.createdAt|date('d.m.Y H:i') }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-2">
+                                            {% if post.status == 'published' %}
+                                                <a href="{{ path('blog_show', {'slug': post.slug}) }}" 
+                                                   class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                   target="_blank"
+                                                   title="Переглянути на сайті">
+                                                    <i class="fas fa-external-link-alt text-sm"></i>
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <a href="{{ path('user_blog_edit', {'id': post.id}) }}" 
+                                               class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                               title="Редагувати">
+                                                <i class="fas fa-edit text-sm"></i>
+                                            </a>
+                                            
+                                            <button type="button" 
+                                                    class="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                    onclick="openDeleteModal('{{ post.id }}', '{{ post.title|e('js') }}')"
+                                                    title="Видалити">
+                                                <i class="fas fa-trash text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Empty state -->
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-100 mb-6">
+                        <i class="fas fa-blog text-4xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">У вас ще немає блогів</h3>
+                    <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                        Почніть ділитися своїми думками та досвідом зі спільнотою. Створіть свій перший блог прямо зараз!
+                    </p>
+                    <a href="{{ path('user_blog_new') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-plus text-lg mr-3"></i>
+                        Створити перший блог
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для видалення -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeDeleteModal()"></div>
+
+        <!-- Modal content -->
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-6 pt-6 pb-4">
+                <div class="flex items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900" id="modal-title">
+                            Підтвердження видалення
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-gray-600">
+                                Ви впевнені, що хочете видалити блог <strong id="post-title" class="text-gray-900"></strong>?
+                            </p>
+                            <p class="mt-2 text-sm text-red-600">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                Цю дію неможливо скасувати.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                <button type="button" 
+                        onclick="closeDeleteModal()" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200">
+                    Скасувати
+                </button>
+                <form id="delete-form" method="post">
+                    <input type="hidden" name="_token" id="csrf-token" value="">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200">
+                        Видалити
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPostId = null;
+let currentPostTitle = '';
+
+function openDeleteModal(postId, postTitle) {
+    currentPostId = postId;
+    currentPostTitle = postTitle;
+    
+    // Оновлюємо модальне вікно
+    document.getElementById('post-title').textContent = '"' + postTitle + '"';
+    document.getElementById('csrf-token').value = '{{ csrf_token("delete") }}' + postId;
+    
+    // Показуємо модальне вікно
+    document.getElementById('deleteModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    currentPostId = null;
+    currentPostTitle = '';
+}
+
+// Закрити модальне вікно при натисканні ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+
+// Закрити модальне вікно при кліку поза ним
+document.getElementById('deleteModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeDeleteModal();
+    }
+});
+</script>
+{% endblock %}

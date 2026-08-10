@@ -1,0 +1,111 @@
+/* Pagination (rendered with the <twig:ea:Pagination> component)
+   ------------------------------------------------------------------------- */
+
+.list-pagination {
+    background: var(--table-footer-bg);
+    border-end-start-radius: var(--border-radius);
+    border-end-end-radius: var(--border-radius);
+    color: var(--pagination-color);
+    padding: 15px 0;
+}
+@media (min-width: 768px) {
+    .list-pagination {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+.list-pagination-counter {
+    color: var(--pagination-color);
+}
+
+.pager .pagination {
+    --bs-pagination-font-size: var(--font-size-sm);
+    --bs-pagination-focus-box-shadow: none;
+
+    margin-block-end: 0;
+}
+@media (max-width: 992px) {
+    .pager .pagination {
+        margin-block-start: 15px;
+    }
+}
+.page-item .page-link {
+    white-space: nowrap;
+}
+.page-item.active .page-link,
+.page-item.active .page-link:hover {
+    background: var(--pagination-active-bg);
+    border-color: var(--pagination-active-bg);
+    color: var(--pagination-active-color);
+}
+.page-item.disabled .page-link {
+    background: transparent;
+    color: var(--pagination-disabled-color);
+}
+.page-item .page-link,
+.page-item .page-link:focus,
+.page-item .page-link:hover {
+    background: transparent;
+    border: var(--border-width) var(--border-style) transparent;
+    border-radius: var(--bs-pagination-border-radius);
+    color: inherit;
+    margin: 0 1px;
+}
+/* needed to override some Bootstrap styles */
+.page-item:not(:first-child) .page-link {
+    margin: 0 1px;
+}
+.page-item .page-link:focus,
+.page-item .page-link:hover {
+    border-color: var(--pagination-hover-border-color);
+}
+
+@media (max-width: 768px) {
+    .pager .page-item:not(.page-item-previous, .page-item-next, .page-item.active) {
+        display: none;
+    }
+    .pager .page-item.active {
+        margin: 0 1em;
+    }
+    .pager .page-item-previous,
+    .pager .page-item-next {
+        flex: 1;
+    }
+    .pager .page-item-previous .page-link,
+    .pager .page-item-next .page-link {
+        border: var(--border-width) var(--border-style) var(--border-secondary-color);
+        border-radius: var(--bs-pagination-border-radius);
+    }
+    .pager .page-item-previous:not(.disabled):hover .page-link,
+    .pager .page-item-next:not(.disabled):hover .page-link {
+        border-color: var(--link-color);
+    }
+    .pager .page-item-previous .page-link {
+        padding-inline-start: calc(var(--bs-pagination-padding-x) / 2);
+    }
+    .pager .page-item-next .page-link {
+        text-align: right;
+        padding-inline-end: calc(var(--bs-pagination-padding-x) / 2);
+    }
+}
+
+/* The radius utilities set Bootstrap's pagination radius token, so the chosen
+   radius reaches every link -- including Bootstrap's first/last-child corners
+   and the mobile previous/next buttons -- without any specificity overrides. */
+.page-link.ea-rounded-none {
+    --bs-pagination-border-radius: var(--border-radius-none);
+}
+.page-link.ea-rounded-sm {
+    --bs-pagination-border-radius: var(--border-radius-sm);
+}
+.page-link.ea-rounded-md {
+    --bs-pagination-border-radius: var(--border-radius);
+}
+.page-link.ea-rounded-lg {
+    --bs-pagination-border-radius: var(--border-radius-lg);
+}
+.page-link.ea-rounded-full {
+    --bs-pagination-border-radius: var(--border-radius-full);
+}

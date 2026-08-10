@@ -1,0 +1,113 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Створення тегу{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Заголовок -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Створення нового тегу</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Заповніть форму для створення нового тегу</p>
+            </div>
+            <a href="{{ path('admin_tag_index') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Назад до списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Форма -->
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            {{ form_start(form) }}
+            
+            <div class="space-y-6">
+                <div>
+                    {{ form_label(form.name, 'Назва тегу', {
+                        'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                    }) }}
+                    {{ form_widget(form.name, {
+                        'attr': {
+                            'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100',
+                            'placeholder': 'Наприклад: PHP, Symfony, JavaScript'
+                        }
+                    }) }}
+                    {{ form_errors(form.name) }}
+                </div>
+                
+                <div>
+                    {{ form_label(form.slug, 'URL-адреса (слаг)', {
+                        'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                    }) }}
+                    {{ form_widget(form.slug, {
+                        'attr': {
+                            'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100',
+                            'placeholder': 'Автоматично генерується з назви'
+                        }
+                    }) }}
+                    {{ form_errors(form.slug) }}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Якщо залишити порожнім, слаг буде автоматично згенеровано з назви
+                    </p>
+                </div>
+                
+                <div>
+                    {{ form_label(form.description, 'Опис (необов\'язково)', {
+                        'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                    }) }}
+                    {{ form_widget(form.description, {
+                        'attr': {
+                            'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100',
+                            'rows': 4,
+                            'placeholder': 'Короткий опис тегу...'
+                        }
+                    }) }}
+                    {{ form_errors(form.description) }}
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <button type="submit" 
+                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>
+                        Створити тег
+                    </button>
+                    
+                    <a href="{{ path('admin_tag_index') }}" 
+                       class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition duration-200">
+                        Скасувати
+                    </a>
+                </div>
+            </div>
+            
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+
+<script>
+// Автоматичне генерування slug з назви
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.querySelector('#tag_name');
+    const slugInput = document.querySelector('#tag_slug');
+    
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('blur', function() {
+            if (!slugInput.value) {
+                const slug = this.value
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                slugInput.value = slug;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

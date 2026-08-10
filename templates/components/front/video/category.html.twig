@@ -1,0 +1,223 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ category.name }} - Відео{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+    
+    <!-- Декоративні елементи -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-red-500/5 dark:bg-red-500/10 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-3xl animate-float" style="animation-delay: 1s"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Хлібні крихти -->
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6 animate-fade-in">
+            <a href="{{ path('app_home') }}" class="hover:text-red-600 transition-colors">Головна</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <a href="{{ path('app_video_index') }}" class="hover:text-red-600 transition-colors">Відео</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 dark:text-white font-medium">{{ category.name }}</span>
+        </div>
+
+        <!-- Заголовок категорії -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 animate-fade-in">
+            <div class="backdrop-blur-sm bg-white/70 dark:bg-gray-900/30 p-6 rounded-2xl border border-gray-200/50 dark:border-white/20 shadow-sm flex items-center gap-4">
+                
+                <!-- Іконка категорії -->
+<div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+    {% if category.image %}
+        {{ material_icon(category.image, '32px', {'class': 'text-white'}) }}
+    {% else %}
+        {{ material_icon('folder', '32px', {'class': 'text-white'}) }}
+    {% endif %}
+</div>
+                
+                <div>
+                    <h1 class="text-4xl lg:text-5xl font-bold mb-2">
+                        <span class="bg-gradient-to-r from-red-600 via-purple-600 to-pink-600 dark:from-red-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                            {{ category.name }}
+                        </span>
+                    </h1>
+                    {% if category.description %}
+                        <p class="text-gray-600 dark:text-gray-300/90">{{ category.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ path('app_video_index') }}" 
+                   class="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-gray-500 to-gray-600 dark:from-gray-500/80 dark:to-gray-600/80 text-white rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 group shadow-sm">
+                    <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span class="font-bold">Всі відео</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Статистика категорії -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-in">
+            <div class="glass-light rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Всього відео</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ videos|length }}</p>
+            </div>
+            <div class="glass-light rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Загальні перегляди</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                    {{ videos|reduce((carry, v) => carry + v.views, 0)|number_format }}
+                </p>
+            </div>
+            <div class="glass-light rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Найновіше</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ videos|first ? videos|first.publishedAt|date('d.m.Y') : '—' }}
+                </p>
+            </div>
+            <div class="glass-light rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Загальна тривалість</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {% set total = videos|reduce((carry, v) => carry + v.duration, 0) %}
+                    {{ (total / 3600)|round }} год {{ ((total % 3600) / 60)|round }} хв
+                </p>
+            </div>
+        </div>
+
+        <!-- Фільтри -->
+        <div class="glass-light rounded-xl p-4 mb-8 border border-gray-200 dark:border-gray-700/50 animate-slide-in">
+            <form method="get" action="" class="flex flex-wrap gap-4 items-center">
+                <div class="flex-1 min-w-[250px]">
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ app.request.query.get('search') }}"
+                               placeholder="Пошук у цій категорії..."
+                               class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all">
+                    </div>
+                </div>
+                
+                <div class="w-48">
+                    <select name="sort" 
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all">
+                        <option value="newest" {{ app.request.query.get('sort') == 'newest' ? 'selected' : '' }}>Спочатку нові</option>
+                        <option value="oldest" {{ app.request.query.get('sort') == 'oldest' ? 'selected' : '' }}>Спочатку старі</option>
+                        <option value="popular" {{ app.request.query.get('sort') == 'popular' ? 'selected' : '' }}>Найпопулярніші</option>
+                    </select>
+                </div>
+                
+                <button type="submit" 
+                        class="px-6 py-3 bg-gradient-to-r from-red-500 to-purple-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                    <i class="fas fa-filter"></i>
+                    <span>Застосувати</span>
+                </button>
+                
+                {% if app.request.query.all|length > 0 %}
+                <a href="{{ path('app_video_category', {'id': category.id}) }}" 
+                   class="px-4 py-3 glass-light rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+                    <i class="fas fa-times"></i>
+                    <span>Скинути</span>
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Список відео -->
+        {% if videos|default([])|length > 0 %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                {% for video in videos %}
+                    {% include 'front/video/_card.html.twig' with {video: video} %}
+                {% endfor %}
+            </div>
+            
+            <!-- Пагінація -->
+            {% if totalPages is defined and totalPages > 1 %}
+            <div class="flex justify-center mt-8">
+                <div class="flex gap-2">
+                    {% if currentPage > 1 %}
+                    <a href="{{ path('app_video_category', {id: category.id, page: currentPage - 1, search: app.request.query.get('search'), sort: app.request.query.get('sort')}) }}" 
+                       class="w-10 h-10 flex items-center justify-center rounded-lg glass-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% for i in 1..totalPages %}
+                        <a href="{{ path('app_video_category', {id: category.id, page: i, search: app.request.query.get('search'), sort: app.request.query.get('sort')}) }}" 
+                           class="w-10 h-10 flex items-center justify-center rounded-lg transition-colors {{ i == currentPage ? 'bg-gradient-to-r from-red-500 to-purple-600 text-white shadow-md' : 'glass-light hover:bg-gray-100 dark:hover:bg-gray-800' }}">
+                            {{ i }}
+                        </a>
+                    {% endfor %}
+                    
+                    {% if currentPage < totalPages %}
+                    <a href="{{ path('app_video_category', {id: category.id, page: currentPage + 1, search: app.request.query.get('search'), sort: app.request.query.get('sort')}) }}" 
+                       class="w-10 h-10 flex items-center justify-center rounded-lg glass-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- Пустий стан -->
+            <div class="text-center py-16 bg-white/70 dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700/50">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-red-500 to-purple-600 rounded-full mb-6">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                    У цій категорії немає відео
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300/70 mb-6 max-w-md mx-auto">
+                    {% if app.request.query.get('search') %}
+                        За запитом "{{ app.request.query.get('search') }}" нічого не знайдено.
+                    {% else %}
+                        В категорії "{{ category.name }}" поки немає відео.
+                    {% endif %}
+                </p>
+                
+                <div class="flex gap-4 justify-center">
+                    {% if app.request.query.all|length > 0 %}
+                    <a href="{{ path('app_video_category', {'id': category.id}) }}" 
+                       class="px-6 py-3 glass-light rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+                        <i class="fas fa-times"></i>
+                        <span>Скинути фільтри</span>
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{{ path('app_video_index') }}" 
+                       class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-purple-600 text-white rounded-xl hover:scale-105 transition-all duration-300 shadow-lg">
+                        <i class="fas fa-list"></i>
+                        <span>Всі відео</span>
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Інші категорії -->
+        {% if otherCategories|default([])|length > 0 %}
+        <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Інші категорії</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {% for cat in otherCategories %}
+                <a href="{{ path('app_video_category', {'id': cat.id}) }}" 
+                   class="group flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors {{ cat.id == category.id ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
+                    <span class="text-red-500">
+                        <i class="fas fa-folder"></i>
+                    </span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-red-600">{{ cat.name }}</span>
+                    <span class="ml-auto text-xs text-gray-500">({{ cat.videos|length }})</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

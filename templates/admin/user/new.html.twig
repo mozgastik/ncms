@@ -1,0 +1,196 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Створення нового користувача - Адмін панель{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-user-plus mr-2"></i>Створення нового користувача
+            </h1>
+        </div>
+        <div>
+            <a href="{{ path('admin_user_index') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Назад до списку
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-green-600 px-6 py-4">
+                <h2 class="text-lg font-semibold text-white">Форма створення</h2>
+            </div>
+            <div class="p-6">
+                {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <div>
+                            {{ form_label(form.username, 'Ім\'я користувача*', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.username, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.username) }}
+                            </div>
+                        </div>
+
+                        <div>
+                            {{ form_label(form.mail, 'Email*', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.mail, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.mail) }}
+                            </div>
+                        </div>
+
+                        <div>
+                            {{ form_label(form.fullName, 'Повне ім\'я', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.fullName, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.fullName) }}
+                            </div>
+                        </div>
+
+                        {% if form.plainPassword is defined %}
+                        <div>
+                            {{ form_label(form.plainPassword.first, 'Пароль*', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.plainPassword.first, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.plainPassword.first) }}
+                            </div>
+                        </div>
+
+                        <div>
+                            {{ form_label(form.plainPassword.second, 'Підтвердження паролю*', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.plainPassword.second, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.plainPassword.second) }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        {% if form.bio is defined %}
+                        <div>
+                            {{ form_label(form.bio, 'Про себе', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.bio, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition', 'rows': 4}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.bio) }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if form.birthDate is defined %}
+                        <div>
+                            {{ form_label(form.birthDate, 'Дата народження', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}
+                            }) }}
+                            {{ form_widget(form.birthDate, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition'}
+                            }) }}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.birthDate) }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if form.roles is defined %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ролі</label>
+                            <div class="space-y-2">
+                                {% for role in form.roles %}
+                                    <div class="flex items-center">
+                                        {{ form_widget(role, {
+                                            'attr': {'class': 'h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'}
+                                        }) }}
+                                        {{ form_label(role, null, {
+                                            'label_attr': {'class': 'ml-2 text-sm text-gray-700'}
+                                        }) }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form_errors(form.roles) }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if form.isActive is defined %}
+                        <div class="flex items-center">
+                            {{ form_widget(form.isActive, {
+                                'attr': {'class': 'h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'}
+                            }) }}
+                            {{ form_label(form.isActive, 'Активний', {
+                                'label_attr': {'class': 'ml-2 text-sm text-gray-700'}
+                            }) }}
+                            <div class="ml-2 text-sm text-red-600">
+                                {{ form_errors(form.isActive) }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <a href="{{ path('admin_user_index') }}" 
+                       class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Скасувати
+                    </a>
+                    <button type="submit" 
+                            class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-save mr-2"></i>Створити користувача
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Інформація</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>Поля позначені * є обов'язковими для заповнення.</p>
+                        <p class="mt-1">Після створення користувач отримає доступ до системи з вказаним паролем.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

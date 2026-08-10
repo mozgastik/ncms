@@ -1,0 +1,58 @@
+{% props
+    group = null,
+    showBlankIcons = true,
+    entity = null,
+%}
+
+<li class="dropstart dropdown-submenu">
+    {% if group.hasMainAction and group.mainAction %}
+        {# split dropdown: main action + submenu toggle #}
+        <div class="d-flex flex-row-reverse position-relative">
+            <twig:ea:ActionMenu:ActionList:Item
+                :wrapInListItem="false"
+                class="flex-grow-1 border-end-0 {{ group.mainAction.cssClass }}"
+                label="{{ group.mainAction.label is ea_is_not_empty ? group.mainAction.label|trans }}"
+                icon="{{ group.icon }}"
+                htmlAttributes="{{ group.mainAction.htmlAttributes|ea_html_attrs }}"
+                url="{{ group.mainAction.linkUrl }}"
+                renderAsForm="{{ group.mainAction.isRenderedAsForm }}"
+                showBlankIcons="{{ showBlankIcons or group.hasAnyActionWithIcon }}" />
+            <a class="dropdown-toggle dropdown-toggle-split dropdown-item border-start-0" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <twig:ea:Icon name="internal:chevron-right" class="dropdown-submenu-chevron" />
+            </a>
+        </div>
+    {% else %}
+        {# regular submenu toggle #}
+        <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            {% if group.icon %}
+                <twig:ea:Icon name="{{ group.icon }}" />
+            {% elseif showBlankIcons or group.hasAnyActionWithIcon %}
+                <twig:ea:Icon name="internal:blank" />
+            {% endif %}
+            {% if group.label is ea_is_not_empty %}<span>{{ group.label|trans }}</span>{% endif %}
+            <twig:ea:Icon name="internal:chevron-right" class="dropdown-submenu-chevron" />
+        </a>
+    {% endif %}
+
+    {# nested ActionList for submenu items #}
+    <ul class="dropdown-menu">
+        {% for subItem in group.items %}
+            {% if subItem is iterable and subItem.type is defined %}
+                {% if subItem.type == 'divider' %}
+                    <twig:ea:ActionMenu:ActionList:Divider />
+                {% elseif subItem.type == 'header' %}
+                    <twig:ea:ActionMenu:ActionList:Header label="{{ subItem.content|trans }}" renderLabelRaw="true" />
+                {% endif %}
+            {% else %}
+                {# subItem is an ActionDto #}
+                <twig:ea:ActionMenu:ActionList:Item
+                    class="{{ subItem.cssClass }} dropdown-item-variant-{{ subItem.variant.value }}"
+                    label="{{ subItem.label|trans }}" icon="{{ subItem.icon }}"
+                    htmlAttributes="{{ subItem.htmlAttributes|ea_html_attrs }}"
+                    url="{{ subItem.linkUrl }}" renderLabelRaw="true"
+                    renderAsForm="{{ subItem.isRenderedAsForm }}"
+                    showBlankIcons="{{ group.hasAnyActionWithIcon }}" />
+            {% endif %}
+        {% endfor %}
+    </ul>
+</li>

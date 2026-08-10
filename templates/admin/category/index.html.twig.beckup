@@ -1,0 +1,358 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Управління категоріями - Адмін панель{% endblock %}
+
+{% block body %}
+<main class="flex-1 p-4 lg:p-6">
+    <!-- Header -->
+    <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Управління категоріями</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Загальна кількість: {{ categories|length }}</p>
+            </div>
+            <a href="{{ path('admin_category_new') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                <i class="fas fa-plus text-sm"></i>
+                <span>Нова категорія</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-blue-800">Усього категорій</p>
+                    <p class="text-2xl font-bold text-blue-900 mt-1">{{ categories|length }}</p>
+                </div>
+                <div class="bg-blue-200/50 p-3 rounded-lg">
+                    <i class="fas fa-folder text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-green-800">Статей в категоріях</p>
+                    <p class="text-2xl font-bold text-green-900 mt-1">
+                        {% set totalArticles = 0 %}
+                        {% for category in categories %}
+                            {% set totalArticles = totalArticles + category.articles|length %}
+                        {% endfor %}
+                        {{ totalArticles }}
+                    </p>
+                </div>
+                <div class="bg-green-200/50 p-3 rounded-lg">
+                    <i class="fas fa-newspaper text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-purple-800">Середньо статей</p>
+                    <p class="text-2xl font-bold text-purple-900 mt-1">
+                        {% if categories|length > 0 %}
+                            {{ (totalArticles / categories|length)|round(1) }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="bg-purple-200/50 p-3 rounded-lg">
+                    <i class="fas fa-chart-bar text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if categories|length > 0 %}
+        <!-- Categories Table -->
+        <div class="bg-surface-0 rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+            {% set maxArticles = 0 %}
+{% for category in categories %}
+    {% if category.articles|length > maxArticles %}
+        {% set maxArticles = category.articles|length %}
+    {% endif %}
+{% endfor %}
+                <table class="min-w-full divide-y divide-surface-200">
+                    <thead class="bg-surface-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                                Категорія
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                                URL
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                                Опис
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                                Статей
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
+                                Дії
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-surface-0 divide-y divide-surface-200">
+                        {% for category in categories %}
+                            <tr class="hover:bg-surface-50 transition-colors">
+                                <!-- Category Info -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                                            <i class="fas fa-folder text-primary-600"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-surface-900">
+                                                {{ category.name }}
+                                            </p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-100 text-surface-600">
+                                                    <i class="fas fa-hashtag text-xs mr-1"></i>
+                                                    ID: {{ category.id }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- URL -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="group relative">
+                                        <code class="text-xs bg-surface-100 text-surface-700 px-2 py-1 rounded font-mono">
+                                            /category/{{ category.slug }}
+                                        </code>
+                                        <button onclick="copyToClipboard('/category/{{ category.slug }}')"
+                                                class="ml-2 text-surface-400 hover:text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Копіювати URL">
+                                            <i class="fas fa-copy text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                
+   <!-- Description -->
+<td class="px-6 py-4">
+    {% if category.description %}
+        <p class="text-sm text-surface-600 line-clamp-2">
+            {{ category.description }}
+        </p>
+    {% else %}
+        <span class="text-sm text-surface-400">—</span>
+    {% endif %}
+</td>
+
+<!-- Articles Count -->
+<td class="px-6 py-4 whitespace-nowrap">
+    <div class="flex items-center gap-3">
+        <div class="text-center">
+            <span class="text-lg font-bold text-surface-900">{{ category.articles|length }}</span>
+            <span class="block text-xs text-surface-500">статей</span>
+        </div>
+        {% if category.articles|length > 0 %}
+            <div class="flex-1">
+                <div class="w-24 bg-surface-200 rounded-full h-2">
+                    {# Обчислюємо максимальну кількість статей #}
+                    {% set maxArticles = 0 %}
+                    {% for c in categories %}
+                        {% if c.articles|length > maxArticles %}
+                            {% set maxArticles = c.articles|length %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if maxArticles > 0 %}
+                        {% set percentage = (category.articles|length / maxArticles * 100)|round %}
+                        <div class="h-full rounded-full bg-primary-500" style="width: {{ percentage }}%"></div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</td>
+
+<!-- Actions -->
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    <div class="flex items-center gap-2">
+        <!-- View on site -->
+        <a href="{{ path('app_category_show', {'slug': category.slug}) }}" 
+           target="_blank"
+           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+           title="Переглянути на сайті">
+            <i class="fas fa-external-link-alt text-sm"></i>
+        </a>
+        
+        <!-- Edit -->
+        <a href="{{ path('admin_category_edit', {'id': category.id}) }}" 
+           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-surface-600 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+           title="Редагувати">
+            <i class="fas fa-edit text-sm"></i>
+        </a>
+        
+        <!-- Delete -->
+        <form method="post" 
+              action="{{ path('admin_category_delete', {'id': category.id}) }}" 
+              onsubmit="return confirm('Ви впевнені, що хочете видалити цю категорію?')" 
+              class="inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ category.id) }}">
+            <button type="submit" 
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    title="Видалити">
+                <i class="fas fa-trash text-sm"></i>
+            </button>
+        </form>
+    </div>
+</td>
+
+                                
+                                
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table Footer -->
+            <div class="px-6 py-4 border-t border-surface-200 bg-surface-50">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-surface-500">
+                        Показано <span class="font-medium">{{ categories|length }}</span> категорій
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="inline-flex items-center px-3 py-1.5 border border-surface-300 rounded-lg text-sm font-medium text-surface-700 bg-surface-0 hover:bg-surface-50">
+                            <i class="fas fa-download mr-1"></i>
+                            Експорт
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Categories Chart (Optional) -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-surface-0 rounded-xl border border-surface-200 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-surface-900 mb-4">Розподіл статей по категоріям</h3>
+                <div class="space-y-4">
+                    {% for category in categories %}
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-surface-700">{{ category.name }}</span>
+                                <span class="text-sm text-surface-500">{{ category.articles|length }} статей</span>
+                            </div>
+                            <div class="w-full bg-surface-200 rounded-full h-2">
+                                {% if totalArticles > 0 %}
+                                    {% set percentage = (category.articles|length / totalArticles * 100)|round %}
+                                    <div class="h-full rounded-full bg-primary-500" style="width: {{ percentage }}%"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="bg-surface-0 rounded-xl border border-surface-200 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-surface-900 mb-4">Швидкі дії</h3>
+                <div class="space-y-3">
+                    <a href="{{ path('admin_category_new') }}" 
+                       class="flex items-center gap-3 p-4 border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors group">
+                        <div class="h-10 w-10 rounded-lg bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+                            <i class="fas fa-plus text-primary-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-surface-900">Створити нову категорію</p>
+                            <p class="text-sm text-surface-500">Додайте нову категорію для статей</p>
+                        </div>
+                    </a>
+                    
+                    <a href="{{ path('admin_article_new') }}" 
+                       class="flex items-center gap-3 p-4 border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors group">
+                        <div class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                            <i class="fas fa-newspaper text-green-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-surface-900">Створити нову статтю</p>
+                            <p class="text-sm text-surface-500">Додайте нову статтю в категорію</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" 
+                       class="flex items-center gap-3 p-4 border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors group">
+                        <div class="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                            <i class="fas fa-cog text-amber-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-surface-900">Налаштування категорій</p>
+                            <p class="text-sm text-surface-500">Керування порядком та налаштуваннями</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-surface-0 rounded-xl border-2 border-dashed border-surface-300 p-12 text-center">
+            <div class="mx-auto max-w-md">
+                <div class="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-surface-100 to-surface-200 flex items-center justify-center mb-6">
+                    <i class="fas fa-folder text-3xl text-surface-400"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-surface-900 mb-2">Немає категорій</h3>
+                <p class="text-surface-500 mb-6">Створіть першу категорію для організації ваших статей.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ path('admin_category_new') }}" 
+                       class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                        <i class="fas fa-plus"></i>
+                        Створити категорію
+                    </a>
+                    <a href="#" 
+                       class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-surface-300 text-surface-700 font-medium rounded-lg hover:bg-surface-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                        <i class="fas fa-question-circle"></i>
+                        Довідка
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+
+
+<style>
+/* Custom styles */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects */
+.group:hover .group-hover\:bg-primary-200 {
+    background-color: rgb(var(--color-primary-200) / 1);
+}
+
+.group:hover .group-hover\:bg-green-200 {
+    background-color: rgb(187 247 208 / 1);
+}
+
+.group:hover .group-hover\:bg-amber-200 {
+    background-color: rgb(253 230 138 / 1);
+}
+</style>
+{% endblock %}

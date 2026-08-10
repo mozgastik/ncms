@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ category.name }} – Блоги{% endblock %}
+
+{% block body %}
+<div class="content-container py-8">
+    <!-- Заголовок категорії -->
+    <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white shadow-md">
+                {% if category.image %}
+                    <span class="material-icons text-white text-xl">{{ category.image }}</span>
+                {% else %}
+                    <span class="material-icons text-white text-xl">folder</span>
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ category.name }}</h1>
+                {% if category.description %}
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ category.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Список блогів -->
+    {% if pagination|length > 0 %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for blog in pagination %}
+                {% include 'components/blog_card.html.twig' with {blog: blog} %}
+            {% endfor %}
+        </div>
+        <div class="mt-8">
+            {{ knp_pagination_render(pagination) }}
+        </div>
+    {% else %}
+        <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Немає блогів у цій категорії</h3>
+            <p class="text-gray-500 dark:text-gray-400">Тут поки що немає опублікованих блогів.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

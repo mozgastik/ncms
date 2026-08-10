@@ -1,0 +1,456 @@
+{# templates/admin/components/form/select.html.twig #}
+
+{# Базове поле вибору #}
+{% block select_basic %}
+    {% set field = field|default(null) %}
+    {% set placeholder = placeholder|default('Оберіть значення...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set icon = icon|default('fas fa-chevron-down') %}
+    {% set show_label = show_label|default(true) %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label and field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 appearance-none bg-white',
+                        'placeholder': placeholder
+                    }
+                }) }}
+            {% else %}
+                <select class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 appearance-none bg-white">
+                    <option value="">{{ placeholder }}</option>
+                </select>
+            {% endif %}
+            
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <i class="{{ icon }} text-surface-400"></i>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле вибору з пошуком #}
+{% block select_with_search %}
+    {% set field = field|default(null) %}
+    {% set options = options|default([]) %}
+    {% set placeholder = placeholder|default('Пошук та вибір...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set selected_value = selected_value|default('') %}
+    {% set show_label = show_label|default(true) %}
+    {% set select_id = field ? field.vars.id : 'select-search-' ~ random() %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label %}
+            <label for="{{ select_id }}" class="block text-sm font-medium text-surface-700">
+                {{ field ? field.vars.label : 'Вибір' }}
+            </label>
+        {% endif %}
+        
+        <div class="relative" x-data="{
+            open: false,
+            search: '',
+            selected: '{{ selected_value }}',
+            options: {{ options|json_encode|raw }},
+            get filteredOptions() {
+                return this.options.filter(option => 
+                    option.text.toLowerCase().includes(this.search.toLowerCase())
+                );
+            },
+            get selectedText() {
+                const option = this.options.find(opt => opt.value === this.selected);
+                return option ? option.text : '{{ placeholder }}';
+            }
+        }" x-on:click.outside="open = false">
+            {# Кнопка тригера #}
+            <button type="button"
+                    x-on:click="open = !open"
+                    class="relative w-full px-4 py-2.5 text-left border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white">
+                <span x-text="selectedText" class="block truncate {{ selected_value ? 'text-surface-900' : 'text-surface-400' }}"></span>
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <i class="fas fa-chevron-down text-surface-400" x-bind:class="{ 'transform rotate-180': open }"></i>
+                </span>
+            </button>
+            
+            {# Приховане поле для форми #}
+            <input type="hidden" 
+                   name="{{ field ? field.vars.full_name : 'select_value' }}" 
+                   x-model="selected">
+            
+            {# Випадаюче меню з пошуком #}
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="transform opacity-0 scale-95"
+                 x-transition:enter-end="transform opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="transform opacity-100 scale-100"
+                 x-transition:leave-end="transform opacity-0 scale-95"
+                 class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-surface-200 max-h-60 overflow-auto">
+                
+                {# Поле пошуку #}
+                <div class="p-2 border-b border-surface-200">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-surface-400"></i>
+                        </div>
+                        <input type="text"
+                               x-model="search"
+                               placeholder="Пошук..."
+                               class="block w-full pl-10 pr-3 py-2 border border-surface-300 rounded text-sm focus:ring-2 focus:ring-primary-500"
+                               x-on:keydown.escape="open = false">
+                    </div>
+                </div>
+                
+                {# Список опцій #}
+                <div class="py-1">
+                    <template x-for="option in filteredOptions" :key="option.value">
+                        <button type="button"
+                                x-on:click="selected = option.value; open = false"
+                                class="w-full text-left px-4 py-2 text-sm hover:bg-surface-50 focus:bg-surface-100 focus:outline-none"
+                                :class="{ 'bg-primary-50 text-primary-700': selected === option.value }">
+                            <span x-text="option.text" class="block"></span>
+                        </button>
+                    </template>
+                    
+                    <div x-show="filteredOptions.length === 0" class="px-4 py-3 text-sm text-surface-500 text-center">
+                        Нічого не знайдено
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Мультивибір з тегами #}
+{% block select_multiple_tags %}
+    {% set field = field|default(null) %}
+    {% set options = options|default([]) %}
+    {% set placeholder = placeholder|default('Оберіть опції...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set selected_values = selected_values|default([]) %}
+    
+    <div class="space-y-2 {{ extra_classes }}" x-data="{
+        selected: {{ selected_values|json_encode|raw }},
+        options: {{ options|json_encode|raw }},
+        search: '',
+        get filteredOptions() {
+            return this.options.filter(option => 
+                !this.selected.includes(option.value) &&
+                option.text.toLowerCase().includes(this.search.toLowerCase())
+            );
+        },
+        addOption(value) {
+            if (!this.selected.includes(value)) {
+                this.selected.push(value);
+            }
+            this.search = '';
+        },
+        removeOption(value) {
+            this.selected = this.selected.filter(item => item !== value);
+        },
+        getSelectedText(value) {
+            const option = this.options.find(opt => opt.value === value);
+            return option ? option.text : value;
+        }
+    }">
+        {% if field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        {# Приховані поля для форми #}
+        <template x-for="value in selected" :key="value">
+            <input type="hidden" 
+                   name="{{ field ? field.vars.full_name : 'tags[]' }}[]" 
+                   x-bind:value="value">
+        </template>
+        
+        {# Контейнер для вибраних тегів #}
+        <div class="flex flex-wrap gap-2 p-3 border border-surface-300 rounded-lg bg-white min-h-[42px]">
+            <template x-for="value in selected" :key="value">
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-100 text-primary-800 rounded-full text-sm">
+                    <span x-text="getSelectedText(value)"></span>
+                    <button type="button" 
+                            x-on:click="removeOption(value)"
+                            class="ml-1 text-primary-600 hover:text-primary-800">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </span>
+            </template>
+            
+            {# Поле для додавання нових #}
+            <div class="relative flex-grow min-w-[150px]">
+                <input type="text"
+                       x-model="search"
+                       x-on:keydown.enter.prevent="if (filteredOptions.length > 0) addOption(filteredOptions[0].value)"
+                       placeholder="{{ placeholder }}"
+                       class="w-full border-0 focus:ring-0 focus:outline-none text-sm">
+                
+                {# Випадаючий список #}
+                <div x-show="search.length > 0 && filteredOptions.length > 0"
+                     class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-surface-200 max-h-48 overflow-auto">
+                    <div class="py-1">
+                        <template x-for="option in filteredOptions" :key="option.value">
+                            <button type="button"
+                                    x-on:click="addOption(option.value)"
+                                    class="w-full text-left px-4 py-2 text-sm hover:bg-surface-50 focus:bg-surface-100 focus:outline-none">
+                                <span x-text="option.text"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+        
+        {# Популярні опції #}
+        {% if options|length > 0 %}
+            <div class="mt-2">
+                <p class="text-xs text-surface-500 mb-1">Популярні опції:</p>
+                <div class="flex flex-wrap gap-1">
+                    <template x-for="option in options.slice(0, 5)" :key="option.value">
+                        <button type="button"
+                                x-on:click="addOption(option.value)"
+                                x-bind:disabled="selected.includes(option.value)"
+                                class="text-xs px-2 py-1 border border-surface-300 rounded hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                x-bind:class="{ 'bg-surface-100': selected.includes(option.value) }">
+                            <span x-text="option.text"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле вибору з групами #}
+{% block select_with_groups %}
+    {% set field = field|default(null) %}
+    {% set groups = groups|default({}) %}
+    {% set placeholder = placeholder|default('Оберіть зі списку...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 appearance-none bg-white'
+                    }
+                }) }}
+            {% else %}
+                <select class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 appearance-none bg-white">
+                    <option value="">{{ placeholder }}</option>
+                    {% for group_name, group_options in groups %}
+                        <optgroup label="{{ group_name }}">
+                            {% for option in group_options %}
+                                <option value="{{ option.value }}" {{ option.selected ? 'selected' : '' }}>
+                                    {{ option.text }}
+                                </option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <i class="fas fa-chevron-down text-surface-400"></i>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Кастомне поле вибору з іконками #}
+{% block select_custom %}
+    {% set field = field|default(null) %}
+    {% set options = options|default([]) %}
+    {% set placeholder = placeholder|default('Оберіть варіант...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set selected_value = selected_value|default('') %}
+    
+    <div class="space-y-3 {{ extra_classes }}" x-data="{
+        selected: '{{ selected_value }}',
+        open: false,
+        options: {{ options|json_encode|raw }},
+        get selectedOption() {
+            return this.options.find(opt => opt.value === this.selected) || {};
+        }
+    }" x-on:click.outside="open = false">
+        
+        {% if field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        {# Кнопка вибору #}
+        <button type="button"
+                x-on:click="open = !open"
+                class="relative w-full px-4 py-3 text-left border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white hover:bg-surface-50">
+            <div class="flex items-center gap-3">
+                <template x-if="selectedOption.icon">
+                    <div class="flex-shrink-0">
+                        <i x-bind:class="selectedOption.icon" class="text-lg text-surface-500"></i>
+                    </div>
+                </template>
+                
+                <div class="flex-grow">
+                    <span x-text="selectedOption.text || '{{ placeholder }}'" 
+                          class="block text-sm {{ selected_value ? 'text-surface-900' : 'text-surface-400' }}"></span>
+                    <template x-if="selectedOption.description">
+                        <p x-text="selectedOption.description" class="text-xs text-surface-500 mt-1"></p>
+                    </template>
+                </div>
+                
+                <div class="flex-shrink-0">
+                    <i class="fas fa-chevron-down text-surface-400" x-bind:class="{ 'transform rotate-180': open }"></i>
+                </div>
+            </div>
+        </button>
+        
+        {# Приховане поле #}
+        <input type="hidden" 
+               name="{{ field ? field.vars.full_name : 'select_custom' }}" 
+               x-model="selected">
+        
+        {# Випадаюче меню #}
+        <div x-show="open"
+             x-transition
+             class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg border border-surface-200 max-h-96 overflow-auto">
+            <div class="py-1">
+                <template x-for="option in options" :key="option.value">
+                    <button type="button"
+                            x-on:click="selected = option.value; open = false"
+                            class="w-full text-left px-4 py-3 hover:bg-surface-50 focus:bg-surface-100 focus:outline-none border-b border-surface-100 last:border-b-0">
+                        <div class="flex items-center gap-3">
+                            <template x-if="option.icon">
+                                <div class="flex-shrink-0">
+                                    <i x-bind:class="option.icon" class="text-lg text-surface-500"></i>
+                                </div>
+                            </template>
+                            
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <span x-text="option.text" class="text-sm font-medium text-surface-900"></span>
+                                    <template x-if="selected === option.value">
+                                        <i class="fas fa-check text-primary-600 text-sm"></i>
+                                    </template>
+                                </div>
+                                <template x-if="option.description">
+                                    <p x-text="option.description" class="text-xs text-surface-500 mt-1"></p>
+                                </template>
+                            </div>
+                        </div>
+                    </button>
+                </template>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле вибору для фільтрів #}
+{% block select_filter %}
+    {% set field = field|default(null) %}
+    {% set options = options|default([]) %}
+    {% set placeholder = placeholder|default('Фільтр...') %}
+    {% set icon = icon|default('fas fa-filter') %}
+    {% set show_label = show_label|default(false) %}
+    {% set extra_classes = extra_classes|default('') %}
+    
+    <div class="{{ extra_classes }}">
+        {% if show_label and field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700 mb-1'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full pl-10 pr-8 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm appearance-none bg-white',
+                        'placeholder': placeholder,
+                        'onchange': 'this.form.submit()'
+                    }
+                }) }}
+            {% else %}
+                <select class="block w-full pl-10 pr-8 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm appearance-none bg-white"
+                        onchange="this.form.submit()">
+                    <option value="">{{ placeholder }}</option>
+                    {% for option in options %}
+                        <option value="{{ option.value }}" {{ option.selected ? 'selected' : '' }}>
+                            {{ option.text }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="{{ icon }} text-surface-400 text-sm"></i>
+            </div>
+            
+            <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                <i class="fas fa-chevron-down text-surface-400 text-xs"></i>
+            </div>
+        </div>
+    </div>
+{% endblock %}

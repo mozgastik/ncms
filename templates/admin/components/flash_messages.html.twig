@@ -1,0 +1,25 @@
+{% for message in app.flashes('success') %}
+    <div class="fixed top-4 right-4 px-4 py-3 bg-green-100 text-green-800 border border-green-200 rounded-lg shadow-lg z-50 animate-fade-in">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span class="font-medium">{{ message }}</span>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    class="ml-4 text-current hover:opacity-70 transition-opacity">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('error') %}
+    <div class="fixed top-4 right-4 px-4 py-3 bg-red-100 text-red-800 border border-red-200 rounded-lg shadow-lg z-50 animate-fade-in">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            <span class="font-medium">{{ message }}</span>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    class="ml-4 text-current hover:opacity-70 transition-opacity">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+{% endfor %}

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="uk" 
+      x-data="app()" 
+      x-init="init" 
+      :class="[darkMode ? 'dark' : 'light']" 
+      data-theme="light"
+      class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+    <meta name="csrf-token" content="{{ csrf_token('authenticate') }}">
+    <title x-text="pageTitle">{% block title %}Новинний портал - Адмін{% endblock %}</title>
+    
+    {% block stylesheets %}
+        {{ encore_entry_link_tags('app') }}
+        <!-- Fonts & Icons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
+    {% endblock %}
+</head>
+<body 
+    x-cloak
+    class="min-h-screen bg-surface-50 text-surface-900 font-sans antialiased dark:bg-surface-950 dark:text-surface-100 overflow-x-hidden"
+    :class="{ 'animate-fade-in': initialized }"
+>
+
+    <!-- Прелоадер -->
+    <div x-show="!initialized" 
+         x-transition:leave="transition-opacity duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[9999] flex items-center justify-center bg-surface-0 dark:bg-surface-900">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Основний контейнер -->
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Сайдбар -->
+        <aside 
+            id="sidebar"
+            :style="`width: ${sidebarCollapsed && !isMobile ? '80px' : '256px'}`"
+            :class="[
+                isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0',
+                'fixed lg:sticky top-0 left-0 z-40 h-screen bg-surface-0 dark:bg-surface-950 border-r border-surface-200 dark:border-surface-800 shadow-xl lg:shadow-none transition-all duration-300 ease-smooth'
+            ]"
+        >     
+            <!-- Overlay для мобільної версії -->
+            <div 
+                x-show="isMobile && sidebarOpen"
+                x-transition:enter="transition-opacity duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition-opacity duration-300"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click="closeSidebar"
+                class="fixed inset-0 bg-black/50 lg:hidden z-30"
+            ></div>
+            
+            <!-- Контейнер сайдбару -->
+            <div class="relative h-full flex flex-col">
+                <!-- Кнопка згортання/розгортання (тільки десктоп) -->
+                <button 
+                    x-show="!isMobile"
+                    @click="toggleSidebar"
+                    :title="sidebarCollapsed ? 'Розгорнути меню' : 'Згорнути меню'"
+                    class="absolute -right-3 top-6 z-50 w-6 h-6 flex items-center justify-center bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-full shadow-lg hover:shadow-xl hover-scale transition-all duration-200 focus-ring"
+                >
+                    <i :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'" class="fas text-surface-600 dark:text-surface-400 text-sm"></i>
+                </button>
+
+                <!-- Логотип -->
+                <div class="p-4 lg:p-6 border-b border-surface-200 dark:border-surface-800" style="height: 77px;"> 
+                    <a href="{{ path('admin_dashboard') }}" class="flex items-center" :class="!isMobile && sidebarCollapsed ? 'lg:justify-center' : 'lg:space-x-3'">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </div>
+                        <div x-show="!isMobile && !sidebarCollapsed" class="hidden lg:block ml-3">
+                            <p class="text-xs text-surface-500 whitespace-nowrap">Адмін-панель</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Меню навігації -->
+                <nav class="flex-1 p-4 space-y-6 overflow-y-auto scrollbar-thin">
+                    <!-- Головне -->
+                    <div class="space-y-2">
+                        <div x-show="!isMobile && !sidebarCollapsed" class="px-3">
+                            <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Головне</p>
+                        </div>
+                        <div x-show="!isMobile && sidebarCollapsed" class="px-3 text-center hidden lg:block">
+                            <p class="text-xs font-semibold text-surface-400 uppercase">●●●</p>
+                        </div>
+                        
+                        <!-- Панель керування -->
+                        <a href="{{ path('admin_dashboard') }}" 
+                           @click="selected = 'dashboard'"
+                           :class="[
+                               selected === 'dashboard' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-tachometer-alt w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Панель керування</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Управління контентом -->
+                    <div class="space-y-2">
+                        <div x-show="!isMobile && !sidebarCollapsed" class="px-3">
+                            <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Управління контентом</p>
+                        </div>
+                        <div x-show="!isMobile && sidebarCollapsed" class="px-3 text-center hidden lg:block">
+                            <p class="text-xs font-semibold text-surface-400 uppercase">●●●</p>
+                        </div>
+                        
+                        <!-- Статті -->
+                        <a href="{{ path('admin_articles') }}" 
+                           @click="selected = 'articles'"
+                           :class="[
+                               selected === 'articles' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-newspaper w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Статті</span>
+                        </a>
+                        <!-- Блог -->
+                        {% if path('admin_blog_index') is defined %}
+                        <a href="{{ path('admin_blog_index') }}" 
+                           @click="selected = 'blog'"
+                           :class="[
+                               selected === 'blog' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-blog w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Блоги</span>
+                        </a>
+                        {% endif %}
+                        <!-- Відео -->
+                    <a href="{{ path('admin_video_index') }}"
+                    @click="selected = 'videos'"
+                    :class="[
+                       selected === 'videos' 
+                        ? 'bg-surface-100 dark:bg-surface-800 text-red-600 dark:text-red-400' 
+                        : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-red-600 dark:hover:text-red-400',
+                        !isMobile && isidebarCollapsed ? 'lg:justify-center' : ''
+                         ]" 
+                    class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200 group">
+    
+                    <i class="fas fa-video w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+    
+                    <span x-show="!isMobile && !sidebarCollapsed" 
+                    class="whitespace-nowrap text-sm font-medium">
+                    Відео
+                    </span>
+    
+                    <!-- Бейдж з кількістю (опціонально) -->
+                   <span x-show="!isMobile && !sidebarCollapsed && {{ videoCount|default(0) }} > 0"
+                    class="ml-auto px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">
+                   {{ videoCount|default(0) }}
+                    </span>
+                    </a>
+
+                        <!-- Категорії -->
+                        <a href="{{ path('admin_category_index') }}" 
+                           @click="selected = 'categories'"
+                           :class="[
+                               selected === 'categories' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-folder w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Категорії</span>
+                        </a>
+                        
+                        <!-- Теги -->
+                        <a href="{{ path('admin_tag_index') }}" 
+                           @click="selected = 'tags'"
+                           :class="[
+                               selected === 'tags' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-tags w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Теги</span>
+                        </a>
+                        
+                        <!-- Коментарі -->
+                        <a href="{{ path('admin_comment_index') }}" 
+                           @click="selected = 'comments'"
+                           :class="[
+                               selected === 'comments' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200 relative">
+                            <i class="fas fa-comments w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Коментарі</span>
+                            {% if pending_comments is defined and pending_comments > 0 %}
+                                <span x-show="!isMobile && !sidebarCollapsed" class="ml-auto bg-danger-500 text-white text-xs px-2 py-1 rounded-full animate-pulse-custom">
+                                    {{ pending_comments }}
+                                </span>
+                                <span x-show="!isMobile && !sidebarCollapsed" class="absolute -top-1 -right-1 w-4 h-4 bg-danger-500 text-white text-xs flex items-center justify-center rounded-full lg:hidden">
+                                    {{ pending_comments }}
+                                </span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    
+                    <!-- Блоки та вміст -->
+                    <div class="space-y-2">
+                        <div x-show="!isMobile && !sidebarCollapsed" class="px-3">
+                            <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Модулі</p>
+                        </div>
+                        <div x-show="!isMobile && sidebarCollapsed" class="px-3 text-center hidden lg:block">
+                            <p class="text-xs font-semibold text-surface-400 uppercase">●●●</p>
+                        </div>
+                        
+                        
+                        
+                        <!-- Цитати -->
+                        {% if path('admin_quote_index') is defined %}
+                        <a href="{{ path('admin_quote_index') }}" 
+                           @click="selected = 'quotes'"
+                           :class="[
+                               selected === 'quotes' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-quote-right w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Цитати</span>
+                        </a>
+                        {% endif %}
+                        <!--  Реклама-->
+                        {% if path ('admin_ad_index') is defined %}
+                        <a href="{{ path('admin_ad_index') }}" 
+                           @click="selected = 'ad'"
+                           :class="[
+                               selected === 'ad' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-brands fa-adversal w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Реклама</span>
+                        </a>
+                        {% endif %}
+                        <!-- Слайдер -->
+                        {% if path('admin_slider_index') is defined %}
+                        <a href="{{ path('admin_slider_index') }}" 
+                           @click="selected = 'slider'"
+                           :class="[
+                               selected === 'slider' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-images w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Слайдер</span>
+                        </a>
+                        {% endif %}
+
+                        {% if path('admin_page_index') is defined %}
+                        <a href="{{ path('admin_page_index') }}"
+                        @click="selected = 'page'"
+                           :class="[
+                               selected === 'page' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200"> 
+                        <i class="fas fa-file-alt w-5 " :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                        <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Сторінки</span>
+                         </a>
+                         {% endif %}
+                         
+                        <!-- Галерея -->
+                        {% if path('admin_gallery_index') is defined %}
+                        <a href="{{ path('admin_gallery_index') }}" 
+                           @click="selected = 'gallery'"
+                           :class="[
+                               selected === 'gallery' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-photo-video w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Галерея</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Система -->
+                    <div class="space-y-2">
+                        <div x-show="!isMobile && !sidebarCollapsed" class="px-3">
+                            <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Система</p>
+                        </div>
+                        <div x-show="!isMobile && sidebarCollapsed" class="px-3 text-center hidden lg:block">
+                            <p class="text-xs font-semibold text-surface-400 uppercase">●●●</p>
+                        </div>
+                        
+                        <!-- Користувачі -->
+                        <a href="{{ path('admin_user_index') }}" 
+                           @click="selected = 'users'"
+                           :class="[
+                               selected === 'users' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-users w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Користувачі</span>
+                        </a>
+
+                        {# Додати в секцію "Система" сайдбару #}
+                      <a href="{{ path('admin_maintenance_index') }}" 
+                      @click="selected = 'maintenance'"
+                     :class="[
+                      selected === 'maintenance' ? 'bg-(--color-surface-100) dark:bg-(--color-surface-800) text-(--color-primary-600) dark:text-(--color-primary-400)' : 'text-(--color-surface-700) dark:text-(--color-surface-300) hover:bg-(--color-surface-100) dark:hover:bg-(--color-surface-800) hover:text-(--color-primary-600) dark:hover:text-(--color-primary-400)',
+                      !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                        ]"
+                       class="flex items-center px-3 py-2 rounded-lg transition-colors duration-(--transition-fast)">
+                      <i class="fas fa-tools w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                      <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Обслуговування</span>
+                       </a>
+                        
+                        <!-- Налаштування -->
+                        {% if path('admin_settings_index') is defined %}
+                        <a href="{{ path('admin_settings_index') }}" 
+                           @click="selected = 'settings'"
+                           :class="[
+                               selected === 'settings' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-cog w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Налаштування</span>
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Статистика -->
+                        {% if path('admin_stats') is defined %}
+                        <a href="{{ path('admin_stats') }}" 
+                           @click="selected = 'stats'"
+                           :class="[
+                               selected === 'stats' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
+                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
+                           ]"
+                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
+                            <i class="fas fa-chart-line w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
+                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Статистика</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </nav>
+                
+                <!-- Інформація про користувача -->
+                <div class="p-4 border-t border-surface-200 dark:border-surface-800">
+                    <div class="flex items-center" :class="!isMobile && sidebarCollapsed ? 'lg:justify-center' : 'lg:space-x-3'">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <span class="text-white text-sm font-semibold">{{ app.user.username|first|upper }}</span>
+                        </div>
+                        <div x-show="!isMobile && !sidebarCollapsed" class="flex-1 min-w-0 hidden lg:block ml-3">
+                            <p class="text-sm font-medium text-surface-900 dark:text-surface-100 truncate">{{ app.user.username }}</p>
+                            <p class="text-xs text-surface-500 truncate">Адміністратор</p>
+                        </div>
+                        <a x-show="!isMobile && !sidebarCollapsed" href="{{ path('app_logout') }}" 
+                           title="Вийти"
+                           class="p-2 text-surface-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/30 rounded-lg transition-colors flex-shrink-0 focus-ring hidden lg:block ml-auto">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                        <a x-show="!isMobile && sidebarCollapsed" href="{{ path('app_logout') }}" 
+                           title="Вийти"
+                           class="p-2 text-surface-500 hover:text-danger-600 rounded-lg transition-colors flex-shrink-0 focus-ring hidden lg:block">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Основний контент з хедером -->
+        <div 
+            id="main-content-wrapper" 
+            class="relative flex flex-col flex-1 h-full w-full overflow-hidden bg-surface-50 dark:bg-surface-950 transition-all duration-300"
+        >
+            <!-- Хедер -->
+            <header 
+                :class="[
+                    scrolled ? 'bg-white/80 dark:bg-surface-900/80 backdrop-blur-md shadow-md' : 'bg-surface-0 dark:bg-surface-900',
+                    'flex-shrink-0 border-b border-surface-200 dark:border-surface-800 w-full transition-all duration-300'
+                ]"
+                :class="{ 'header-hidden': hidden }"
+                id="main-header"
+            >
+                <div class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6">
+                    <!-- Верхня частина з гамбургером і логотипом -->
+                    <div class="flex w-full items-center justify-between gap-2 border-b border-surface-200 px-3 py-3 sm:gap-4 lg:justify-start lg:border-b-0 lg:px-0 lg:py-4 dark:border-surface-800">
+                        
+                        <!-- Гамбургер меню -->
+                        <button 
+                            @click.stop="toggleSidebar"
+                            class="z-50 flex h-10 w-10 items-center justify-center rounded-lg text-surface-600 hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800 lg:h-11 lg:w-11 lg:border lg:border-surface-200 dark:lg:border-surface-800 transition-colors"
+                            aria-label="Перемкнути меню"
+                        >
+                            <!-- Десктоп іконка -->
+                            <svg class="hidden fill-current lg:block" width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z" fill="currentColor"/>
+                            </svg>
+                            <!-- Мобільна іконка -->
+                            <svg class="fill-current lg:hidden" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.25 6C3.25 5.58579 3.58579 5.25 4 5.25L20 5.25C20.4142 5.25 20.75 5.58579 20.75 6C20.75 6.41421 20.4142 6.75 20 6.75L4 6.75C3.58579 6.75 3.25 6.41422 3.25 6ZM3.25 18C3.25 17.5858 3.58579 17.25 4 17.25L20 17.25C20.4142 17.25 20.75 17.5858 20.75 18C20.75 18.4142 20.4142 18.75 20 18.75L4 18.75C3.58579 18.75 3.25 18.4142 3.25 18ZM4 11.25C3.58579 11.25 3.25 11.5858 3.25 12C3.25 12.4142 3.58579 12.75 4 12.75L12 12.75C12.4142 12.75 12.75 12.4142 12.75 12C12.75 11.5858 12.4142 11.25 12 11.25L4 11.25Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+
+                        <!-- Логотип для мобільних -->
+                        <a href="{{ path('admin_dashboard') }}" class="flex items-center space-x-2 lg:hidden">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md">
+                                <i class="fas fa-newspaper text-white text-sm"></i>
+                            </div>
+                            <span class="font-bold text-surface-900 dark:text-surface-100 gradient-text">Адмін</span>
+                        </a>
+
+                        <!-- Логотип для десктопу -->
+                        <div class="hidden lg:flex items-center">
+                            <div class="flex items-center space-x-3">
+                                <div x-show="!sidebarCollapsed" class="flex flex-col">
+                                    <h1 class="text-lg font-semibold text-surface-900 dark:text-surface-100">
+                                        {% block page_title %}Панель керування{% endblock %}
+                                    </h1>
+                                    <p class="text-xs text-surface-500 dark:text-surface-400">
+                                        {% block page_subtitle %}Керування сайтом та контентом{% endblock %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Права частина хедера -->
+                    <div class="flex items-center gap-2 px-5 py-4 lg:px-0 lg:py-0">
+                        <!-- Кнопка темної теми -->
+                        <button 
+                            @click="toggleTheme"
+                            class="relative flex h-11 w-11 items-center justify-center rounded-full border border-surface-200 bg-surface-0 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700 dark:hover:text-white focus-ring"
+                            aria-label="Перемкнути тему"
+                        >
+                            <i x-show="!darkMode" class="fas fa-moon text-lg"></i>
+                            <i x-show="darkMode" class="fas fa-sun text-lg"></i>
+                        </button>
+
+                        <!-- Сповіщення -->
+                            <div class="relative" @click.outside="notificationsOpen = false">
+                                <button 
+                                    @click="notificationsOpen = !notificationsOpen; notifying = false"
+                                    class="relative flex h-11 w-11 items-center justify-center rounded-full border border-surface-200 bg-surface-0 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700 dark:hover:text-white focus-ring"
+                                    aria-label="Сповіщення"
+                                >
+                                    <span 
+                                        x-show="notifying" 
+                                        class="absolute top-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-danger-500"
+                                    >
+                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger-500 opacity-75"></span>
+                                    </span>
+                                    <i class="fas fa-bell text-lg"></i>
+                                </button>
+
+                                <!-- Dropdown сповіщень -->
+                                <div 
+                                    x-show="notificationsOpen"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-95"
+                                    class="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg border border-surface-200 bg-surface-0 p-4 shadow-xl dark:border-surface-700 dark:bg-surface-800 z-50"
+                                    @click.away="notificationsOpen = false"
+                                >
+                                    <div class="flex items-center justify-between border-b border-surface-200 pb-3 dark:border-surface-700">
+                                        <h5 class="text-lg font-semibold text-surface-900 dark:text-surface-100">
+                                            Сповіщення
+                                        </h5>
+                                        <button @click="notificationsOpen = false" class="text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="max-h-96 overflow-y-auto scrollbar-thin py-2">
+                                        {% block notifications %}
+                                            <div class="text-center py-8">
+                                                <i class="fas fa-bell-slash text-3xl text-surface-300 dark:text-surface-600 mb-3"></i>
+                                                <p class="text-sm text-surface-500 dark:text-surface-400">Немає нових сповіщень</p>
+                                            </div>
+                                        {% endblock %}
+                                    </div>
+
+                                    <a href="{{ path('admin_notification_index') }}" class="mt-3 flex justify-center rounded-lg border border-surface-300 bg-surface-0 p-3 text-sm font-medium text-surface-700 hover:bg-surface-50 dark:border-surface-600 dark:bg-surface-700 dark:text-surface-200 dark:hover:bg-surface-600 transition-colors">
+                                        Всі сповіщення
+                                    </a>
+                                </div>
+                            </div>
+
+                        <!-- Профіль користувача -->
+                        <div class="relative" x-data="{ profileOpen: false }" @click.outside="profileOpen = false">
+                            <button 
+                                @click="profileOpen = !profileOpen"
+                                class="flex items-center space-x-3 rounded-lg p-1.5 pr-3 text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800 transition-colors"
+                            >
+                                <div class="h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white shadow-md">
+                                    {% if app.user.avatar is defined and app.user.avatar %}
+                                        <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" alt="{{ app.user.username }}" class="h-full w-full object-cover" />
+                                    {% else %}
+                                        <span class="text-lg font-semibold">{{ app.user.username|first|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="hidden lg:block text-sm font-medium">{{ app.user.username }}</span>
+                                <i class="fas fa-chevron-down text-xs text-surface-400 transition-transform duration-200" :class="profileOpen && 'rotate-180'"></i>
+                            </button>
+
+                            <!-- Dropdown профілю -->
+                            <div 
+                                x-show="profileOpen"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-56 rounded-lg border border-surface-200 bg-surface-0 p-2 shadow-xl dark:border-surface-700 dark:bg-surface-800 z-50"
+                            >
+                                <div class="border-b border-surface-200 px-3 py-3 dark:border-surface-700">
+                                    <p class="text-sm font-semibold text-surface-900 dark:text-surface-100">{{ app.user.username }}</p>
+                                    <p class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ app.user.email }}</p>
+                                </div>
+                                
+                                <div class="mt-2 space-y-1">
+                                    <a href="{{ path('user_dashboard') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-700 transition-colors">
+                                        <i class="fas fa-user w-5 text-surface-400"></i>
+                                        <span>Мій профіль</span>
+                                    </a>
+                                    <a href="{{ path('admin_settings_index') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-700 transition-colors">
+                                        <i class="fas fa-cog w-5 text-surface-400"></i>
+                                        <span>Налаштування</span>
+                                    </a>
+                                </div>
+                                
+                                <div class="mt-2 border-t border-surface-200 pt-2 dark:border-surface-700">
+                                    <a href="{{ path('app_logout') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-danger-50 hover:text-danger-600 dark:text-surface-300 dark:hover:bg-danger-900/20 dark:hover:text-danger-400 transition-colors">
+                                        <i class="fas fa-sign-out-alt w-5"></i>
+                                        <span>Вийти</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-surface-50 dark:bg-surface-950 scrollbar-custom"
+                  @scroll="handleScroll">
+                <div class="content-container py-6">
+                    <div class="animate-fade-in">
+                        {% block body %}{% endblock %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Кнопка "наверх" -->
+    <button 
+        x-show="showScrollTop"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-50"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-50"
+        @click="scrollToTop"
+        class="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-full shadow-lg hover:shadow-xl hover-scale flex items-center justify-center z-50 focus-ring interactive"
+    >
+        <i class="fas fa-arrow-up text-lg"></i>
+    </button>
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('app') }}
+    <script>
+        // Централізований стан
+        function app() {
+            return {
+                // --- Тема ---
+                darkMode: localStorage.getItem('theme') === 'dark' || 
+                          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                
+                // --- Ініціалізація ---
+                initialized: false,
+                
+                // --- Заголовок сторінки ---
+                pageTitle: 'Панель керування',
+                pageSubtitle: 'Керування сайтом та контентом',
+                
+                // --- Скрол ---
+                showScrollTop: false,
+                
+                // --- Сайдбар ---
+                sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+                sidebarOpen: false,
+                isMobile: window.innerWidth < 1024,
+                selected: localStorage.getItem('selectedMenuItem') || 'dashboard',
+                
+                // --- Хедер ---
+                scrolled: false,
+                hidden: false,
+                lastScroll: 0,
+                scrollThreshold: 50,
+                notificationsOpen: false,
+                notifying: true,
+                searchQuery: '',
+
+                init() {
+                    this.initialized = true;
+                    
+                    // Стежимо за темою
+                    this.$watch('darkMode', value => {
+                        this.applyTheme();
+                    });
+                    
+                    // Стежимо за згортанням сайдбару
+                    this.$watch('sidebarCollapsed', value => {
+                        localStorage.setItem('sidebarCollapsed', value);
+                    });
+                    
+                    // Стежимо за вибраним пунктом меню
+                    this.$watch('selected', value => {
+                        localStorage.setItem('selectedMenuItem', value);
+                    });
+                    
+                    // Підлаштовуємось під розмір вікна
+                    window.addEventListener('resize', () => {
+                        this.isMobile = window.innerWidth < 1024;
+                        if (!this.isMobile) {
+                            this.sidebarOpen = false;
+                            document.body.classList.remove('mobile-menu-open');
+                        }
+                    });
+                    
+                    // Скрол хедера
+                    window.addEventListener('scroll', () => this.onScroll(), { passive: true });
+                    
+                    // Ініціалізуємо тему
+                    this.applyTheme();
+                },
+
+                // ====== Тема ======
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                },
+                applyTheme() {
+                    const root = document.documentElement;
+                    if (this.darkMode) {
+                        root.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        root.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                    }
+                },
+
+                // ====== Скрол ======
+                onScroll() {
+                    const currentScroll = window.pageYOffset;
+                    this.scrolled = currentScroll > 20;
+                    
+                    if (currentScroll > this.lastScroll && currentScroll > this.scrollThreshold) {
+                        this.hidden = true;
+                    } else {
+                        this.hidden = false;
+                    }
+                    this.lastScroll = currentScroll;
+                },
+                handleScroll(e) {
+                    if (e && e.target) {
+                        this.showScrollTop = e.target.scrollTop > 300;
+                    }
+                },
+                scrollToTop() {
+                    const main = document.querySelector('main');
+                    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                // ====== Сайдбар ======
+                toggleSidebar() {
+                    if (this.isMobile) {
+                        this.sidebarOpen = !this.sidebarOpen;
+                        document.body.classList.toggle('mobile-menu-open', this.sidebarOpen);
+                    } else {
+                        this.sidebarCollapsed = !this.sidebarCollapsed;
+                    }
+                },
+                closeSidebar() {
+                    this.sidebarOpen = false;
+                    document.body.classList.remove('mobile-menu-open');
+                },
+
+                // ====== Пошук ======
+                search() {
+                    console.log('Search:', this.searchQuery);
+                }
+            }
+        }
+    </script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,54 @@
+{# templates/page/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ page.metaTitle ?: page.title }}{% endblock %}
+{% block meta_description %}{{ page.metaDescription }}{% endblock %}
+{% block meta_keywords %}{{ page.metaKeywords }}{% endblock %}
+
+{% block body %}
+<div x-data="{ showBackToTop: false }" @scroll.window="showBackToTop = window.pageYOffset > 300">
+  <div class="max-w-8xl mx-auto my-10 px-4">
+    <article
+      class="rounded-2xl shadow-lg p-8 bg-white dark:bg-gray-900 transition animate-fade-in"
+    >
+      <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-8">
+        {{ page.title }}
+      </h1>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        {{ page.content|raw }}
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+  // Плавний скрол до якорів у змісті
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Анімація появи секцій при скролі (Intersection Observer)
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-fade-in');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section').forEach(section => {
+    observer.observe(section);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,314 @@
+{# templates/user/comments.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Мої коментарі - Новинний портал{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">
+                        <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            <i class="fas fa-comments mr-3"></i>Мої коментарі
+                        </span>
+                    </h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2 text-lg">Всі коментарі, які ви залишили на сайті</p>
+                </div>
+                <a href="{{ path('app_article_index') }}" 
+                   class="hidden md:inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-pen mr-2"></i>Написати коментар
+                </a>
+            </div>
+        </div>
+
+        <!-- Отримуємо всі коментарі для статистики -->
+        {% set allComments = comments|default([]) %}
+        {% set approvedComments = allComments|filter(c => c.isApproved) %}
+        {% set pendingComments = allComments|filter(c => not c.isApproved) %}
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <i class="fas fa-comment text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Всього коментарів</p>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ allComments|length }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Схвалені</p>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ approvedComments|length }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">В очікуванні</p>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ pendingComments|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-700 p-6 mb-6">
+            <div class="flex flex-wrap gap-4">
+                <a href="{{ path('user_comments', {'status': 'all'}) }}" 
+                   class="px-4 py-2 rounded-lg transition-all duration-200 {{ app.request.query.get('status', 'all') == 'all' ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fas fa-list-ul mr-2"></i>
+                    Всі ({{ allComments|length }})
+                </a>
+                <a href="{{ path('user_comments', {'status': 'approved'}) }}" 
+                   class="px-4 py-2 rounded-lg transition-all duration-200 {{ app.request.query.get('status') == 'approved' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Схвалені ({{ approvedComments|length }})
+                </a>
+                <a href="{{ path('user_comments', {'status': 'pending'}) }}" 
+                   class="px-4 py-2 rounded-lg transition-all duration-200 {{ app.request.query.get('status') == 'pending' ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    <i class="fas fa-clock mr-2"></i>
+                    В очікуванні ({{ pendingComments|length }})
+                </a>
+            </div>
+        </div>
+
+        <!-- Comments List -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-700 overflow-hidden">
+            {% if allComments|length > 0 %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <i class="fas fa-newspaper mr-2"></i>Стаття
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <i class="fas fa-comment mr-2"></i>Коментар
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <i class="fas fa-tag mr-2"></i>Статус
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <i class="fas fa-calendar mr-2"></i>Дата
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <i class="fas fa-cog mr-2"></i>Дії
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for comment in allComments %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            {% set articleImage = comment.article.featuredImage ?? comment.article.coverImage %}
+                                            {% if articleImage %}
+                                                {% if articleImage starts with 'http://' or articleImage starts with 'https://' %}
+                                                    <img class="h-10 w-10 rounded-lg object-cover ring-2 ring-gray-200 dark:ring-gray-700" 
+                                                         src="{{ articleImage }}" 
+                                                         alt="{{ comment.article.title }}">
+                                                {% else %}
+                                                    <img class="h-10 w-10 rounded-lg object-cover ring-2 ring-gray-200 dark:ring-gray-700" 
+                                                         src="{{ asset('uploads/articles/' ~ articleImage) }}" 
+                                                         alt="{{ comment.article.title }}">
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center ring-2 ring-gray-200 dark:ring-gray-700">
+                                                    <i class="fas fa-newspaper text-gray-500 dark:text-gray-400"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-4">
+                                            <a href="{{ path('app_article_show', {'slug': comment.article.slug}) }}#comments" 
+                                               class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
+                                                {{ comment.article.title|slice(0, 40) }}{{ comment.article.title|length > 40 ? '...' : '' }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-gray-200 max-w-xs">
+                                        <p class="line-clamp-2">{{ comment.content }}</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if comment.isApproved %}
+                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full border border-green-200 dark:border-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>Схвалено
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full border border-yellow-200 dark:border-yellow-800">
+                                            <i class="fas fa-clock mr-1"></i>В очікуванні
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                    <div class="flex items-center">
+                                        <i class="far fa-calendar-alt mr-2"></i>
+                                        {{ comment.createdAt|date('d.m.Y H:i') }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex justify-end space-x-2">
+                                        <a href="{{ path('app_article_show', {'slug': comment.article.slug}) }}#comments" 
+                                           class="inline-flex items-center p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/30 transition-colors"
+                                           title="Переглянути">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if not comment.isApproved %}
+                                        <a href="{{ path('user_comment_edit', {'id': comment.id}) }}" 
+                                           class="inline-flex items-center p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-800/30 transition-colors"
+                                           title="Редагувати">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="post" 
+                                              action="{{ path('user_comment_delete', {'id': comment.id}) }}" 
+                                              onsubmit="return confirm('Ви впевнені, що хочете видалити цей коментар?');"
+                                              class="inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comment.id) }}">
+                                            <button type="submit" 
+                                                    class="inline-flex items-center p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors"
+                                                    title="Видалити">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if totalPages is defined and totalPages > 1 %}
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            Показано {{ fromItem }}-{{ toItem }} з {{ totalItems }} коментарів
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{{ path('user_comments', {page: currentPage - 1, status: app.request.query.get('status')}) }}" 
+                               class="px-3 py-1 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition {{ currentPage <= 1 ? 'opacity-50 pointer-events-none' : '' }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            {% for i in 1..totalPages %}
+                                <a href="{{ path('user_comments', {page: i, status: app.request.query.get('status')}) }}" 
+                                   class="px-3 py-1 rounded {{ i == currentPage ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600' }} transition">
+                                    {{ i }}
+                                </a>
+                            {% endfor %}
+                            <a href="{{ path('user_comments', {page: currentPage + 1, status: app.request.query.get('status')}) }}" 
+                               class="px-3 py-1 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition {{ currentPage >= totalPages ? 'opacity-50 pointer-events-none' : '' }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-16 px-4">
+                    <div class="mb-6">
+                        <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full">
+                            <i class="fas fa-comment-slash text-4xl text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Коментарів поки немає</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                        Ви ще не залишили жодного коментаря. Почніть обговорення в наших статтях!
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="{{ path('app_article_index') }}" 
+                           class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300">
+                            <i class="fas fa-newspaper mr-2"></i>Перейти до статей
+                        </a>
+                        <a href="{{ path('user_dashboard') }}" 
+                           class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Повернутись до панелі
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-lightbulb text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Поради</h3>
+                        <ul class="space-y-2 text-sm text-blue-700 dark:text-blue-200">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-500 dark:text-blue-400 mr-2 mt-0.5"></i>
+                                <span>Коментарі від авторизованих користувачів схвалюються автоматично</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-500 dark:text-blue-400 mr-2 mt-0.5"></i>
+                                <span>Коментарі від гостей проходять модерацію</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-blue-500 dark:text-blue-400 mr-2 mt-0.5"></i>
+                                <span>Ви можете редагувати та видаляти коментарі, поки вони не схвалені</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-100 dark:border-green-800 rounded-xl p-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">Активність</h3>
+                        <div class="space-y-2 text-sm text-green-700 dark:text-green-200">
+                            <p>Ваші коментарі допомагають іншим користувачам та покращують якість контенту.</p>
+                            <p class="font-medium pt-2 border-t border-green-200 dark:border-green-700">
+                                <i class="fas fa-heart text-red-500 mr-1"></i>
+                                Дякуємо за вашу активність!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile FAB Button -->
+        <div class="fixed bottom-6 right-6 md:hidden">
+            <a href="{{ path('app_article_index') }}" 
+               class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300">
+                <i class="fas fa-pen text-xl"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

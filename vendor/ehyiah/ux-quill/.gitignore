@@ -1,0 +1,16 @@
+.php-cs-fixer.cache
+.phpunit.result.cache
+.php-cs-fixer.php
+yarn-error.log
+
+var/
+vendor/
+.idea
+
+assets/node_modules
+compose.override.yaml
+/.phpunit.cache/
+*.map
+/docs/node_modules/
+/docs/.vitepress/cache/
+/docs/.vitepress/dist/

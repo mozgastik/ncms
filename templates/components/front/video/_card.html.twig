@@ -1,0 +1,76 @@
+<article class="group relative bg-white dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden hover:scale-[1.02] active:scale-95 border border-gray-200 dark:border-gray-700/50">
+    
+    <!-- Декоративний градієнт -->
+    <div class="absolute inset-0 bg-gradient-to-r from-red-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+    
+    <!-- Мініатюра -->
+    <a href="{{ path('app_video_show', {'id': video.id}) }}" class="block relative aspect-video overflow-hidden">
+        {% if video.thumbnail %}
+            <img src="{{ video.thumbnail }}" 
+                 alt="{{ video.title }}" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+        {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <svg class="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        {% endif %}
+        
+        <!-- Іконка плеєра -->
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Тривалість -->
+        {% if video.duration %}
+        <div class="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium px-2 py-1 rounded-md backdrop-blur-sm">
+            {{ video.formattedDuration }}
+        </div>
+        {% endif %}
+        
+        <!-- Джерело -->
+        <div class="absolute top-2 left-2">
+            <span class="inline-flex items-center gap-1 px-2 py-1 bg-black/80 text-white text-xs rounded-md backdrop-blur-sm">
+                <i class="{{ video.providerIcon }}"></i>
+                <span>{{ video.source|capitalize }}</span>
+            </span>
+        </div>
+    </a>
+    
+    <!-- Інформація -->
+    <div class="p-4">
+        <h3 class="font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group/title">
+            <a href="{{ path('app_video_show', {'id': video.id}) }}" 
+               class="hover:text-transparent bg-gradient-to-r from-red-600 to-purple-600 bg-clip-text hover:bg-[length:100%_3px] bg-[length:0%_3px] bg-no-repeat bg-left-bottom transition-all duration-500">
+                {{ video.title }}
+            </a>
+        </h3>
+        
+        <!-- Мета-інформація -->
+        <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1">
+                    <i class="far fa-eye"></i>
+                    {{ video.views|number_format(0, '.', ' ') }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="far fa-calendar-alt"></i>
+                    {{ video.publishedAt|date('d.m.Y') }}
+                </span>
+            </div>
+            
+            {% if video.category %}
+            <a href="{{ path('app_video_category', {'id': video.category.id}) }}" 
+               class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                {{ video.category.name }}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</article>

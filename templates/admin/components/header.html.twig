@@ -1,0 +1,275 @@
+<header 
+    x-data="{ 
+        menuToggle: false,
+        notificationsOpen: false,
+        notifying: true,
+        darkMode: localStorage.getItem('theme') === 'dark'
+    }"
+    x-init="$watch('darkMode', value => {
+        localStorage.setItem('theme', value ? 'dark' : 'light');
+        if (value) {
+            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
+        }
+        
+        // Оновлюємо іконку теми в AdminApp якщо потрібно
+        if (window.adminApp) {
+            window.adminApp.theme = value ? 'dark' : 'light';
+            if (document.getElementById('theme-icon')) {
+                document.getElementById('theme-icon').className = value ? 'fas fa-sun text-sm' : 'fas fa-moon text-sm';
+            }
+            if (document.getElementById('theme-icon-mobile')) {
+                document.getElementById('theme-icon-mobile').className = value ? 'fas fa-sun text-sm' : 'fas fa-moon text-sm';
+            }
+        }
+    })"
+    class="flex-shrink-0 bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 w-full"
+>
+    <div class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6">
+        <!-- Верхня частина з гамбургером і логотипом -->
+        <div class="flex w-full items-center justify-between gap-2 border-b border-surface-200 px-3 py-3 sm:gap-4 lg:justify-start lg:border-b-0 lg:px-0 lg:py-4 dark:border-surface-800">
+            <!-- Гамбургер меню -->
+            <button 
+                @click.stop="if (window.adminApp && window.adminApp.sidebar) { 
+                    window.adminApp.sidebar.toggleMobile ? window.adminApp.sidebar.toggleMobile() : window.adminApp.sidebar.toggle() 
+                } else if (window.toggleSidebar) {
+                    window.toggleSidebar()
+                } else {
+                    sidebarToggle = !sidebarToggle
+                }"
+                class="z-50 flex h-10 w-10 items-center justify-center rounded-lg text-surface-600 hover:bg-surface-100 dark:text-surface-400 dark:hover:bg-surface-800 lg:h-11 lg:w-11 lg:border lg:border-surface-200 dark:lg:border-surface-800"
+                :class="window.innerWidth < 1024 ? (window.adminApp?.sidebar?.sidebar?.classList?.contains('-translate-x-full') ? '' : 'bg-surface-100 dark:bg-surface-800') : ''"
+                aria-label="Перемкнути меню"
+            >
+                <!-- Десктоп іконка -->
+                <svg class="hidden fill-current lg:block" width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z" fill="currentColor"/>
+                </svg>
+
+                <!-- Мобільна іконка - завжди бургер, стан керується через клас -->
+                <svg class="fill-current lg:hidden" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.25 6C3.25 5.58579 3.58579 5.25 4 5.25L20 5.25C20.4142 5.25 20.75 5.58579 20.75 6C20.75 6.41421 20.4142 6.75 20 6.75L4 6.75C3.58579 6.75 3.25 6.41422 3.25 6ZM3.25 18C3.25 17.5858 3.58579 17.25 4 17.25L20 17.25C20.4142 17.25 20.75 17.5858 20.75 18C20.75 18.4142 20.4142 18.75 20 18.75L4 18.75C3.58579 18.75 3.25 18.4142 3.25 18ZM4 11.25C3.58579 11.25 3.25 11.5858 3.25 12C3.25 12.4142 3.58579 12.75 4 12.75L12 12.75C12.4142 12.75 12.75 12.4142 12.75 12C12.75 11.5858 12.4142 11.25 12 11.25L4 11.25Z" fill="currentColor"/>
+                </svg>
+            </button>
+
+            <!-- Логотип для мобільних -->
+            <a href="{{ path('admin_dashboard') }}" class="flex items-center space-x-2 lg:hidden">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md">
+                    <i class="fas fa-newspaper text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-surface-900 dark:text-surface-100 gradient-text">
+                    Адмін
+                </span>
+            </a>
+
+            <!-- Логотип для десктопу (згорнутий/розгорнутий) -->
+            <div class="hidden lg:flex items-center">
+                <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md"><i class="fas fa-newspaper text-white"></i>
+                    </div>
+                    <div x-show="!window.adminApp?.sidebar?.isCollapsed" class="flex flex-col">
+                        <h1 class="text-lg font-semibold text-surface-900 dark:text-surface-100">
+                            {% block page_title %}Панель керування{% endblock %}
+                        </h1>
+                        <p class="text-xs text-surface-500 dark:text-surface-400">
+                            {% block page_subtitle %}Керування сайтом та контентом{% endblock %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопка додаткового меню для мобільних (показати/сховати праву панель) -->
+            <button 
+                @click.stop="menuToggle = !menuToggle"
+                class="z-50 flex h-10 w-10 items-center justify-center rounded-lg text-surface-700 hover:bg-surface-100 lg:hidden dark:text-surface-400 dark:hover:bg-surface-800"
+                :class="menuToggle ? 'bg-surface-100 dark:bg-surface-800' : ''"
+                aria-label="Меню"
+            >
+                <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z" fill="currentColor"/>
+                </svg>
+            </button>
+
+            <!-- Пошук для десктопу -->
+            <div class="hidden lg:block lg:ml-6">
+                <form>
+                    <div class="relative">
+                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-surface-400">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input 
+                            type="text"
+                            placeholder="Пошук або команда..."
+                            class="h-11 w-80 xl:w-[400px] rounded-lg border border-surface-200 bg-surface-100 py-2.5 pl-12 pr-14 text-sm text-surface-900 placeholder:text-surface-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder:text-surface-500"
+                        />
+                        <span class="absolute top-1/2 right-2.5 -translate-y-1/2 inline-flex items-center gap-0.5 rounded-lg border border-surface-200 bg-surface-50 px-2 py-1 text-xs text-surface-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400">
+                            <span>⌘</span>
+                            <span>K</span>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Права частина хедера (темна тема, сповіщення, профіль) -->
+        <div 
+            x-show="!window.matchMedia('(min-width: 1024px)').matches ? menuToggle : true"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform -translate-y-2"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-2"
+            class="w-full items-center justify-between gap-4 px-5 py-4 lg:flex lg:w-auto lg:justify-end lg:px-0 lg:py-0 lg:opacity-100 lg:transform-none"
+            :class="menuToggle ? 'flex' : 'hidden lg:flex'"
+        >
+            <div class="flex items-center gap-2">
+                <!-- Кнопка темної теми -->
+                <button 
+                    @click="darkMode = !darkMode"
+                    class="relative flex h-11 w-11 items-center justify-center rounded-full border border-surface-200 bg-surface-0 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700 dark:hover:text-white"
+                    aria-label="Перемкнути тему"
+                >
+                    <i x-show="!darkMode" class="fas fa-moon text-lg"></i>
+                    <i x-show="darkMode" class="fas fa-sun text-lg"></i>
+                </button>
+
+                <!-- Сповіщення -->
+                <div class="relative" @click.outside="notificationsOpen = false">
+                    <button 
+                        @click="notificationsOpen = !notificationsOpen; notifying = false"
+                        class="relative flex h-11 w-11 items-center justify-center rounded-full border border-surface-200 bg-surface-0 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700 dark:hover:text-white"
+                        aria-label="Сповіщення"
+                    >
+                        <span 
+                            x-show="notifying" 
+                            class="absolute top-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-danger-500"
+                        >
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger-500 opacity-75"></span>
+                        </span>
+                        <i class="fas fa-bell text-lg"></i>
+                    </button>
+
+                    <!-- Dropdown сповіщень -->
+                    <div 
+                        x-show="notificationsOpen"
+                        x-transition
+                        class="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg border border-surface-200 bg-surface-0 p-4 shadow-xl dark:border-surface-700 dark:bg-surface-800 z-50"
+                        style="display: none;"
+                        @click.away="notificationsOpen = false"
+                    >
+                        <div class="flex items-center justify-between border-b border-surface-200 pb-3 dark:border-surface-700">
+                            <h5 class="text-lg font-semibold text-surface-900 dark:text-surface-100">
+                                Сповіщення
+                            </h5>
+                            <button @click="notificationsOpen = false" class="text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="max-h-96 overflow-y-auto custom-scrollbar py-2">
+                            {% block notifications %}
+                                <div class="text-center py-8">
+                                    <i class="fas fa-bell-slash text-3xl text-surface-300 dark:text-surface-600 mb-3"></i>
+                                    <p class="text-sm text-surface-500 dark:text-surface-400">Немає нових сповіщень</p>
+                                </div>
+                            {% endblock %}
+                        </div>
+
+                        <a href="#" class="mt-3 flex justify-center rounded-lg border border-surface-300 bg-surface-0 p-3 text-sm font-medium text-surface-700 hover:bg-surface-50 dark:border-surface-600 dark:bg-surface-700 dark:text-surface-200 dark:hover:bg-surface-600">
+                            Всі сповіщення
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Профіль користувача -->
+            <div class="relative" x-data="{ profileOpen: false }" @click.outside="profileOpen = false">
+                <button 
+                    @click="profileOpen = !profileOpen"
+                    class="flex items-center space-x-3 rounded-lg p-1.5 pr-3 text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
+                >
+                    <div class="h-11 w-11 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white shadow-md">
+                        {% if app.user.avatar is defined and app.user.avatar %}
+                            <img src="{{ app.user.avatar }}" alt="{{ app.user.username }}" class="h-full w-full object-cover" />
+                        {% else %}
+                            <span class="text-lg font-semibold">{{ app.user.username|first|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="hidden lg:block text-sm font-medium">{{ app.user.username }}</span>
+                    <i class="fas fa-chevron-down text-xs text-surface-400 transition-transform duration-200" :class="profileOpen && 'rotate-180'"></i>
+                </button>
+
+                <!-- Dropdown профілю -->
+                <div 
+                    x-show="profileOpen"
+                    x-transition
+                    class="absolute right-0 mt-2 w-56 rounded-lg border border-surface-200 bg-surface-0 p-2 shadow-xl dark:border-surface-700 dark:bg-surface-800 z-50"
+                    style="display: none;"
+                >
+                    <div class="border-b border-surface-200 px-3 py-3 dark:border-surface-700">
+                        <p class="text-sm font-semibold text-surface-900 dark:text-surface-100">{{ app.user.username }}</p>
+                        <p class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ app.user.email }}</p>
+                    </div>
+                    
+                    <div class="mt-2 space-y-1">
+                        <a href="{{ path('user_dashboard') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-700">
+                            <i class="fas fa-user w-5 text-surface-400"></i>
+                            <span>Мій профіль</span>
+                        </a>
+                        <a href="{{ path('admin_settings_index') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-700">
+                            <i class="fas fa-cog w-5 text-surface-400"></i>
+                            <span>Налаштування</span>
+                        </a>
+                    </div>
+                    
+                    <div class="mt-2 border-t border-surface-200 pt-2 dark:border-surface-700">
+                        <a href="{{ path('app_logout') }}" class="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm text-surface-700 hover:bg-danger-50 hover:text-danger-600 dark:text-surface-300 dark:hover:bg-danger-900/20 dark:hover:text-danger-400">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Вийти</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Стилі для кастомного скролбару -->
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #475569;
+    }
+    
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+    
+    /* Адаптація для мобільних */
+    @media (max-width: 1023px) {
+        .lg\:flex {
+            display: flex;
+        }
+    }
+</style>

@@ -1,0 +1,277 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Статистика блогів{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.umd.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 py-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Статистика блогів</h1>
+
+    <!-- Картки статистики -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="text-sm font-medium text-gray-500 mb-2">Всього за останні 30 днів</div>
+            <div class="text-3xl font-bold text-gray-800">{{ monthStats.total }}</div>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="text-sm font-medium text-gray-500 mb-2">Опубліковано</div>
+            <div class="text-3xl font-bold text-green-600">{{ monthStats.published }}</div>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="text-sm font-medium text-gray-500 mb-2">Середня кількість переглядів</div>
+            <div class="text-3xl font-bold text-purple-600">{{ monthStats.avg_views|number_format(1) }}</div>
+        </div>
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+            <div class="text-sm font-medium text-gray-500 mb-2">Загальна кількість переглядів</div>
+            <div class="text-3xl font-bold text-orange-600">{{ monthStats.total_views }}</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Графік активності -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Активність публікацій (30 днів)</h3>
+            <div class="chart-container">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Графік категорій -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Розподіл за категоріями</h3>
+            <div class="chart-container">
+                <canvas id="categoriesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Топ автори -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Топ авторів</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Автор
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Кількість блогів
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Загальні перегляди
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Середні перегляди
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for author in popularAuthors %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-blue-600 font-bold">{{ author.username|first|upper }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ author.username }}</div>
+                                    {% if author.email is defined and author.email %}
+                                        <div class="text-sm text-gray-500">{{ author.email }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ author.post_count }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ author.total_views }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ (author.total_views / author.post_count)|round }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                            Немає даних про авторів
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Топ блоги -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Найпопулярніші блоги</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for blog in topBlogs %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="text-lg font-semibold text-gray-800">
+                        <a href="{{ path('blog_show', {'slug': blog.slug}) }}" 
+                           target="_blank" 
+                           class="hover:text-blue-600 transition-colors">
+                            {{ blog.title }}
+                        </a>
+                    </h4>
+                    <span class="text-sm text-gray-500">{{ blog.publishedAt|date('d.m.Y') }}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-600 mb-3">
+                    <span class="mr-4">{{ blog.author.username }}</span>
+                    {% if blog.category %}
+                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{{ blog.category.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <div class="flex items-center">
+                        <i class="fas fa-eye mr-1"></i>
+                        <span>{{ blog.viewCount }} переглядів</span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-thumbs-up mr-1 text-green-500"></i>
+                            <span>{{ blog.likeCount }}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-thumbs-down mr-1 text-red-500"></i>
+                            <span>{{ blog.dislikeCount }}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-comment mr-1 text-blue-500"></i>
+                            <span>{{ blog.comments|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-3 text-center text-gray-500 py-8">
+                Немає популярних блогів
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Графіки JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Графік активності
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chartData.labels|json_encode|raw }},
+            datasets: [{
+                label: 'Публікації',
+                data: {{ chartData.publications|json_encode|raw }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Графік категорій
+    const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+    new Chart(categoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ categoriesData.labels|json_encode|raw }},
+            datasets: [{
+                data: {{ categoriesData.values|json_encode|raw }},
+                backgroundColor: [
+                    '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', 
+                    '#ef4444', '#ec4899', '#06b6d4', '#84cc16'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+
+    // Графік статусів (якщо потрібно)
+    {% if statusData is defined %}
+    const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Опубліковано', 'Чернетки', 'На модерації', 'Відхилено'],
+                datasets: [{
+                    data: {{ statusData|json_encode|raw }},
+                    backgroundColor: [
+                        '#10b981', '#6b7280', '#f59e0b', '#ef4444'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

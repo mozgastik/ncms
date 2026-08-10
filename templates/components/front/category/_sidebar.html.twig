@@ -1,0 +1,43 @@
+<aside class="space-y-6">
+    <!-- Категорії -->
+    <div class="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-gray-900 dark:text-white mb-4">Категорії</h3>
+        
+        {% macro render_sidebar_category(category) %}
+            <div class="mb-2">
+                <a href="{{ path('app_category_show', {'slug': category.slug}) }}" 
+                   class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group">
+                    <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary-600">{{ category.name }}</span>
+                    <span class="text-sm text-gray-500">{{ category.totalCount }}</span>
+                </a>
+                
+                {% if category.children|length > 0 %}
+                    <div class="ml-4 mt-1">
+                        {% for child in category.children %}
+                            {{ _self.render_sidebar_category(child) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endmacro %}
+
+        {% for root in category_tree %}
+            {{ _self.render_sidebar_category(root.category) }}
+        {% endfor %}
+    </div>
+
+    <!-- Теги -->
+    {% if tags is defined and tags|length > 0 %}
+    <div class="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-gray-900 dark:text-white mb-4">Популярні теги</h3>
+        <div class="flex flex-wrap gap-2">
+            {% for tag in tags %}
+                <a href="{{ path('app_tag_show', {'slug': tag.slug}) }}" 
+                   class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-primary-100 hover:text-primary-600 transition-colors">
+                    {{ tag.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</aside>

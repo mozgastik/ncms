@@ -1,0 +1,136 @@
+/* ActionMenu (dropdown)
+/* ------------------------------------------------------------------------- */
+/* Open/close animation, selectable (radio/checkbox) items and submenu chevron,
+   modeled on the shadcn/ui Dropdown Menu. */
+
+.dropdown-menu {
+    --ea-action-menu-slide: 8px;
+}
+
+/* ENTER: triggered when Bootstrap adds the `.show` class. We animate the
+   individual `scale`/`translate` properties (not `transform`) so they compose
+   on top of Popper's inline `transform: translate()` positioning instead of
+   clobbering it. `transform-origin` is anchored to the corner nearest the
+   toggle, mimicking shadcn's --radix-*-transform-origin. */
+.dropdown-menu.show {
+    /* `ease` (the CSS default) is exactly what shadcn/tw-animate-css uses. A strong
+       decelerate curve (e.g. --ea-ease-out) has a long, slow tail that reads as sluggish
+       at this short duration, so we deliberately match shadcn's `ease` here */
+    animation: ea-action-menu-enter var(--ea-duration-default) ease;
+}
+@keyframes ea-action-menu-enter {
+    from {
+        opacity: 0;
+        scale: 0.95;
+        translate: var(--ea-enter-x, 0) var(--ea-enter-y, 0);
+    }
+    to {
+        opacity: 1;
+        scale: 1;
+        translate: 0 0;
+    }
+}
+.dropdown-menu[data-popper-placement^="bottom"] {
+    transform-origin: top center;
+    --ea-enter-y: calc(-1 * var(--ea-action-menu-slide));
+}
+.dropdown-menu[data-popper-placement^="top"] {
+    transform-origin: bottom center;
+    --ea-enter-y: var(--ea-action-menu-slide);
+}
+.dropdown-menu[data-popper-placement^="left"] {
+    transform-origin: right center;
+    --ea-enter-x: var(--ea-action-menu-slide);
+}
+.dropdown-menu[data-popper-placement^="right"] {
+    transform-origin: left center;
+    --ea-enter-x: calc(-1 * var(--ea-action-menu-slide));
+}
+.dropdown-menu[data-popper-placement$="-end"] {
+    transform-origin: top right;
+}
+.dropdown-menu[data-popper-placement$="-start"] {
+    transform-origin: top left;
+}
+
+/* EXIT: Bootstrap removes `.show` and destroys Popper synchronously, so a
+   CSS-only exit can't play. page-layout.js adds `.ea-dropdown-hiding` while
+   `.show` (and Popper positioning) is still in place, plays this, then lets
+   Bootstrap finish hiding */
+.dropdown-menu.ea-dropdown-hiding {
+    animation: ea-action-menu-exit var(--ea-duration-fast) var(--ea-ease-in) forwards;
+    pointer-events: none;
+}
+@keyframes ea-action-menu-exit {
+    from {
+        opacity: 1;
+        scale: 1;
+    }
+    to {
+        opacity: 0;
+        scale: var(--ea-action-menu-zoom-from);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dropdown-menu.show,
+    .dropdown-menu.ea-dropdown-hiding {
+        animation: none;
+    }
+}
+
+.dropdown-menu .dropdown-selectable-group {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.dropdown-menu .dropdown-item-trailing {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+}
+.dropdown-menu .dropdown-item-check {
+    color: var(--color-primary);
+    inline-size: 16px;
+    block-size: 16px;
+    opacity: 0;
+    transition: opacity var(--ea-duration-fast) var(--ea-ease-out);
+}
+.dropdown-menu .dropdown-item[aria-checked="true"] .dropdown-item-check,
+.dropdown-menu .dropdown-item-selectable.active .dropdown-item-check {
+    opacity: 1;
+}
+
+.dropdown-menu .dropdown-item-selectable.active,
+.dropdown-menu .dropdown-item-selectable[aria-checked="true"] {
+    background: var(--dropdown-settings-active-item-bg);
+    box-shadow: none;
+    color: var(--dropdown-link-color);
+}
+.dropdown-menu .dropdown-item-selectable.active .icon,
+.dropdown-menu .dropdown-item-selectable[aria-checked="true"] .icon {
+    color: var(--dropdown-icon-color);
+}
+.dropdown-menu .dropdown-item-selectable.active .dropdown-item-check {
+    color: var(--color-primary);
+}
+
+.dropdown-submenu .dropdown-toggle::after,
+.dropdown-submenu .dropdown-toggle::before {
+    display: none; /* hide Bootstrap's native caret; we render a chevron icon instead */
+}
+.dropdown-menu .dropdown-submenu-chevron {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    inline-size: 16px;
+    block-size: 16px;
+}
+/* the chevron follows the side the submenu actually opens to: right by default
+   (chevron-right, no flip), flipped to point left when the submenu opens to the
+   left (Bootstrap's .dropstart, e.g. datagrid row actions) */
+.dropstart > .dropdown-submenu-chevron,
+.dropstart > * .dropdown-submenu-chevron {
+    scale: -1 1; /* point left */
+    order: -1; /* and sit on the leading (left) edge, the side it opens to */
+    margin-inline-start: 0;
+}

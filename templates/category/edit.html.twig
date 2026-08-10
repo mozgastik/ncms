@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% trans %}Редагування категорії{% endtrans %} - Адмін панель{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <nav class="mb-6">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{{ path('admin_dashboard') }}" class="text-blue-600 hover:text-blue-800">
+                    {% trans %}Головна{% endtrans %}
+                </a>
+            </li>
+            <li class="text-gray-500">/</li>
+            <li>
+                <a href="{{ path('admin_category_index') }}" class="text-blue-600 hover:text-blue-800">
+                    {% trans %}Категорії{% endtrans %}
+                </a>
+            </li>
+            <li class="text-gray-500">/</li>
+            <li class="text-gray-700">{% trans %}Редагування{% endtrans %}</li>
+        </ol>
+    </nav>
+    
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-800">
+                    {% trans %}Редагування категорії{% endtrans %}
+                </h1>
+                <p class="text-gray-600 mt-1">{% trans %}ID:{% endtrans %} {{ category.id }}</p>
+            </div>
+            
+            <div class="p-6">
+                {{ form_start(form) }}
+                <div class="space-y-6">
+                    <div>
+                        {{ form_label(form.name, 'Назва категорії'|trans, {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}
+                        }) }}
+                        {{ form_widget(form.name, {
+                            'attr': {'class': 'mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'}
+                        }) }}
+                        {{ form_errors(form.name) }}
+                    </div>
+                    
+                    <div>
+                        {{ form_label(form.slug, 'Slug'|trans, {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}
+                        }) }}
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                /category/
+                            </span>
+                            {{ form_widget(form.slug, {
+                                'attr': {'class': 'flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm'}
+                            }) }}
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            {% trans %}Унікальний ідентифікатор для URL-адреси{% endtrans %}
+                        </p>
+                        {{ form_errors(form.slug) }}
+                    </div>
+                    
+                    <div>
+                        {{ form_label(form.description, 'Опис'|trans, {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}
+                        }) }}
+                        {{ form_widget(form.description, {
+                            'attr': {
+                                'class': 'mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
+                                'rows': 3
+                            }
+                        }) }}
+                        {{ form_errors(form.description) }}
+                    </div>
+                    
+                    {% if form.color is defined %}
+                    <div>
+                        {{ form_label(form.color, 'Колір'|trans, {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}
+                        }) }}
+                        <div class="mt-1 flex items-center">
+                            {{ form_widget(form.color, {
+                                'attr': {'class': 'h-8 w-8 rounded border border-gray-300'}
+                            }) }}
+                            <span class="ml-3 text-sm text-gray-500">
+                                {% trans %}Виберіть колір для відображення{% endtrans %}
+                            </span>
+                        </div>
+                        {{ form_errors(form.color) }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between">
+                    <div>
+                        <a href="{{ path('admin_category_index') }}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            {% trans %}Скасувати{% endtrans %}
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="{{ path('admin_category_delete', {'id': category.id}) }}" 
+                           class="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                           onclick="return confirm('Ви впевнені, що хочете видалити цю категорію?')">
+                            {% trans %}Видалити{% endtrans %}
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            {% trans %}Зберегти зміни{% endtrans %}
+                        </button>
+                    </div>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

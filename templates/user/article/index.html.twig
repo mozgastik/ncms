@@ -1,0 +1,741 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Мої статті{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8"
+     x-data="articlesManager()"
+     x-init="init()">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+                    <i class="fas fa-newspaper text-blue-600 dark:text-blue-400 mr-3"></i>
+                    Мої статті
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">Керуйте вашими статтями та відстежуйте їх статус</p>
+            </div>
+            <a href="{{ path('user_article_new') }}" 
+               class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm sm:text-base rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 whitespace-nowrap">
+                <i class="fas fa-plus mr-2"></i>Додати статтю
+            </a>
+        </div>
+
+        <!-- Статистика -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                 @click="setFilter('all')"
+                 :class="{'ring-2 ring-blue-500': currentFilter === 'all'}">
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Всього</p>
+                <p class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.total"></p>
+            </div>
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-3 sm:p-4 border border-yellow-200 dark:border-yellow-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                 @click="setFilter('pending')"
+                 :class="{'ring-2 ring-yellow-500': currentFilter === 'pending'}">
+                <p class="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">На модерації</p>
+                <p class="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300" x-text="stats.pending"></p>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 sm:p-4 border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                 @click="setFilter('approved')"
+                 :class="{'ring-2 ring-green-500': currentFilter === 'approved'}">
+                <p class="text-xs sm:text-sm text-green-600 dark:text-green-400">Схвалено</p>
+                <p class="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-300" x-text="stats.approved"></p>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 sm:p-4 border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                 @click="setFilter('published')"
+                 :class="{'ring-2 ring-blue-500': currentFilter === 'published'}">
+                <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">Опубліковано</p>
+                <p class="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300" x-text="stats.published"></p>
+            </div>
+            <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 sm:p-4 border border-red-200 dark:border-red-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                 @click="setFilter('rejected')"
+                 :class="{'ring-2 ring-red-500': currentFilter === 'rejected'}">
+                <p class="text-xs sm:text-sm text-red-600 dark:text-red-400">Відхилено</p>
+                <p class="text-xl sm:text-2xl font-bold text-red-700 dark:text-red-300" x-text="stats.rejected"></p>
+            </div>
+        </div>
+
+        <!-- Фільтри -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 sm:p-4 mb-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-filter text-gray-500 dark:text-gray-400 text-sm"></i>
+                    <span class="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Фільтр:</span>
+                </div>
+                <div class="flex flex-wrap gap-1 sm:gap-2">
+                    <button @click="setFilter('all')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        Всі
+                    </button>
+                    <button @click="setFilter('draft')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'draft' ? 'bg-gray-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        <i class="fas fa-pencil-alt mr-1"></i>Чернетки
+                    </button>
+                    <button @click="setFilter('pending')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        <i class="fas fa-clock mr-1"></i>Модерація
+                    </button>
+                    <button @click="setFilter('approved')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        <i class="fas fa-check-circle mr-1"></i>Схвалено
+                    </button>
+                    <button @click="setFilter('published')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'published' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        <i class="fas fa-globe mr-1"></i>Опубліковано
+                    </button>
+                    <button @click="setFilter('rejected')"
+                            class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-all"
+                            :class="currentFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                        <i class="fas fa-times-circle mr-1"></i>Відхилено
+                    </button>
+                </div>
+                
+                <!-- Пошук -->
+                <div class="ml-auto">
+                    <div class="relative">
+                        <input type="text" 
+                               x-model="searchQuery"
+                               @input="filterArticles()"
+                               placeholder="Пошук статей..."
+                               class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список статей -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Індикатор завантаження -->
+            <div x-show="loading" class="flex items-center justify-center py-12">
+                <div class="inline-flex items-center gap-3">
+                    <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-600 dark:text-gray-400">Завантаження...</span>
+                </div>
+            </div>
+
+            <!-- Список статей -->
+            <template x-if="!loading">
+                <div>
+                    <!-- Десктопна таблиця -->
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Стаття</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Дата</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <template x-for="article in paginatedArticles" :key="article.id">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 group">
+                                        <td class="px-4 py-3">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex-shrink-0">
+                                                    <template x-if="article.coverImage">
+                                                        <img :src="'/uploads/articles/' + article.coverImage" 
+                                                             :alt="article.title"
+                                                             class="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                                             loading="lazy">
+                                                    </template>
+                                                    <template x-if="!article.coverImage">
+                                                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                            <i class="fas fa-file-alt text-white text-lg"></i>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="font-medium text-gray-800 dark:text-white truncate text-sm" x-text="article.title"></div>
+                                                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                        <span class="inline-flex items-center gap-1" x-show="article.category">
+                                                            <i class="fas fa-folder-open text-xs"></i>
+                                                            <span x-text="article.category?.name"></span>
+                                                        </span>
+                                                        <span class="text-gray-400" x-show="!article.category">Без категорії</span>
+                                                        
+                                                        <span class="inline-flex items-center gap-1">
+                                                            <i class="fas fa-eye text-xs"></i>
+                                                            <span x-text="article.views || 0"></span>
+                                                        </span>
+                                                        
+                                                        <span class="inline-flex items-center gap-1">
+                                                            <i class="fas fa-heart text-xs"></i>
+                                                            <span x-text="article.likeCount || 0"></span>
+                                                        </span>
+                                                        
+                                                        <span class="inline-flex items-center gap-1">
+                                                            <i class="fas fa-comment text-xs"></i>
+                                                            <span x-text="article.commentCount || 0"></span>
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div class="flex flex-wrap gap-1 mt-1">
+                                                        <span x-show="article.isBreaking" 
+                                                              class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 text-xs rounded-full">
+                                                            <i class="fas fa-bolt text-xs"></i>Екстрено
+                                                        </span>
+                                                        <span x-show="article.isFeatured" 
+                                                              class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs rounded-full">
+                                                            <i class="fas fa-star text-xs"></i>Рекомендовано
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div x-show="article.rejectionReason" 
+                                                         class="mt-1 flex items-start gap-1 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">
+                                                        <i class="fas fa-exclamation-circle mt-0.5"></i>
+                                                        <span class="truncate" x-text="article.rejectionReason"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap"
+                                                  :class="getStatusClass(article.status)">
+                                                <i class="fas" :class="getStatusIcon(article.status)"></i>
+                                                <span x-text="getStatusLabel(article.status)"></span>
+                                            </span>
+                                        </td>
+                                        
+                                        <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                                            <div x-text="formatDate(article.createdAt)"></div>
+                                            <div class="text-xs" x-text="formatTime(article.createdAt)"></div>
+                                        </td>
+                                        
+                                        <td class="px-4 py-3 text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <!-- Переглянути -->
+                                                <a x-show="article.status === 'published'" 
+                                                   :href="'/article/' + article.slug"
+                                                   target="_blank"
+                                                   class="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition"
+                                                   title="Переглянути">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                <!-- Редагувати - ВИПРАВЛЕНО -->
+                                                <a x-show="['draft', 'rejected'].includes(article.status)" 
+                                                   :href="'/user/article/' + article.id + '/edit'"
+                                                   class="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:text-yellow-600 dark:hover:text-yellow-400 rounded-lg transition"
+                                                   title="Редагувати">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                
+                                                <!-- Відправити на модерацію -->
+                                                <form x-show="article.status === 'draft'" 
+                                                      method="post" 
+                                                      :action="'/user/article/' + article.id + '/submit'"
+                                                      class="inline"
+                                                      @submit.prevent="submitArticle(article.id)">
+                                                    <input type="hidden" name="_token" :value="csrfToken">
+                                                    <button type="submit" 
+                                                            class="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400 rounded-lg transition"
+                                                            title="Відправити на модерацію">
+                                                        <i class="fas fa-paper-plane"></i>
+                                                    </button>
+                                                </form>
+                                                
+                                                <!-- Видалити -->
+                                                <form x-show="article.status !== 'published'" 
+                                                      method="post" 
+                                                      :action="'/user/article/' + article.id + '/delete'"
+                                                      class="inline"
+                                                      @submit.prevent="deleteArticle(article.id)">
+                                                    <input type="hidden" name="_token" :value="csrfToken">
+                                                    <button type="submit" 
+                                                            class="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition"
+                                                            title="Видалити">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Мобільні картки -->
+                    <div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                        <template x-for="article in paginatedArticles" :key="article.id">
+                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <template x-if="article.coverImage">
+                                            <img :src="'/uploads/articles/' + article.coverImage" 
+                                                 :alt="article.title"
+                                                 class="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                                 loading="lazy">
+                                        </template>
+                                        <template x-if="!article.coverImage">
+                                            <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                <i class="fas fa-file-alt text-white text-xl"></i>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-medium text-gray-800 dark:text-white text-sm truncate" x-text="article.title"></div>
+                                        
+                                        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <span class="inline-flex items-center gap-1" x-show="article.category">
+                                                <i class="fas fa-folder-open text-xs"></i>
+                                                <span x-text="article.category?.name"></span>
+                                            </span>
+                                            <span class="text-gray-400" x-show="!article.category">Без категорії</span>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-eye text-xs"></i>
+                                                <span x-text="article.views || 0"></span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-heart text-xs"></i>
+                                                <span x-text="article.likeCount || 0"></span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="fas fa-comment text-xs"></i>
+                                                <span x-text="article.commentCount || 0"></span>
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="mt-2">
+                                            <span class="px-2 py-0.5 text-xs font-medium rounded-full"
+                                                  :class="getStatusClass(article.status)">
+                                                <i class="fas" :class="getStatusIcon(article.status)"></i>
+                                                <span x-text="getStatusLabel(article.status)"></span>
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap items-center gap-1 mt-3">
+                                            <a x-show="article.status === 'published'" 
+                                               :href="'/article/' + article.slug"
+                                               target="_blank"
+                                               class="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 transition">
+                                                <i class="fas fa-eye mr-1"></i>Перегляд
+                                            </a>
+                                            
+                                            <a x-show="['draft', 'rejected'].includes(article.status)" 
+                                               :href="'/user/article/' + article.id + '/edit'"
+                                               class="px-3 py-1 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 transition">
+                                                <i class="fas fa-edit mr-1"></i>Редагувати
+                                            </a>
+                                            
+                                            <button x-show="article.status === 'draft'" 
+                                                    @click="submitArticle(article.id)"
+                                                    class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 transition">
+                                                <i class="fas fa-paper-plane mr-1"></i>Відправити
+                                            </button>
+                                            
+                                            <button x-show="article.status !== 'published'" 
+                                                    @click="deleteArticle(article.id)"
+                                                    class="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 transition">
+                                                <i class="fas fa-trash-alt mr-1"></i>Видалити
+                                            </button>
+                                        </div>
+                                        
+                                        <div x-show="article.rejectionReason" 
+                                             class="mt-2 flex items-start gap-1 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">
+                                            <i class="fas fa-exclamation-circle mt-0.5"></i>
+                                            <span x-text="article.rejectionReason"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Пагінація -->
+                    <div x-show="totalPages > 1" class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                Показано <span class="font-medium" x-text="paginatedArticles.length"></span> 
+                                з <span class="font-medium" x-text="totalItems"></span> статей
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-1">
+                                <!-- Кнопка "Перша" -->
+                                <button @click="goToPage(1)" 
+                                        :disabled="currentPage === 1"
+                                        class="px-3 py-1 text-sm rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        :class="currentPage === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </button>
+                                
+                                <!-- Кнопка "Попередня" -->
+                                <button @click="goToPage(currentPage - 1)" 
+                                        :disabled="currentPage === 1"
+                                        class="px-3 py-1 text-sm rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        :class="currentPage === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                
+                                <!-- Номери сторінок -->
+                                <template x-for="page in getPageRange()" :key="page">
+                                    <button @click="goToPage(page)" 
+                                            class="px-3 py-1 text-sm rounded-lg transition"
+                                            :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+                                            x-text="page">
+                                    </button>
+                                </template>
+                                
+                                <!-- Кнопка "Наступна" -->
+                                <button @click="goToPage(currentPage + 1)" 
+                                        :disabled="currentPage === totalPages"
+                                        class="px-3 py-1 text-sm rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        :class="currentPage === totalPages ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                
+                                <!-- Кнопка "Остання" -->
+                                <button @click="goToPage(totalPages)" 
+                                        :disabled="currentPage === totalPages"
+                                        class="px-3 py-1 text-sm rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        :class="currentPage === totalPages ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </button>
+                                
+                                <!-- Вибір кількості на сторінці -->
+                                <div class="ml-2">
+                                    <select x-model="itemsPerPage" 
+                                            @change="changeItemsPerPage()"
+                                            class="text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="15">15</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Порожній стан -->
+                    <div x-show="filteredArticles.length === 0" class="text-center py-12 sm:py-16 px-4">
+                        <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
+                            <i class="fas fa-newspaper text-2xl sm:text-3xl text-gray-400 dark:text-gray-500"></i>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-medium text-gray-800 dark:text-white mb-2">Статей не знайдено</h3>
+                        <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6" 
+                           x-text="searchQuery ? 'За вашим запитом нічого не знайдено' : 'У вас ще немає статей'"></p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <a href="{{ path('user_article_new') }}" 
+                               class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm sm:text-base rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300">
+                                <i class="fas fa-plus mr-2"></i>
+                                <span x-text="searchQuery ? 'Створити статтю' : 'Написати першу статтю'"></span>
+                            </a>
+                            <button x-show="searchQuery || currentFilter !== 'all'" 
+                                    @click="resetFilters()"
+                                    class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm sm:text-base rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                                <i class="fas fa-times mr-2"></i>Очистити фільтри
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<script>
+function articlesManager() {
+    return {
+        // Дані
+        articles: [],
+        filteredArticles: [],
+        paginatedArticles: [],
+        stats: {
+            total: 0,
+            pending: 0,
+            approved: 0,
+            published: 0,
+            rejected: 0
+        },
+        currentFilter: 'all',
+        searchQuery: '',
+        loading: false,
+        csrfToken: '{{ csrf_token('article_action') }}',
+        
+        // Пагінація
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalPages: 1,
+        totalItems: 0,
+        
+        // Статуси
+        statusConfig: {
+            'draft': {'icon': 'fa-pencil-alt', 'color': 'gray', 'label': 'Чернетка'},
+            'pending': {'icon': 'fa-clock', 'color': 'yellow', 'label': 'На модерації'},
+            'approved': {'icon': 'fa-check-circle', 'color': 'blue', 'label': 'Схвалено'},
+            'published': {'icon': 'fa-globe', 'color': 'green', 'label': 'Опубліковано'},
+            'rejected': {'icon': 'fa-times-circle', 'color': 'red', 'label': 'Відхилено'},
+            'archived': {'icon': 'fa-archive', 'color': 'gray', 'label': 'Архів'}
+        },
+        
+        // Ініціалізація
+        init() {
+            this.loadArticles();
+            
+            // Спостерігаємо за змінами
+            this.$watch('currentFilter', () => {
+                this.currentPage = 1;
+                this.filterArticles();
+            });
+            this.$watch('searchQuery', () => {
+                this.currentPage = 1;
+                this.filterArticles();
+            });
+            this.$watch('itemsPerPage', () => {
+                this.currentPage = 1;
+                this.paginateArticles();
+            });
+        },
+        
+        // Завантаження статей
+        async loadArticles() {
+            this.loading = true;
+            
+            try {
+                const response = await fetch('/api/user/articles', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Помилка завантаження');
+                
+                const data = await response.json();
+                
+                this.articles = data.articles || [];
+                this.stats = data.stats || this.stats;
+                
+                this.filterArticles();
+            } catch (error) {
+                console.error('Error loading articles:', error);
+                this.showNotification('error', 'Не вдалося завантажити статті');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        // Фільтрація статей
+        filterArticles() {
+            let filtered = this.articles;
+            
+            // Фільтр за статусом
+            if (this.currentFilter !== 'all') {
+                filtered = filtered.filter(article => article.status === this.currentFilter);
+            }
+            
+            // Пошук
+            if (this.searchQuery.trim()) {
+                const query = this.searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(article => 
+                    article.title.toLowerCase().includes(query) ||
+                    (article.excerpt && article.excerpt.toLowerCase().includes(query)) ||
+                    (article.category && article.category.name.toLowerCase().includes(query))
+                );
+            }
+            
+            this.filteredArticles = filtered;
+            this.totalItems = filtered.length;
+            this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+            
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = 1;
+            }
+            
+            this.paginateArticles();
+        },
+        
+        // Пагінація
+        paginateArticles() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            this.paginatedArticles = this.filteredArticles.slice(start, end);
+        },
+        
+        // Перехід на сторінку
+        goToPage(page) {
+            if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+            this.currentPage = page;
+            this.paginateArticles();
+        },
+        
+        // Зміна кількості на сторінці
+        changeItemsPerPage() {
+            this.currentPage = 1;
+            this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+            this.paginateArticles();
+        },
+        
+        // Отримання діапазону сторінок
+        getPageRange() {
+            const range = [];
+            const total = this.totalPages;
+            const current = this.currentPage;
+            const delta = 2;
+            
+            let left = current - delta;
+            let right = current + delta;
+            
+            if (left < 1) {
+                right += Math.abs(left) + 1;
+                left = 1;
+            }
+            
+            if (right > total) {
+                left -= right - total;
+                right = total;
+            }
+            
+            if (left < 1) left = 1;
+            
+            for (let i = left; i <= right; i++) {
+                range.push(i);
+            }
+            
+            return range;
+        },
+        
+        // Встановлення фільтра
+        setFilter(status) {
+            this.currentFilter = status;
+        },
+        
+        // Скидання фільтрів
+        resetFilters() {
+            this.currentFilter = 'all';
+            this.searchQuery = '';
+        },
+        
+        // Відправка на модерацію
+        async submitArticle(id) {
+            if (!confirm('Відправити статтю на модерацію?')) return;
+            
+            try {
+                const response = await fetch(`/user/article/${id}/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _token: this.csrfToken
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showNotification('success', 'Статтю відправлено на модерацію');
+                    this.loadArticles();
+                } else {
+                    this.showNotification('error', data.message || 'Помилка відправки');
+                }
+            } catch (error) {
+                console.error('Error submitting article:', error);
+                this.showNotification('error', 'Помилка відправки статті');
+            }
+        },
+        
+        // Видалення статті
+        async deleteArticle(id) {
+            if (!confirm('Видалити статтю? Цю дію не можна скасувати.')) return;
+            
+            try {
+                const response = await fetch(`/user/article/${id}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _token: this.csrfToken
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showNotification('success', 'Статтю видалено');
+                    this.loadArticles();
+                } else {
+                    this.showNotification('error', data.message || 'Помилка видалення');
+                }
+            } catch (error) {
+                console.error('Error deleting article:', error);
+                this.showNotification('error', 'Помилка видалення статті');
+            }
+        },
+        
+        // Допоміжні методи для статусів
+        getStatusClass(status) {
+            const config = this.statusConfig[status] || this.statusConfig.draft;
+            const color = config.color;
+            return `bg-${color}-100 dark:bg-${color}-900/30 text-${color}-700 dark:text-${color}-400`;
+        },
+        
+        getStatusIcon(status) {
+            return this.statusConfig[status]?.icon || 'fa-question-circle';
+        },
+        
+        getStatusLabel(status) {
+            return this.statusConfig[status]?.label || status;
+        },
+        
+        // Форматування дати
+        formatDate(date) {
+            if (!date) return '—';
+            const d = new Date(date);
+            return d.toLocaleDateString('uk-UA');
+        },
+        
+        formatTime(date) {
+            if (!date) return '—';
+            const d = new Date(date);
+            return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        },
+        
+        // Сповіщення
+        showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-0');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "es2020",
+        "moduleResolution": "node",
+        "noUnusedLocals": true,
+        "rootDir": "src",
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "target": "es2020",
+        "removeComments": true,
+        "outDir": "dist",
+        "baseUrl": "..",
+        "noEmit": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "isolatedModules": true,
+        "declaration": true,
+        "emitDeclarationOnly": true,
+    },
+    "exclude": ["tests"],
+    "include": ["src", "node_modules/quill/dist"]
+}

@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ video.title }} - Відео{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Відео на всю ширину з правильною висотою -->
+    <div class="mb-8 w-full">
+        <div class="bg-black rounded-2xl overflow-hidden shadow-2xl mx-auto w-full" style="max-width: 1200px;">
+            <div class="relative" style="padding-bottom: 56.25%;"> <!-- 16:9 aspect ratio -->
+                {% if video.source == 'local' %}
+                    <video controls class="absolute inset-0 w-full h-full">
+                        <source src="{{ asset('uploads/videos/' ~ video.url) }}" type="video/mp4">
+                        Ваш браузер не підтримує відео.
+                    </video>
+                {% else %}
+                    <iframe class="absolute inset-0 w-full h-full"
+                            src="{{ video.embedUrl }}"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Інформація про відео -->
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-xl mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{{ video.title }}</h1>
+        
+        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <span class="flex items-center gap-1">
+                <i class="far fa-eye"></i> {{ video.views|number_format }} переглядів
+            </span>
+            <span class="flex items-center gap-1">
+                <i class="far fa-calendar-alt"></i> {{ video.publishedAt|date('d.m.Y') }}
+            </span>
+            {% if video.duration %}
+            <span class="flex items-center gap-1">
+                <i class="far fa-clock"></i> {{ video.formattedDuration }}
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Опис -->
+        {% if video.description %}
+        <div class="prose max-w-none text-gray-700 dark:text-gray-300 mb-4">
+            {{ video.description|nl2br }}
+        </div>
+        {% endif %}
+
+        <!-- Автор -->
+        <div class="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                {{ video.author.username|first|upper }}
+            </div>
+            <div>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Автор:</span>
+                <a href="{{ path('user_profile', {id: video.author.id}) }}" 
+                   class="font-medium text-gray-900 dark:text-white hover:text-red-600 ml-1">
+                    {{ video.author.username }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Схожі відео -->
+    {% if recommended|length > 0 %}
+    <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Схожі відео</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for related in recommended %}
+            <a href="{{ path('app_video_show', {'id': related.id}) }}" class="group">
+                <div class="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition">
+                    <div class="relative" style="padding-bottom: 56.25%;"> <!-- 16:9 aspect ratio -->
+                        {% if related.thumbnail %}
+                            <img src="{{ related.thumbnail }}" alt="{{ related.title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition">
+                        {% else %}
+                            <div class="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-gray-900 dark:text-white line-clamp-2 mb-1">{{ related.title }}</h3>
+                        <p class="text-sm text-gray-500">{{ related.views|number_format }} переглядів</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,287 @@
+{# templates/user/notifications.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Мої сповіщення{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900" 
+     x-data="notificationsPage()"
+     x-init="init()">
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Заголовок -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-bell text-white"></i>
+                    </div>
+                    Мої сповіщення
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    Історія всіх ваших сповіщень
+                </p>
+            </div>
+            
+            <div class="flex gap-2">
+                <button 
+                    @click="markAllAsRead()"
+                    x-show="unreadCount > 0"
+                    class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <i class="fas fa-check-double mr-2"></i>
+                    Прочитати всі
+                </button>
+                
+                <!-- ВИПРАВЛЕНО: використовуємо правильний маршрут -->
+                <a href="{{ path('user_notification_settings_index') }}" 
+                   class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition">
+                    <i class="fas fa-cog mr-2"></i>
+                    Налаштування
+                </a>
+            </div>
+        </div>
+
+        <!-- Таби -->
+        <div class="flex gap-2 mb-6 p-1 bg-white dark:bg-gray-800 rounded-2xl w-fit border border-gray-200 dark:border-gray-700">
+            <button 
+                @click="filter = 'all'"
+                :class="filter === 'all' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+                class="px-6 py-2 rounded-xl font-medium transition">
+                Усі
+                <span class="ml-2 text-xs" x-text="totalCount"></span>
+            </button>
+            <button 
+                @click="filter = 'unread'"
+                :class="filter === 'unread' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+                class="px-6 py-2 rounded-xl font-medium transition">
+                Непрочитані
+                <span class="ml-2 text-xs" x-text="unreadCount"></span>
+            </button>
+        </div>
+
+        <!-- Список сповіщень -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- Завантаження -->
+            <template x-if="loading">
+                <div class="flex justify-center items-center py-20">
+                    <div class="loader"></div>
+                </div>
+            </template>
+
+            <!-- Пустий стан -->
+            <template x-if="!loading && filteredItems.length === 0">
+                <div class="text-center py-20">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full mb-6">
+                        <i class="fas fa-bell-slash text-3xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Немає сповіщень
+                    </h3>
+                    <p class="text-gray-500 dark:text-gray-400">
+                        Відпочивайте, все спокійно
+                    </p>
+                </div>
+            </template>
+
+            <!-- Список -->
+            <template x-if="!loading && filteredItems.length > 0">
+                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <template x-for="item in filteredItems" :key="item.id">
+                        <div 
+                            @click="markAsRead(item)"
+                            :class="{
+                                'bg-blue-50/50 dark:bg-blue-900/10': !item.readAt,
+                                'opacity-70': item.readAt
+                            }"
+                            class="flex items-start gap-4 p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer group"
+                        >
+                            <!-- Іконка -->
+                            <div 
+                                :class="{
+                                    'bg-blue-100 dark:bg-blue-900/30': item.type === 'info',
+                                    'bg-green-100 dark:bg-green-900/30': item.type === 'success',
+                                    'bg-yellow-100 dark:bg-yellow-900/30': item.type === 'warning',
+                                    'bg-red-100 dark:bg-red-900/30': item.type === 'error'
+                                }"
+                                class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i :class="{
+                                    'fa-info-circle text-blue-600 dark:text-blue-400': item.type === 'info',
+                                    'fa-check-circle text-green-600 dark:text-green-400': item.type === 'success',
+                                    'fa-exclamation-triangle text-yellow-600 dark:text-yellow-400': item.type === 'warning',
+                                    'fa-times-circle text-red-600 dark:text-red-400': item.type === 'error'
+                                }" class="fas text-lg"></i>
+                            </div>
+                            
+                            <!-- Контент -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between gap-4 mb-1">
+                                    <h3 class="text-base font-semibold text-gray-900 dark:text-white"
+                                        x-text="item.title">
+                                    </h3>
+                                    <span x-show="!item.readAt" 
+                                          class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full whitespace-nowrap">
+                                        Нове
+                                    </span>
+                                </div>
+                                
+                                <p x-show="item.message" 
+                                   class="text-sm text-gray-600 dark:text-gray-400 mb-3"
+                                   x-text="item.message">
+                                </p>
+                                
+                                <div class="flex items-center gap-4 text-xs">
+                                    <span class="text-gray-500 dark:text-gray-500" 
+                                          x-text="timeAgo(item.createdAt)">
+                                    </span>
+                                    
+                                    <a x-show="item.link" 
+                                       :href="item.link"
+                                       @click.stop
+                                       class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline">
+                                        <span>Переглянути</span>
+                                        <i class="fas fa-arrow-right text-[10px]"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Пагінація -->
+        <div x-show="!loading && totalPages > 1" class="flex justify-center mt-8 gap-2">
+            <button 
+                @click="prevPage" 
+                :disabled="currentPage === 1"
+                class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <i class="fas fa-chevron-left mr-2"></i>
+                Попередня
+            </button>
+            
+            <span class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg">
+                <span x-text="currentPage"></span> / <span x-text="totalPages"></span>
+            </span>
+            
+            <button 
+                @click="nextPage" 
+                :disabled="currentPage === totalPages"
+                class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                Наступна
+                <i class="fas fa-chevron-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function notificationsPage() {
+    return {
+        filter: 'all',
+        loading: false,
+        items: [],
+        unreadCount: {{ unreadCount|default(0) }},
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 1,
+        perPage: 20,
+        
+        get filteredItems() {
+            if (this.filter === 'unread') {
+                return this.items.filter(item => !item.readAt);
+            }
+            return this.items;
+        },
+        
+        init() {
+            this.load();
+            
+            setInterval(() => {
+                this.load();
+            }, 30000);
+        },
+        
+        load() {
+            this.loading = true;
+            
+            fetch('/api/notifications?page=' + this.currentPage + '&limit=' + this.perPage)
+                .then(res => res.json())
+                .then(data => {
+                    this.items = data.items;
+                    this.unreadCount = data.unreadCount;
+                    this.totalCount = data.total;
+                    this.totalPages = Math.ceil(data.total / this.perPage);
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.loading = false;
+                });
+        },
+        
+        markAsRead(item) {
+            if (item.readAt) return;
+            
+            fetch('/api/notifications/' + item.id + '/read', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    item.readAt = new Date().toISOString();
+                    this.unreadCount = data.unreadCount;
+                });
+        },
+        
+        markAllAsRead() {
+            fetch('/api/notifications/read-all', { method: 'POST' })
+                .then(res => res.json())
+                .then(() => {
+                    this.items.forEach(item => {
+                        item.readAt = new Date().toISOString();
+                    });
+                    this.unreadCount = 0;
+                });
+        },
+        
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.load();
+            }
+        },
+        
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.load();
+            }
+        },
+        
+        timeAgo(date) {
+            const diff = Math.floor((new Date() - new Date(date)) / 1000);
+            if (diff < 60) return 'щойно';
+            if (diff < 3600) return Math.floor(diff / 60) + ' хв тому';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' год тому';
+            if (diff < 2592000) return Math.floor(diff / 86400) + ' дн тому';
+            return new Date(date).toLocaleDateString('uk-UA');
+        }
+    }
+}
+</script>
+
+<style>
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #e2e8f0;
+    border-radius: 50%;
+    border-top-color: #0ea5e9;
+    animation: spin 1s linear infinite;
+}
+.dark .loader {
+    border-color: #334155;
+    border-top-color: #0ea5e9;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

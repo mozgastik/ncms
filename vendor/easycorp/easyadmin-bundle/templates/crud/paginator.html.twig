@@ -1,0 +1,8 @@
+{# @var paginator \EasyCorp\Bundle\EasyAdminBundle\Orm\EntityPaginator #}
+{# when results are hidden because of missing permissions, 'render_detailed_pagination' is FALSE
+   and both the results counter and the page numbers are hidden #}
+<twig:ea:Pagination
+    paginator="{{ paginator }}"
+    showResultsCount="{{ render_detailed_pagination ?? true }}"
+    showPageNumbers="{{ render_detailed_pagination ?? true }}"
+/>

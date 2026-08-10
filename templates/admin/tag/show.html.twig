@@ -1,0 +1,121 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Тег: {{ tag.name }}{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Заголовок -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Тег: {{ tag.name }}</h1>
+                {% if tag.description %}
+                <p class="text-gray-600 dark:text-gray-400 mt-2">{{ tag.description }}</p>
+                {% endif %}
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="{{ path('admin_tag_edit', {'id': tag.id}) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 transition duration-200">
+                    <i class="fas fa-edit mr-2"></i>
+                    Редагувати
+                </a>
+                <a href="{{ path('admin_tag_index') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Назад
+                </a>
+            </div>
+        </div>
+        
+        <!-- Мета-информация -->
+        <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <span>
+                <i class="fas fa-link mr-1"></i>
+                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ tag.slug }}</code>
+            </span>
+            <span>
+                <i class="fas fa-newspaper mr-1"></i>
+                {{ tag.articles|length }} статей
+            </span>
+            <span>
+                <i class="fas fa-calendar mr-1"></i>
+                Створено: {{ tag.createdAt|date('d.m.Y H:i') }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Статьи с этим тегом -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+            Статті з тегом "{{ tag.name }}"
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                ({{ tag.articles|length }})
+            </span>
+        </h2>
+        
+        {% if tag.articles|length > 0 %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            ID
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Заголовок
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Статус
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Категорія
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Дата
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for article in tag.articles %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {{ article.id }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="{{ path('app_article_show', {'slug': article.slug}) }}" 
+                               target="_blank"
+                               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                                {{ article.title }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="{{ article.getStatusColor(article.status) }} inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                {{ article_statuses|filter(v => v == article.status)|keys|first }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {% if article.category %}
+                                {{ article.category.name }}
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {{ article.createdAt|date('d.m.Y') }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="text-gray-300 dark:text-gray-600 mb-3">
+                <i class="fas fa-newspaper text-4xl"></i>
+            </div>
+            <p class="text-gray-500 dark:text-gray-400">Жодна стаття ще не має цього тегу</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'admin/base_simple.html.twig' %}
+
+{% block title %}Перегляд статті{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Перегляд статті</h1>
+        <div class="btn-group">
+            <a href="{{ path('admin_article_edit', {'id': article.id}) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> Редагувати
+            </a>
+            <a href="{{ path('admin_article_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Назад
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ article.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p><strong>URL:</strong> {{ article.slug }}</p>
+                    <p><strong>Короткий опис:</strong> {{ article.excerpt }}</p>
+                    
+                    <div class="mt-4">
+                        <h6>Контент:</h6>
+                        <div class="border p-3 bg-light">
+                            {{ article.content|nl2br }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <strong>Статус:</strong>
+                        {% if article.isPublished %}
+                            <span class="badge bg-success">Опубліковано</span>
+                        {% else %}
+                            <span class="badge bg-warning">Чернетка</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if article.publishedAt %}
+                        <div class="mb-3">
+                            <strong>Дата публікації:</strong><br>
+                            {{ article.publishedAt|date('d.m.Y H:i') }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if article.coverImage %}
+                        <div class="mb-3">
+                            <strong>Зображення:</strong><br>
+                            <img src="{{ article.coverImage }}" alt="{{ article.title }}" class="img-fluid mt-2">
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Переглядів:</strong> {{ article.views }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Створено:</strong> {{ article.createdAt|date('d.m.Y H:i') }}
+                    </div>
+                    
+                    {% if article.updatedAt %}
+                        <div class="mb-3">
+                            <strong>Оновлено:</strong> {{ article.updatedAt|date('d.m.Y H:i') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

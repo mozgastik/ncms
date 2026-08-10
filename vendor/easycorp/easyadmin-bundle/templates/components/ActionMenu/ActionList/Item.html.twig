@@ -1,0 +1,41 @@
+{% props
+    label = null,
+    renderLabelRaw = false,
+    icon = null,
+    url = null,
+    htmlAttributes = {},
+    renderAsForm = false, # if true, the item will be rendered as a <form> element (and POST method) instead of an <a> (and GET method)
+    showBlankIcons = true, # (this is mostly an internal option) if false, the blank icon will not be rendered when action icon is null
+    selected = null, # null = regular item; true/false turns the item into a selectable one (radio/checkbox) that shows a trailing checkmark
+    wrapInListItem = true, # (this is an internal option) if false, the <li> wrapper is not rendered, so the item can be embedded in custom markup (e.g. the split dropdown of ItemGroup)
+%}
+
+{% set is_selectable = selected is not null %}
+{# `aria-checked` is the source of truth for the selected state; the legacy `active`
+   class is mirrored alongside it (kept for one release, in sync with page-color-scheme.js) #}
+{% set item_class = html_classes('dropdown-item', {'dropdown-item-selectable': is_selectable, active: selected}) %}
+
+{% if wrapInListItem %}<li>{% endif %}
+    {% set formId = renderAsForm ? ea_uid('ea-form-') : null %}
+    {% if renderAsForm %}
+        <form action="{{ url }}" method="POST" {% if formId %}id="{{ formId }}"{% endif %}></form>
+    {% endif %}
+
+    <a {{ attributes.defaults({class: item_class}|merge(htmlAttributes)) }}
+        {% if is_selectable %}aria-checked="{{ selected ? 'true' : 'false' }}"{% endif %}
+        {% if renderAsForm %}
+            href="#"
+            data-ea-action-form-id="{{ formId }}"
+        {% else %}
+            href="{{ url }}"
+        {% endif %}
+    >
+        {% if icon %}
+            <twig:ea:Icon {{ ...attributes.nested('icon').defaults({name: icon}) }} />
+        {% elseif showBlankIcons %}
+            <twig:ea:Icon name="internal:blank" />
+        {% endif %}
+        {% if label is ea_is_not_empty %}<span {{ attributes.nested('label') }}>{{ renderLabelRaw ? label|raw : label }}</span>{% endif %}
+        {% if is_selectable %}<span class="dropdown-item-trailing"><twig:ea:Icon name="internal:check" class="dropdown-item-check" /></span>{% endif %}
+    </a>
+{% if wrapInListItem %}</li>{% endif %}

@@ -1,0 +1,26 @@
+<div {{ attributes.defaults({class: this.defaultCssClass(), role: 'alert'}) }}>
+    {% if this.icon %}
+        <twig:ea:Icon name="{{ this.icon }}" class="alert-icon" />
+    {% endif %}
+
+    {% set has_title_block = block('title') is defined and block('title') is not empty %}
+    {% set has_actions_block = block('actions') is defined and block('actions') is not empty %}
+
+    {% if this.title or has_title_block or has_actions_block %}
+        <div class="alert-content">
+            {% if this.title or has_title_block %}
+                <div class="alert-title">{{ has_title_block ? block('title') : this.title }}</div>
+            {% endif %}
+            <div class="alert-description"><twig:block name="content"></twig:block></div>
+            {% if has_actions_block %}
+                <div class="alert-actions">{{ block('actions') }}</div>
+            {% endif %}
+        </div>
+    {% else %}
+        {{ block('content') }}
+    {% endif %}
+
+    {% if this.withDismissButton %}
+        <twig:ea:Button type="button" isInvisible icon="internal:xmark" class="btn-close" data-bs-dismiss="alert" aria-label="Close" />
+    {% endif %}
+</div>

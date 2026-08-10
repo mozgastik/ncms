@@ -1,0 +1,39 @@
+{# templates/auth/reset_password/check_email.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Перевірте вашу пошту{% endblock %}
+
+{% block body %}
+<div class="min-h-[80vh] flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        {# Іконка #}
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <svg class="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Перевірте вашу електронну пошту
+        </h1>
+
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Якщо обліковий запис із вказаною адресою існує, ми надіслали на неї лист із посиланням для скидання пароля.
+            Будь ласка, перевірте папку «Вхідні», а також «Спам», якщо лист не надійшов протягом кількох хвилин.
+        </p>
+
+        <div class="mb-6">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Не отримали листа? <a href="{{ path('app_reset_password_request') }}" class="text-blue-600 hover:underline">Спробувати знову</a>
+            </p>
+        </div>
+
+        <a href="{{ path('app_login') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Повернутися до входу
+        </a>
+    </div>
+</div>
+{% endblock %}

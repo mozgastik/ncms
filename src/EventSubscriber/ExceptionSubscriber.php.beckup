@@ -1,0 +1,52 @@
+<?php
+
+namespace App\EventSubscriber;
+
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Twig\Environment;
+
+class ExceptionSubscriber implements EventSubscriberInterface
+{
+    public function __construct(private Environment $twig)
+    {
+    }
+
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            KernelEvents::EXCEPTION => ['onKernelException', 10],
+        ];
+    }
+
+    public function onKernelException(ExceptionEvent $event): void
+    {
+        $exception = $event->getThrowable();
+        $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR;
+
+        if ($exception instanceof HttpExceptionInterface) {
+            $statusCode = $exception->getStatusCode();
+        } elseif ($exception instanceof NotFoundHttpException) {
+            $statusCode = Response::HTTP_NOT_FOUND;
+        }
+
+        // Завантажуємо шаблон
+        $template = sprintf('bundles/TwigBundle/Exception/error%d.html.twig', $statusCode);
+        if (!$this->twig->getLoader()->exists($template)) {
+            $template = 'bundles/TwigBundle/Exception/error.html.twig';
+            $template = 'bundles/TwigBundle/Exception/error403.html.twig';
+            $template = 'bundles/TwigBundle/Exception/error404.html.twig';
+        }
+
+        if ($this->twig->getLoader()->exists($template)) {
+            $content = $this->twig->render($template, [
+                'status_code' => $statusCode,
+                'status_text' => Response::$statusTexts[$statusCode] ?? 'Unknown Error',
+            ]);
+            $response = new Response($content, $statusCode);
+            $event->setResponse($response);
+        }
+    }
+}

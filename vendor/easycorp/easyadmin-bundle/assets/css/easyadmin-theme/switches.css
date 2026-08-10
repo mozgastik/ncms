@@ -1,0 +1,112 @@
+/* Switches (toggles)
+/* ------------------------------------------------------------------------- */
+/* <twig:ea:Switch> component. A native checkbox is layered (invisible) on top
+/* of a track + thumb, so the thumb can slide with a CSS transform like the
+/* shadcn/ui switch. The colors are themed via the --switch-* design tokens
+/* defined in variables-theme.css (light + dark schemes). */
+
+.ea-switch {
+    --ea-switch-width: 32px;
+    --ea-switch-height: 18px;
+    --ea-switch-thumb-size: 14px;
+    --ea-switch-thumb-inset: 2px;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    inline-size: var(--ea-switch-width);
+    block-size: var(--ea-switch-height);
+    flex-shrink: 0;
+}
+
+.ea-switch-sm {
+    --ea-switch-width: 24px;
+    --ea-switch-height: 14px;
+    --ea-switch-thumb-size: 10px;
+}
+
+/* the real checkbox sits on top of the visuals, fully transparent, so it stays
+   keyboard-focusable, clickable and submittable while the track/thumb render */
+.ea-switch-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.ea-switch-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background-color: var(--switch-bg);
+    transition: background-color 0.15s ease-in-out;
+    pointer-events: none;
+}
+
+.ea-switch-thumb {
+    position: absolute;
+    inset-block-start: var(--ea-switch-thumb-inset);
+    inset-inline-start: var(--ea-switch-thumb-inset);
+    inline-size: var(--ea-switch-thumb-size);
+    block-size: var(--ea-switch-thumb-size);
+    border-radius: 50%;
+    background-color: var(--switch-thumb-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease-in-out;
+}
+
+.ea-switch-input:checked ~ .ea-switch-track {
+    background-color: var(--switch-checked-bg);
+}
+
+.ea-switch-input:checked ~ .ea-switch-track .ea-switch-thumb {
+    transform: translateX(calc(var(--ea-switch-width) - var(--ea-switch-thumb-size) - 2 * var(--ea-switch-thumb-inset)));
+}
+
+.ea-switch-input:focus-visible ~ .ea-switch-track {
+    box-shadow: 0 0 0 3px var(--switch-focus-ring);
+}
+
+/* color variants: only the checked track + focus ring change, reusing the same
+   colors as the button variants. The unchecked track stays neutral gray */
+.ea-switch-success {
+    --switch-checked-bg: var(--switch-success-bg);
+    --switch-focus-ring: color-mix(in srgb, var(--switch-success-bg) 35%, transparent);
+}
+.ea-switch-warning {
+    --switch-checked-bg: var(--switch-warning-bg);
+    --switch-focus-ring: color-mix(in srgb, var(--switch-warning-bg) 35%, transparent);
+}
+.ea-switch-danger {
+    --switch-checked-bg: var(--switch-danger-bg);
+    --switch-focus-ring: color-mix(in srgb, var(--switch-danger-bg) 35%, transparent);
+}
+
+/* disabled: dimmed and non-interactive (the wrapper gets .ea-switch-disabled
+   from the component, and the input itself is also disabled in forms) */
+.ea-switch-disabled,
+.ea-switch:has(.ea-switch-input:disabled) {
+    opacity: 0.5;
+}
+
+.ea-switch-disabled .ea-switch-input,
+.ea-switch-input:disabled {
+    cursor: not-allowed;
+}
+
+/* switch inside a form (edit/new): the <twig:ea:Switch> is nested in the field
+   label, so lay them out as a row with the label text next to the switch */
+.ea-switch-check {
+    padding-inline-start: 0;
+}
+.ea-switch-check .form-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}

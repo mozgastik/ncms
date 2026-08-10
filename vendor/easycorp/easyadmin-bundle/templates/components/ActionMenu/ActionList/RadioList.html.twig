@@ -1,0 +1,15 @@
+{# A group of mutually-exclusive (radio) options inside an ActionList.
+   Wrap regular <twig:ea:ActionMenu:ActionList:Item> elements that pass a `selected`
+   prop; each renders a trailing checkmark when selected. The exclusivity is owned
+   by the caller (server-side or JS), this component only adds the group semantics and styling #}
+{% props
+    label = null,
+    labelClass = null,
+%}
+
+{% if label %}<twig:ea:ActionMenu:ActionList:Header label="{{ label }}" class="{{ labelClass }}" />{% endif %}
+<li>
+    <ul role="group" {{ attributes.defaults({class: 'dropdown-selectable-group dropdown-radio-group'}) }}>
+        <twig:block name="content"></twig:block>
+    </ul>
+</li>

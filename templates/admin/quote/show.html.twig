@@ -1,0 +1,179 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Цитата: {{ quote.author }}{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-quote-left mr-2"></i>Цитата
+            </h1>
+            <p class="text-gray-600 mt-2">Детальний перегляд цитати</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ path('admin_quote_index') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Назад
+            </a>
+            <a href="{{ path('admin_quote_edit', {'id': quote.id}) }}" 
+               class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
+                <i class="fas fa-edit mr-2"></i>Редагувати
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Основна інформація -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-blue-600 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-white">Цитата</h2>
+                </div>
+                <div class="p-6">
+                    <div class="prose max-w-none mb-8">
+                        <blockquote class="text-xl italic text-gray-700 border-l-4 border-blue-500 pl-6 py-4">
+                            {{ quote.content }}
+                            <footer class="text-right mt-4 text-gray-600 not-italic">
+                                — {{ quote.author }}
+                                {% if quote.source %}
+                                    <cite class="text-sm text-gray-500 block mt-1">{{ quote.source }}</cite>
+                                {% endif %}
+                            </footer>
+                        </blockquote>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-2">Основна інформація</h3>
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Автор</dt>
+                                    <dd class="text-gray-900">{{ quote.author }}</dd>
+                                </div>
+                                {% if quote.source %}
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Джерело</dt>
+                                    <dd class="text-gray-900">{{ quote.source }}</dd>
+                                </div>
+                                {% endif %}
+                                {% if quote.category %}
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Категорія</dt>
+                                    <dd class="text-gray-900">
+                                        <span class="px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
+                                            {{ quote.category }}
+                                        </span>
+                                    </dd>
+                                </div>
+                                {% endif %}
+                            </dl>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500 mb-2">Статистика</h3>
+                            <dl class="space-y-3">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Перегляди</dt>
+                                    <dd class="text-gray-900">{{ quote.views }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Статус</dt>
+                                    <dd class="text-gray-900">
+                                        {% if quote.isActive %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                                Активна
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                                Неактивна
+                                            </span>
+                                        {% endif %}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Дата показу</dt>
+                                    <dd class="text-gray-900">
+                                        {% if quote.displayDate %}
+                                            {{ quote.displayDate|date('d.m.Y') }}
+                                        {% else %}
+                                            <span class="text-gray-400">Не призначено</span>
+                                        {% endif %}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Додаткова інформація -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="bg-gray-100 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Метадані</h2>
+                </div>
+                <div class="p-6">
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">ID</dt>
+                            <dd class="text-gray-900">{{ quote.id }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Створено</dt>
+                            <dd class="text-gray-900">{{ quote.createdAt|date('d.m.Y H:i') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Оновлено</dt>
+                            <dd class="text-gray-900">
+                                {% if quote.updatedAt %}
+                                    {{ quote.updatedAt|date('d.m.Y H:i') }}
+                                {% else %}
+                                    <span class="text-gray-400">Не оновлювалась</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Швидкі дії -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gray-100 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Швидкі дії</h2>
+                </div>
+                <div class="p-6 space-y-3">
+                    <a href="{{ path('app_quote_show', {'id': quote.id}) }}" 
+                       target="_blank"
+                       class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-external-link-alt mr-2"></i>Переглянути на сайті
+                    </a>
+                    
+                    <form method="post" 
+                          action="{{ path('admin_quote_toggle_active', {'id': quote.id}) }}" 
+                          class="w-full">
+                        <input type="hidden" name="_token" value="{{ csrf_token('toggle-active' ~ quote.id) }}">
+                        <button type="submit" 
+                                class="w-full inline-flex items-center justify-center px-4 py-2 {{ quote.isActive ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700' }} text-white rounded-lg transition">
+                            <i class="fas {{ quote.isActive ? 'fa-eye-slash' : 'fa-eye' }} mr-2"></i>
+                            {{ quote.isActive ? 'Деактивувати' : 'Активувати' }}
+                        </button>
+                    </form>
+                    
+                    <form method="post" 
+                          action="{{ path('admin_quote_delete', {'id': quote.id}) }}" 
+                          onsubmit="return confirm('Ви впевнені, що хочете видалити цю цитату?');"
+                          class="w-full">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ quote.id) }}">
+                        <button type="submit" 
+                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-trash mr-2"></i>Видалити цитату
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{# the inner content is the same for all button elements: leading icon + label + trailing icon #}
+{% set button_content %}
+    {%- if this.icon and not this.withTrailingIcon -%}
+        <twig:ea:Icon name="{{ this.icon }}" class="btn-icon" />
+    {%- endif -%}
+    {%- if block('content') is defined and block('content') is not empty -%}
+        <span {{- attributes.nested('label').defaults({class: 'btn-label'}) }}>{{ block('content') }}</span>
+    {%- endif -%}
+    {%- if this.icon and this.withTrailingIcon -%}
+        <twig:ea:Icon name="{{ this.icon }}" class="btn-icon btn-icon-trailing" />
+    {%- endif -%}
+{% endset %}
+
+{% if this.htmlElement.isLink %}
+    {% set link_defaults = {class: this.defaultCssClass(), role: 'button'} %}
+    {% if this.inactive %}
+        {% set link_defaults = link_defaults|merge({'aria-disabled': 'true', tabindex: '-1'}) %}
+    {% elseif this.href %}
+        {% set link_defaults = link_defaults|merge({href: this.href}) %}
+    {% endif %}
+
+    <a {{- attributes.defaults(link_defaults) }}>{{ button_content }}</a>
+{% else %}
+    {% set button_defaults = {class: this.defaultCssClass(), type: this.type.value} %}
+    {% if this.name %}{% set button_defaults = button_defaults|merge({name: this.name}) %}{% endif %}
+    {% if this.value is not null %}{% set button_defaults = button_defaults|merge({value: this.value}) %}{% endif %}
+    {% if this.inactive %}{% set button_defaults = button_defaults|merge({disabled: true}) %}{% endif %}
+
+    {% if this.htmlElement.isForm %}
+        {# HTML forms only support GET and POST; other methods are submitted as POST
+           with the real method in the '_method' hidden field (needs 'http_method_override') #}
+        <form action="{{ this.action }}" method="{{ this.formMethod }}" {{- attributes.only('class') }}>
+            {% if this.usesMethodOverride %}
+                <input type="hidden" name="_method" value="{{ this.method }}">
+            {% endif %}
+
+            <button {{- attributes.defaults(button_defaults) }}>{{ button_content }}</button>
+        </form>
+    {% else %}
+        <button {{- attributes.defaults(button_defaults) }}>{{ button_content }}</button>
+    {% endif %}
+{% endif %}

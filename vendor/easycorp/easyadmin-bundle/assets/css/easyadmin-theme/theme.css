@@ -1,0 +1,21 @@
+@import "./color-palette.css";
+@import "./variables-theme.css";
+
+@import "./base.css";
+@import "./action-menu.css";
+@import "./pagination.css";
+@import "./modals.css";
+@import "./menu.css";
+@import "./datagrids.css";
+@import "./detail-page.css";
+@import "./fields.css";
+@import "./images.css";
+@import "./forms.css";
+@import "./buttons.css";
+@import "./alerts.css";
+@import "./badges.css";
+@import "./switches.css";
+@import "./autocomplete.css";
+@import "./errors.css";
+@import "./pages.css";
+@import "./utilities.css";

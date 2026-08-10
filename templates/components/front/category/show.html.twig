@@ -1,0 +1,183 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ category.name }} - Категорія{% endblock %}
+
+{% block meta_description %}{{ category.metaDescription ?: category.description }}{% endblock %}
+{% block meta_keywords %}{{ category.metaKeywords }}{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Хлібні крихти -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <a href="{{ path('app_home') }}" class="hover:text-primary-600 transition-colors">
+            <i class="fas fa-home"></i>
+        </a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <a href="{{ path('app_category_index') }}" class="hover:text-primary-600 transition-colors">Категорії</a>
+        {% for crumb in path %}
+            <i class="fas fa-chevron-right text-xs"></i>
+            {% if loop.last %}
+                <span class="text-gray-900 dark:text-white font-medium">{{ crumb.name }}</span>
+            {% else %}
+                <a href="{{ path('app_category_show', {'slug': crumb.slug}) }}" 
+                   class="hover:text-primary-600 transition-colors">{{ crumb.name }}</a>
+            {% endif %}
+        {% endfor %}
+    </nav>
+
+    <!-- Заголовок категорії -->
+    <div class="relative mb-8">
+        <!-- Фонове зображення (якщо є) -->
+        {% if category.image %}
+            <div class="absolute inset-0 rounded-2xl overflow-hidden">
+                <img src="{{ category.image }}" alt="" class="w-full h-full object-cover opacity-20">
+                <div class="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-purple-500/20"></div>
+            </div>
+        {% endif %}
+        
+        <div class="relative py-8 px-6 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700/50">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        {{ category.name }}
+                    </h1>
+                    
+                    {% if category.description %}
+                        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mb-4">
+                            {{ category.description }}
+                        </p>
+                    {% endif %}
+                    
+                    <!-- Статистика -->
+                    <div class="flex items-center gap-4 text-sm">
+                        <span class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full">
+                            <i class="fas fa-newspaper mr-1"></i> {{ category.articlesCount }} статей
+                        </span>
+                        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full">
+                            <i class="fas fa-blog mr-1"></i> {{ category.blogsCount }} блогів
+                        </span>
+                        <span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">
+                            <i class="fas fa-video mr-1"></i> {{ category.videosCount }} відео
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Кнопка підписки на RSS -->
+                <a href="{{ path('app_category_feed', {'slug': category.slug}) }}" 
+                   class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
+                    <i class="fas fa-rss"></i>
+                    <span class="hidden sm:inline">RSS</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Підкатегорії -->
+    {% if children|length > 0 %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Підкатегорії</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for child in children %}
+                <a href="{{ path('app_category_show', {'slug': child.slug}) }}" 
+                   class="group px-4 py-2 bg-white dark:bg-gray-800/50 rounded-full border border-gray-200 dark:border-gray-700 hover:border-primary-500 hover:shadow-md transition-all">
+                    <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary-600">{{ child.name }}</span>
+                    <span class="ml-2 text-xs text-gray-500">({{ child.totalCount }})</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Контент -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Список елементів -->
+        <div class="lg:col-span-3">
+            {% if items|length > 0 %}
+                <div class="space-y-6">
+                    {% for item in items %}
+                        {% if item is instanceof('App\\Entity\\Article') %}
+                            {% include 'front/article/_card.html.twig' with {article: item} %}
+                        {% elseif item is instanceof('App\\Entity\\BlogPost') %}
+                            {% include 'front/blog/_card.html.twig' with {blog: item} %}
+                        {% elseif item is instanceof('App\\Entity\\Video') %}
+                            {% include 'front/video/_card.html.twig' with {video: item} %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Пагінація -->
+                {% if total > limit %}
+                <div class="mt-8 flex justify-center">
+                    <nav class="flex items-center gap-2">
+                        {% if page > 1 %}
+                            <a href="{{ path('app_category_show', {'slug': category.slug, 'page': page - 1}) }}" 
+                               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-primary-50 hover:border-primary-500 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% endif %}
+
+                        {% for i in 1..(total/limit)|round(0, 'ceil') %}
+                            {% if i >= page - 2 and i <= page + 2 %}
+                                <a href="{{ path('app_category_show', {'slug': category.slug, 'page': i}) }}" 
+                                   class="w-10 h-10 flex items-center justify-center rounded-lg {{ i == page ? 'bg-gradient-to-r from-primary-500 to-purple-600 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-primary-50 hover:border-primary-500' }} transition-colors">
+                                    {{ i }}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page < (total/limit)|round(0, 'ceil') %}
+                            <a href="{{ path('app_category_show', {'slug': category.slug, 'page': page + 1}) }}" 
+                               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-primary-50 hover:border-primary-500 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
+            {% else %}
+                <!-- Пустий стан -->
+                <div class="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-6xl mb-4 opacity-30">📭</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Немає матеріалів</h3>
+                    <p class="text-gray-500 dark:text-gray-400">У цій категорії поки що немає контенту</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Сайдбар -->
+        <aside class="space-y-6">
+            <!-- Популярні категорії -->
+            <div class="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Популярні категорії</h3>
+                <div class="space-y-3">
+                    {% for popular in popularCategories %}
+                        <a href="{{ path('app_category_show', {'slug': popular.slug}) }}" 
+                           class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group">
+                            <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary-600">{{ popular.name }}</span>
+                            <span class="text-sm text-gray-500">{{ popular.totalCount }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Схожі категорії -->
+            {% if category.parent %}
+            <div class="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Схожі категорії</h3>
+                <div class="space-y-3">
+                    {% for sibling in category.parent.children %}
+                        {% if sibling.id != category.id %}
+                            <a href="{{ path('app_category_show', {'slug': sibling.slug}) }}" 
+                               class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group">
+                                <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary-600">{{ sibling.name }}</span>
+                                <span class="text-sm text-gray-500">{{ sibling.totalCount }}</span>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+{% endblock %}

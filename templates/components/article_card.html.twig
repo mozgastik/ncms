@@ -1,0 +1,170 @@
+{% set reading_time = article.content ? (article.content|striptags|split(' ')|length / 200)|round : 1 %}
+{% set excerpt = article.excerpt ?: (article.content ? article.content|striptags|slice(0, 150) ~ '...' : '') %}
+
+<article class="group relative bg-white dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden hover:scale-[1.02] active:scale-95 border border-gray-200 dark:border-gray-700/50 hover:border-transparent">
+    
+    <!-- Декоративний градієнт при наведенні -->
+    <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+    
+    <!-- Верхній акцент -->
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+    
+    <!-- Зображення -->
+    {% if article.coverImage or featured ?? false %}
+    <div class="relative h-56 overflow-hidden">
+        {% if article.coverImage %}
+        <img src="{{ vich_uploader_asset(article, 'coverImageFile') }}" 
+                 alt="{{ article.title }}" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+        {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
+                <svg class="w-16 h-16 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                </svg>
+            </div>
+        {% endif %}
+        
+        <!-- Категорія (нижній лівий кут) -->
+                        {% if article.category %}
+                        <div class="absolute top-4 left-4 z-10">
+                            <a href="{{ path('app_category_show', {slug: article.category.slug}) }}"
+                               class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl 
+                                      bg-white/15 dark:bg-black/25 
+                                      backdrop-blur-md backdrop-saturate-150
+                                      border border-white/25 dark:border-white/10 
+                                      shadow-[0_8px_32px_rgba(0,0,0,0.12)] 
+                                      hover:bg-white/25 dark:hover:bg-black/35 
+                                      hover:border-white/35 dark:hover:border-white/20
+                                      hover:shadow-[0_8px_40px_rgba(59,130,246,0.2)] 
+                                      transition-all duration-300 group/cat
+                                      hover:scale-105 active:scale-95">
+                                
+                                <span class="material-icons text-[10px] text-blue-400 dark:text-blue-300 group-hover/cat:rotate-12 transition-transform duration-300">
+                                    {{ article.category.image|default('folder_open') }}
+                                </span>
+                                
+                                <span class="text-[9px] font-medium text-white/90 dark:text-white/80 tracking-wide">
+                                    {{ article.category.name }}
+                                </span>
+                            </a>
+                        </div>
+                        {% endif %}
+        <!-- Статус "Головна новина" -->
+        {% if featured ?? false %}
+        <div class="absolute top-4 right-4 z-10">
+            <span class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                Головна
+            </span>
+        </div>
+        {% endif %}
+        
+        <!-- Час читання на зображенні -->
+        <div class="absolute bottom-4 right-4 z-10">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/70 text-white text-xs font-medium rounded-full backdrop-blur-sm">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ reading_time < 1 ? 1 : reading_time }} хв
+            </span>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Вміст -->
+    <div class="p-6">
+        <!-- Мета-інформація (дата) -->
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <time datetime="{{ article.publishedAt ? article.publishedAt|date('Y-m-d H:i:s') : '' }}">
+                {{ article.publishedAt ? article.publishedAt|date('d.m.Y') : 'Не опубліковано' }}
+            </time>
+        </div>
+        
+        <!-- Заголовок -->
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 group/title">
+            <a href="{{ path('app_article_show', {slug: article.slug}) }}" 
+               class="hover:text-transparent bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text bg-[length:0%_3px] bg-no-repeat bg-left-bottom hover:bg-[length:100%_3px] transition-all duration-500">
+                {{ article.title }}
+            </a>
+        </h3>
+        
+        <!-- Ексерпт -->
+        {% if excerpt %}
+        <p class="text-gray-600 dark:text-gray-300/80 leading-relaxed mb-6 line-clamp-2">
+            {{ clean_excerpt(article, 200) }}
+        </p>
+        {% endif %}
+        
+        <!-- Статистика -->
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">
+                <i class="fas fa-eye text-sm text-primary-500"></i>
+                <span class="text-sm font-medium">{{ article.views|default(0)|number_format(0, '.', ' ') }}</span>
+            </div>
+            
+            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">
+                <i class="fas fa-heart text-sm text-red-500"></i>
+                <span class="text-sm font-medium">
+                    {% if app.user and voteInfo is defined %}
+                    {{ voteInfo.likes }}
+                    {% else %}
+                        {{ article.likesCount ?? article.getLikeCount() ?? 0 }}
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">
+                <i class="fas fa-comment text-sm text-purple-500"></i>
+                <span class="text-sm font-medium">{{ article.articleComments|length }}</span>
+            </div>
+        </div>
+        
+        <!-- Автор -->
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div class="flex items-center gap-3 group/author">
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary-500 to-purple-600 p-0.5">
+                        <div class="w-full h-full rounded-full bg-white dark:bg-gray-900 overflow-hidden">
+                            {% if article.author.avatar %}
+                                <img src="{{ asset('uploads/avatars/' ~ article.author.avatar) }}" 
+                                     alt="{{ article.author.username }}" 
+                                     class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-purple-600">
+                                    <span class="text-white font-bold text-sm">
+                                        {{ article.author.username|first|upper }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                </div>
+                
+                <div>
+                    <a href="{{ path('user_profile', {id: article.author.id}) }}" 
+                       class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                        {{ article.author.username }}
+                    </a>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ article.author.articles|length|default(0) }} {{ article.author.articles|length == 1 ? 'стаття' : 'статей' }}
+                    </p>
+                </div>
+            </div>
+            
+            <a href="{{ path('app_article_show', {slug: article.slug}) }}" 
+               class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-purple-600 text-white   font-medium rounded-xl hover:shadow-lg hover:shadow-primary-500/25 hover:scale-105 active:scale-95 transition-all duration-300 group/btn">
+                <span>Читати</span>
+                <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</article>

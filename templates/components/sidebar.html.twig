@@ -1,0 +1,92 @@
+<div class="bg-white dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl shadow-md p-6 border border-gray-200 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 group/sidebar">
+    
+    <!-- Заголовок з декоративним елементом -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-500/80 dark:to-emerald-600/80 flex items-center justify-center text-white shadow-md group-hover/sidebar:scale-110 group-hover/sidebar:rotate-3 transition-all duration-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl blur-md opacity-0 group-hover/sidebar:opacity-30 transition-opacity duration-300 -z-10"></div>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white/90">
+                    Категорії
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ categories|length }} {{ categories|length == 1 ? 'категорія' : 'категорій' }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Декоративна лінія -->
+        <div class="w-12 h-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full"></div>
+    </div>
+
+    <!-- Список категорій -->
+    <div class="space-y-2 max-h-128 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 pr-2">
+        {% for category in categories %}
+            <a href="{{ path('app_category_show', {slug: category.slug}) }}" 
+               class="group/category relative flex items-center justify-between p-3 rounded-xl hover:bg-gradient-to-r hover:from-green-500/10 hover:to-emerald-500/10 dark:hover:from-green-500/5 dark:hover:to-emerald-500/5 transition-all duration-300 overflow-hidden">
+                
+                <!-- Анімований індикатор при наведенні -->
+                <span class="absolute left-0 w-1 h-0 bg-gradient-to-b from-green-500 to-emerald-600 group-hover/category:h-full transition-all duration-300 rounded-full"></span>
+                
+                <!-- Назва категорії з іконкою -->
+                <div class="flex items-center gap-3 ml-2">
+                    <div class="relative">
+                       
+                        <div class="w-8 h-8 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500/20 to-grey-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      {% if category.image %}
+                      <span class="material-icons text-green-400 text-xl">{{ category.image }}</span>
+                      {% else %}
+                      <span class="material-icons text-green-400 text-xl">folder</span>
+                    {% endif %}
+                    </div>
+                    </div>
+                    <span class="font-medium text-gray-700 dark:text-gray-300 group-hover/category:text-gray-900 dark:group-hover/category:text-white transition-colors">
+                        {{ category.name }}
+                    </span>
+                </div>
+                
+                <!-- Кількість статей з анімацією -->
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full group-hover/category:bg-gradient-to-r group-hover/category:from-green-500 group-hover/category:to-emerald-600 group-hover/category:text-white transition-all duration-300">
+                        {{ category.articles|default([])|length }}
+                    </span>
+                    
+                    <!-- Стрілка, що з'являється при наведенні -->
+                    <svg class="w-4 h-4 text-green-500 opacity-0 -translate-x-2 group-hover/category:opacity-100 group-hover/category:translate-x-0 transition-all duration-300" 
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+        {% else %}
+            <!-- Пустий стан -->
+            <div class="text-center py-8">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400">Категорій поки що немає</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Футер з кнопкою "Всі категорії" (якщо категорій більше 8) -->
+    {% if categories|length > 5 %}
+    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+        <a href="{{ path('app_category_index') }}" 
+           class="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 group/btn">
+            <span>Всі категорії</span>
+            <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+        </a>
+    </div>
+    {% endif %}
+    </div>

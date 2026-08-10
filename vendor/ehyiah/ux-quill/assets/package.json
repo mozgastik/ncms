@@ -1,0 +1,187 @@
+{
+    "name": "@ehyiah/ux-quill",
+    "description": "Symfony bundle to use Quill JS text editor",
+    "version": "3.6.0",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Ehyiah/ux-quill"
+    },
+    "main": "dist/controller.js",
+    "symfony": {
+        "controllers": {
+            "quill": {
+                "main": "dist/controller.js",
+                "webpackMode": "eager",
+                "fetch": "eager",
+                "enabled": true,
+                "autoimport": {
+                    "quill/dist/quill.snow.css": true,
+                    "quill/dist/quill.bubble.css": true,
+                    "quill-table-better/dist/quill-table-better.css": true,
+                    "quill2-emoji/dist/style.css": true,
+                    "highlight.js/styles/atom-one-dark.css": true,
+                    "katex/dist/katex.min.css": true,
+                    "@ehyiah/ux-quill/dist/styles/html-edit/html-edit.css": true,
+                    "@ehyiah/ux-quill/dist/styles/gallery/gallery.css": true
+                }
+            }
+        },
+        "importmap": {
+            "@hotwired/stimulus": "^3.0.0",
+            "quill2-emoji": "^0.1.2",
+            "quill2-emoji/dist/style.css": "^0.1.2",
+            "quill": "2.0.3",
+            "quill-delta": "^5.1.0",
+            "quill-resize-image": "^1.0.5",
+            "quill/dist/quill.snow.css": "2.0.3",
+            "quill/dist/quill.bubble.css": "2.0.3",
+            "axios": "^1.4.0",
+            "quill-table-better": "^1.2.1",
+            "quill-table-better/dist/quill-table-better.css": "^1.2.1",
+            "quill-toggle-fullscreen-button": "^0.1.4",
+            "highlight.js": "^11.9.0",
+            "highlight.js/styles/atom-one-dark.css": "^11.9.0",
+            "katex": "^0.16.9",
+            "katex/dist/katex.min.css": "^0.16.9",
+            "eventemitter3": "^5.0.1",
+            "lodash-es": "^4.17.21"
+        }
+    },
+    "scripts": {
+        "dev-server": "encore dev-server",
+        "dev": "encore dev",
+        "watch": "npm-run-all --parallel watch:*",
+        "watch:ts": "babel src --out-dir dist --source-maps --watch --extensions '.ts,.js'",
+        "watch:css": "onchange 'src/styles/**/*.css' -- npm run copy-assets",
+        "build": "babel src --extensions .ts -d dist && npm run copy-assets",
+        "copy-assets": "mkdir -p dist/styles && cp -r src/styles/ dist/",
+        "lint": "yarn run eslint src",
+        "lint-fix": "yarn run eslint src --fix",
+        "build:types": "tsc --emitDeclarationOnly",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "install-tests": "yarn add --dev @testing-library/jest-dom"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.20.7",
+        "@babel/core": "^7.20.12",
+        "@babel/plugin-proposal-class-properties": "^7.18.6",
+        "@babel/plugin-transform-modules-commonjs": "^7.23.3",
+        "@babel/preset-env": "^7.20.2",
+        "@babel/preset-typescript": "^7.18.6",
+        "@hotwired/stimulus": "^3.2.1",
+        "@symfony/webpack-encore": "^4.0.0",
+        "@testing-library/dom": "^9.3.0",
+        "@types/jest": "^29.5.2",
+        "@types/quill": "^2.0.14",
+        "@typescript-eslint/eslint-plugin": "^5.2.0",
+        "@typescript-eslint/parser": "^5.2.0",
+        "babel-plugin-module-resolver": "^5.0.2",
+        "core-js": "^3.30.2",
+        "onchange": "^7.1.0",
+        "eslint": "^8.1.0",
+        "eslint-config-prettier": "^8.0.0",
+        "eslint-plugin-jest": "^25.2.2",
+        "jest": "^29.5.0",
+        "jest-environment-jsdom": "^29.5.0",
+        "npm-run-all": "^4.1.5",
+        "ts-jest": "^29.1.0",
+        "ts-loader": "^9.0.0",
+        "typescript": "^4.9.5",
+        "webpack": "^5.99.6",
+        "webpack-cli": "^4.10.0",
+        "webpack-notifier": "^1.15.0"
+    },
+    "peerDependencies": {
+        "@hotwired/stimulus": "^3.0.0",
+        "axios": "^1.4.0",
+        "eventemitter3": "^5.0.1",
+        "lodash-es": "^4.17.21",
+        "quill": "2.0.3",
+        "quill-delta": "^5.1.0",
+        "quill-resize-image": "^1.0.5",
+        "quill-table-better": "^1.2.1",
+        "quill-toggle-fullscreen-button": "^0.1.4",
+        "quill2-emoji": "^0.1.2",
+        "highlight.js": "^11.9.0",
+        "katex": "^0.16.9"
+    },
+    "dependencies": {
+        "@hotwired/stimulus": "^3.0.0",
+        "axios": "^1.4.0",
+        "eventemitter3": "^5.0.1",
+        "lodash-es": "^4.17.21",
+        "quill": "2.0.3",
+        "quill-delta": "^5.1.0",
+        "quill-resize-image": "^1.0.5",
+        "quill-table-better": "^1.2.1",
+        "quill-toggle-fullscreen-button": "^0.1.4",
+        "quill2-emoji": "^0.1.2",
+        "highlight.js": "^11.9.0",
+        "katex": "^0.16.9"
+    },
+    "eslintConfig": {
+        "root": true,
+        "parser": "@typescript-eslint/parser",
+        "plugins": [
+            "@typescript-eslint"
+        ],
+        "extends": [
+            "eslint:recommended",
+            "prettier",
+            "plugin:@typescript-eslint/eslint-recommended",
+            "plugin:@typescript-eslint/recommended"
+        ],
+        "rules": {
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-empty-function": "off",
+            "@typescript-eslint/ban-ts-comment": "off",
+            "quotes": [
+                "error",
+                "single"
+            ]
+        }
+    },
+    "prettier": {
+        "printWidth": 120,
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "jsxBracketSameLine": true,
+        "singleQuote": true
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "jsdom",
+        "setupFilesAfterEnv": [
+            "<rootDir>/tests/setup/jest.setup.ts"
+        ],
+        "moduleNameMapper": {
+            "\\.(css|less)$": "<rootDir>/tests/setup/__mocks__/styleMock.js",
+            "^../src/blots/image$": "<rootDir>/tests/setup/__mocks__/image.ts",
+            "^quill$": "<rootDir>/tests/setup/__mocks__/quill.ts"
+        },
+        "testMatch": [
+            "<rootDir>/tests/**/*.test.ts"
+        ],
+        "moduleDirectories": [
+            "node_modules",
+            "<rootDir>/src"
+        ],
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "transformIgnorePatterns": [
+            "/node_modules/(?!quill|quill2-emoji)"
+        ],
+        "rootDir": ".",
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json"
+        ],
+        "modulePaths": [
+            "<rootDir>"
+        ]
+    }
+}

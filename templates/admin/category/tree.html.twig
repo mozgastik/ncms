@@ -1,0 +1,97 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Дерево категорій{% endblock %}
+
+{% block body %}
+<div class="content-container py-6">
+    <!-- Заголовок -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+            <a href="{{ path('admin_category_index') }}" 
+               class="w-10 h-10 rounded-lg glass-light flex items-center justify-center hover:scale-110 transition-transform">
+                <i class="fas fa-arrow-left text-primary-500"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold gradient-text">Дерево категорій</h1>
+                <p class="text-surface-600 dark:text-surface-400">Ієрархічна структура категорій</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дерево -->
+    <div class="glass-light rounded-xl p-6 border border-surface-200/50 dark:border-surface-700/50">
+        {% macro render_tree(nodes, level = 0) %}
+            {% for node in nodes %}
+                {% set category = node.category %}
+                <div class="tree-item" style="margin-left: {{ level * 30 }}px">
+                    <div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800/30 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <button class="tree-toggle w-6 h-6 flex items-center justify-center text-surface-400 hover:text-surface-600">
+                                {% if node.children|length > 0 %}
+                                    <i class="fas fa-chevron-down"></i>
+                                {% else %}
+                                    <i class="fas fa-circle text-xs"></i>
+                                {% endif %}
+                            </button>
+                            
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500/20 to-purple-500/20 flex items-center justify-center">
+                                <i class="fas fa-folder text-primary-500"></i>
+                            </div>
+                            
+                            <div>
+                                <a href="{{ path('admin_category_edit', {'id': category.id}) }}" 
+                                   class="font-medium hover:text-primary-600">
+                                    {{ category.name }}
+                                </a>
+                                <div class="text-xs text-surface-500">
+                                    <span>{{ category.type }}</span>
+                                    {% if category.totalCount > 0 %}
+                                        <span class="mx-2">•</span>
+                                        <span>{{ category.totalCount }} елементів</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-xs px-2 py-1 rounded-full bg-surface-200 dark:bg-surface-700">
+                                ID: {{ category.id }}
+                            </span>
+                            <a href="{{ path('admin_category_edit', {'id': category.id}) }}" 
+                               class="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors">
+                                <i class="fas fa-edit text-sm"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if node.children|length > 0 %}
+                        <div class="tree-children ml-6 pl-4 border-l-2 border-surface-200 dark:border-surface-700">
+                            {{ _self.render_tree(node.children, level + 1) }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endmacro %}
+
+        {{ _self.render_tree(tree) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.querySelectorAll('.tree-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+        const icon = button.querySelector('i');
+        const children = button.closest('.tree-item').querySelector('.tree-children');
+        
+        if (children) {
+            children.classList.toggle('hidden');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-right');
+        }
+    });
+});
+</script>
+{% endblock %}

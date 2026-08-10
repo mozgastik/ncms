@@ -1,0 +1,512 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Перевірка блогу - {{ post.title }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Перевірка блогу</h1>
+    
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ path('admin_dashboard') }}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-home mr-2"></i>Головна
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ path('admin_blog_index') }}" class="ml-1 text-sm font-medium text-blue-600 hover:text-blue-800">Блоги</a>
+                </div>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ path('admin_blog_moderation') }}" class="ml-1 text-sm font-medium text-blue-600 hover:text-blue-800">Модерація</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500">Перевірка</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Основний контент -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 text-white">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-alt text-xl mr-3"></i>
+                            <h2 class="text-xl font-bold">{{ post.title }}</h2>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-hourglass-half mr-2"></i>На модерації
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <!-- Мета-інформація -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <div class="flex items-center mb-4">
+                                <img src="https://ui-avatars.com/api/?name={{ post.author.username }}" 
+                                     class="rounded-full w-12 h-12 mr-4" 
+                                     alt="{{ post.author.username }}">
+                                <div>
+                                    <p class="font-semibold text-gray-700">Автор:</p>
+                                    <div class="flex items-center">
+                                        <span class="text-lg">{{ post.author.username }}</span>
+                                        <span class="ml-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                            {{ post.author.blogPosts|filter(p => p.isPublished())|length }} опублікованих блогів
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if post.category %}
+                                <div class="mb-4">
+                                    <p class="font-semibold text-gray-700 mb-2">Категорія:</p>
+                                    <span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
+                                        {{ post.category.name }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="border rounded-lg p-3 text-center">
+                                    <div class="text-2xl font-bold text-gray-800">{{ post.readingTime }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">Хв читання</div>
+                                </div>
+                                <div class="border rounded-lg p-3 text-center">
+                                    <div class="text-2xl font-bold text-gray-800">{{ post.content|length }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">Символів</div>
+                                </div>
+                                <div class="border rounded-lg p-3 text-center">
+                                    <div class="text-2xl font-bold text-gray-800">{{ post.images|length }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">Зображень</div>
+                                </div>
+                                <div class="border rounded-lg p-3 text-center">
+                                    <div class="text-2xl font-bold text-gray-800">{{ post.tags|length }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">Тегів</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Короткий опис -->
+                    {% if post.excerpt %}
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+                            <h5 class="font-semibold text-gray-700 mb-2">Короткий опис:</h5>
+                            <p class="text-gray-600">{{ post.excerpt }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Теги -->
+                    {% if post.tags|length > 0 %}
+                        <div class="mb-6">
+                            <h5 class="font-semibold text-gray-700 mb-3">Теги:</h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in post.tags %}
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded-full">#{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Зображення -->
+                    {% if post.images|length > 0 %}
+                        <div class="mb-6">
+                            <h5 class="font-semibold text-gray-700 mb-3">Зображення ({{ post.images|length }})</h5>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {% for image in post.images %}
+                                    <div class="relative group">
+                                        <img src="{{ asset('uploads/blogs/' ~ image.filename) }}" 
+                                             alt="{{ image.altText|default('') }}"
+                                             class="w-full h-32 object-cover rounded-lg cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                                             onclick="openImageModal('{{ asset('uploads/blogs/' ~ image.filename) }}', '{{ image.altText|default('') }}', '{{ image.caption|default('') }}')">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Зміст блогу -->
+                    <div>
+                        <h5 class="font-semibold text-gray-700 border-b pb-2 mb-4">Зміст блогу:</h5>
+                        <div class="prose prose-lg max-w-none text-gray-700">
+                            {{ post.content|raw }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Бічна панель -->
+        <div class="lg:col-span-1">
+            <!-- Статистика автора -->
+            <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-5 mb-6 text-white">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-chart-bar text-xl mr-3"></i>
+                    <h5 class="text-lg font-bold">Статистика автора</h5>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold">{{ post.author.blogPosts|length }}</div>
+                        <div class="text-sm opacity-90">Всього блогів</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold">{{ post.author.blogPosts|filter(p => p.isPublished())|length }}</div>
+                        <div class="text-sm opacity-90">Опубліковано</div>
+                    </div>
+                </div>
+                <div class="text-sm opacity-90">
+                    <i class="fas fa-calendar mr-2"></i>Зареєстрований: {{ post.author.createdAt|date('d.m.Y') }}
+                </div>
+            </div>
+            
+            <!-- Форма модерації -->
+            <div class="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                <div class="flex items-center mb-5">
+                    <i class="fas fa-gavel text-xl mr-3 text-gray-700"></i>
+                    <h5 class="text-lg font-bold text-gray-800">Рішення модератора</h5>
+                </div>
+                
+                {{ form_start(form) }}
+                
+                <div class="mb-5">
+                    {{ form_label(form.action, null, {'label_attr': {'class': 'block font-bold text-gray-700 mb-2'}}) }}
+                    <div class="space-y-2">
+                        {% for child in form.action %}
+                            <div class="flex items-center">
+                                {{ form_widget(child, {'attr': {'class': 'w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500'}}) }}
+                                {{ form_label(child, null, {'label_attr': {'class': 'ml-2 text-gray-700'}}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-5">
+                    {{ form_label(form.notes, null, {'label_attr': {'class': 'block font-bold text-gray-700 mb-2'}}) }}
+                    {{ form_widget(form.notes, {'attr': {
+                        'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none',
+                        'rows': 5,
+                        'placeholder': 'Детально опишіть причину рішення...'
+                    }}) }}
+                    <div class="text-sm text-gray-500 mt-2">
+                        Цей коментар буде видно автору блогу.
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    {{ form_widget(form.submit, {'attr': {'class': 'w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300'}}) }}
+                    
+                    <button type="button" 
+                            class="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg transition duration-300"
+                            onclick="history.back()">
+                        <i class="fas fa-arrow-left mr-2"></i>Назад
+                    </button>
+                </div>
+                
+                {{ form_end(form) }}
+            </div>
+            
+            <!-- Швидкі дії -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="bg-gray-100 px-5 py-3 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-bolt text-lg mr-3 text-gray-700"></i>
+                        <h6 class="font-bold text-gray-800">Швидкі дії</h6>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="space-y-3">
+                        <form method="post" action="{{ path('admin_blog_approve', {'id': post.id}) }}" class="w-full">
+                            <input type="hidden" name="notes" value="Блог відповідає всім вимогам">
+                            <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ post.id) }}">
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-300">
+                                <i class="fas fa-check mr-2"></i>Схвалити без коментаря
+                            </button>
+                        </form>
+                        
+                        <button type="button" 
+                                class="w-full border border-green-600 text-green-600 hover:bg-green-50 font-medium py-2.5 px-4 rounded-lg transition duration-300"
+                                onclick="applyTemplate('approve')">
+                            <i class="fas fa-file-alt mr-2"></i>Схвалити з шаблоном
+                        </button>
+                        
+                        <button type="button" 
+                                class="w-full border border-red-600 text-red-600 hover:bg-red-50 font-medium py-2.5 px-4 rounded-lg transition duration-300"
+                                onclick="applyTemplate('reject')">
+                            <i class="fas fa-file-alt mr-2"></i>Відхилити з шаблоном
+                        </button>
+                        
+                        <a href="{{ path('blog_show', {'slug': post.slug}) }}" 
+                           target="_blank" 
+                           class="block w-full border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2.5 px-4 rounded-lg text-center transition duration-300">
+                            <i class="fas fa-external-link-alt mr-2"></i>Попередній перегляд
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Шаблони коментарів -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-gray-100 px-5 py-3 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-sticky-note text-lg mr-3 text-gray-700"></i>
+                        <h6 class="font-bold text-gray-800">Шаблони коментарів</h6>
+                    </div>
+                </div>
+                <div class="p-1">
+                    <div class="space-y-1">
+                        <button type="button" 
+                                class="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition duration-300"
+                                onclick="insertTemplate('Відмінний блог! Відповідає всім вимогам.')">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-sm font-medium text-green-700">Позитивний</span>
+                            </div>
+                            <div class="text-xs text-gray-500 pl-6">Відмінний блог! Відповідає всім вимогам.</div>
+                        </button>
+                        
+                        <button type="button" 
+                                class="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition duration-300"
+                                onclick="insertTemplate('Будь ласка, додайте більше деталей до опису.')">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i>
+                                <span class="text-sm font-medium text-yellow-700">На доопрацювання</span>
+                            </div>
+                            <div class="text-xs text-gray-500 pl-6">Будь ласка, додайте більше деталей до опису.</div>
+                        </button>
+                        
+                        <button type="button" 
+                                class="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition duration-300"
+                                onclick="insertTemplate('Блог містить заборонений контент.')">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                <span class="text-sm font-medium text-red-700">Відхилення</span>
+                            </div>
+                            <div class="text-xs text-gray-500 pl-6">Блог містить заборонений контент.</div>
+                        </button>
+                        
+                        <button type="button" 
+                                class="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition duration-300"
+                                onclick="insertTemplate('Будь ласка, виправте граматичні помилки.')">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-edit text-yellow-500 mr-2"></i>
+                                <span class="text-sm font-medium text-yellow-700">Редагування</span>
+                            </div>
+                            <div class="text-xs text-gray-500 pl-6">Будь ласка, виправте граматичні помилки.</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800">Перегляд зображення</h3>
+            <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <div class="p-6">
+            <img id="modalImage" class="w-full h-auto rounded-lg mb-4" src="" alt="">
+            <div id="imageInfo" class="space-y-2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyTemplate(action) {
+    const textarea = document.getElementById('{{ form.notes.vars.id }}');
+    const actionRadios = document.querySelectorAll('input[name="{{ form.action.vars.full_name }}"]');
+    
+    if (action === 'approve') {
+        textarea.value = 'Блог відповідає всім вимогам якості. Дякуємо за якісний контент!';
+        actionRadios.forEach(radio => {
+            if (radio.value === 'approve') {
+                radio.checked = true;
+                radio.parentElement.classList.add('bg-blue-50');
+            }
+        });
+    } else if (action === 'reject') {
+        textarea.value = 'Блог потребує доопрацювання. Будь ласка, перегляньте наступні моменти:\n1. \n2. \n3. \n\nПісля виправлення відправте блог на повторну перевірку.';
+        actionRadios.forEach(radio => {
+            if (radio.value === 'reject') {
+                radio.checked = true;
+                radio.parentElement.classList.add('bg-blue-50');
+            }
+        });
+    }
+    
+    // Trigger auto-resize
+    textarea.dispatchEvent(new Event('input'));
+}
+
+function insertTemplate(text) {
+    const textarea = document.getElementById('{{ form.notes.vars.id }}');
+    const currentText = textarea.value;
+    
+    if (currentText) {
+        textarea.value = currentText + '\n\n' + text;
+    } else {
+        textarea.value = text;
+    }
+    
+    textarea.focus();
+    
+    // Trigger auto-resize
+    textarea.dispatchEvent(new Event('input'));
+}
+
+// Автоматична висота текстового поля
+const textarea = document.getElementById('{{ form.notes.vars.id }}');
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+// Ініціалізація висоти
+textarea.dispatchEvent(new Event('input'));
+
+// Image modal functions
+function openImageModal(src, altText, caption) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const imageInfo = document.getElementById('imageInfo');
+    
+    modalImage.src = src;
+    modalImage.alt = altText;
+    
+    let infoHtml = '';
+    if (altText) {
+        infoHtml += `<p><strong class="text-gray-700">Alt текст:</strong> <span class="text-gray-600">${altText}</span></p>`;
+    }
+    if (caption) {
+        infoHtml += `<p><strong class="text-gray-700">Підпис:</strong> <span class="text-gray-600">${caption}</span></p>`;
+    }
+    
+    imageInfo.innerHTML = infoHtml;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target.id === 'imageModal') {
+        closeImageModal();
+    }
+});
+
+// Add visual feedback for radio buttons
+document.querySelectorAll('input[name="{{ form.action.vars.full_name }}"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('input[name="{{ form.action.vars.full_name }}"]').forEach(r => {
+            r.parentElement.classList.remove('bg-blue-50');
+        });
+        this.parentElement.classList.add('bg-blue-50');
+    });
+});
+</script>
+
+<style>
+.prose {
+    line-height: 1.8;
+    font-size: 1.1rem;
+    color: #374151;
+}
+
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.prose h2, .prose h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.prose h2 {
+    font-size: 1.875rem;
+}
+
+.prose h3 {
+    font-size: 1.5rem;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}
+
+.prose ul, .prose ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.prose ul {
+    list-style-type: disc;
+}
+
+.prose ol {
+    list-style-type: decimal;
+}
+
+/* Custom scrollbar for modal */
+#imageModal > div::-webkit-scrollbar {
+    width: 8px;
+}
+
+#imageModal > div::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 0.75rem 0.75rem 0;
+}
+
+#imageModal > div::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#imageModal > div::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+{% endblock %}

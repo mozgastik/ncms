@@ -1,0 +1,825 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Редагування статті - {{ article.title }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    /* ============================================ */
+    /* ОСНОВНІ СТИЛІ */
+    /* ============================================ */
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        background: white;
+        color: #1f2937;
+    }
+    .dark .form-control, .dark .form-select {
+        background: #1f2937;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Quill Editor Styles */
+    .ql-toolbar.ql-snow {
+        background: #f8fafc;
+        border-color: #d1d5db;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .dark .ql-toolbar.ql-snow {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .ql-container.ql-snow {
+        border-color: #d1d5db;
+        border-radius: 0 0 0.5rem 0.5rem;
+        min-height: 400px;
+        background: white;
+        color: #1f2937;
+    }
+    .dark .ql-container.ql-snow {
+        background: #111827;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+    .ql-editor {
+        min-height: 400px;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+    .dark .ql-editor {
+        color: #e5e7eb;
+    }
+    .dark .ql-editor.ql-blank::before {
+        color: #6b7280;
+    }
+    
+    /* Dark mode for Quill */
+    .dark .ql-snow .ql-stroke {
+        stroke: #d1d5db;
+    }
+    .dark .ql-snow .ql-fill {
+        fill: #d1d5db;
+    }
+    .dark .ql-snow .ql-picker {
+        color: #d1d5db;
+    }
+    .dark .ql-snow .ql-picker-options {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .dark .ql-snow .ql-picker-item:hover {
+        color: #3b82f6;
+    }
+    
+    /* ============================================ */
+    /* DRAG & DROP ЗОНА */
+    /* ============================================ */
+    
+    .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f9fafb;
+    }
+    .dark .upload-area {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    .dark .upload-area:hover, .dark .upload-area.drag-over {
+        background: #1e293b;
+        border-color: #3b82f6;
+    }
+    
+    /* ============================================ */
+    /* ГАЛЕРЕЯ */
+    /* ============================================ */
+    
+    .gallery-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        background: white;
+        aspect-ratio: 4/3;
+    }
+    .dark .gallery-item {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .gallery-item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .gallery-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .gallery-item:hover .gallery-overlay {
+        opacity: 1;
+    }
+    .gallery-overlay button {
+        padding: 0.5rem;
+        border-radius: 9999px;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.2s;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .gallery-overlay button:hover {
+        transform: scale(1.1);
+    }
+    .cover-badge {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        background: #3b82f6;
+        color: white;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    /* ============================================ */
+    /* ПРОГРЕС БАР */
+    /* ============================================ */
+    
+    .progress-bar {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    .dark .progress-bar {
+        background: #374151;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    /* ============================================ */
+    /* АНІМАЦІЇ */
+    /* ============================================ */
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* ============================================ */
+    /* SLUG PREVIEW */
+    /* ============================================ */
+    
+    .slug-preview {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    .slug-preview span {
+        font-family: monospace;
+        background: #f3f4f6;
+        padding: 0.125rem 0.25rem;
+        border-radius: 0.25rem;
+    }
+    .dark .slug-preview span {
+        background: #374151;
+        color: #9ca3af;
+    }
+    
+    /* ============================================ */
+    /* ТЕГИ */
+    /* ============================================ */
+    
+    .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        min-height: 50px;
+    }
+    .dark .tags-container {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .tag-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        background: #e5e7eb;
+        color: #374151;
+    }
+    .dark .tag-item {
+        background: #374151;
+        color: #e5e7eb;
+    }
+    .tag-item:hover {
+        transform: scale(1.05);
+    }
+    .tag-item.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        color: #1e40af;
+    }
+    .dark .tag-item.selected {
+        background: #1e293b;
+        color: #93c5fd;
+    }
+    
+    /* ============================================ */
+    /* АДАПТИВНІСТЬ */
+    /* ============================================ */
+    
+    @media (max-width: 640px) {
+        .ql-editor {
+            min-height: 250px;
+            font-size: 14px;
+        }
+        .gallery-item {
+            aspect-ratio: 1/1;
+        }
+        .gallery-overlay button {
+            width: 30px;
+            height: 30px;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="max-w-6xl mx-auto px-4 py-8" 
+     x-data="articleEditForm()" 
+     x-init="init()"
+     x-cloak>
+    
+    <h1 class="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        ✏️ Редагування статті
+    </h1>
+
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'id': 'articleForm', 'class': 'space-y-6'}}) }}
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Ліва колонка - основний контент -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Заголовок -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.title, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.title, {'attr': {
+                    'class': 'form-control',
+                    'x-model': 'title',
+                    '@input': 'generateSlug()',
+                    'placeholder': 'Введіть заголовок статті...'
+                }}) }}
+                <div class="slug-preview mt-1" x-show="slug">
+                    <span>🔗 /article/<span x-text="slug"></span></span>
+                    <button type="button" @click="editSlug = !editSlug" class="ml-2 text-blue-600 hover:underline text-xs">редагувати</button>
+                </div>
+                <div x-show="editSlug" x-cloak class="mt-2">
+                    {{ form_widget(form.slug, {'attr': {
+                        'class': 'form-control text-sm font-mono',
+                        'x-model': 'slug',
+                        'placeholder': 'custom-slug'
+                    }}) }}
+                </div>
+                {{ form_errors(form.title) }}
+            </div>
+
+            <!-- Короткий опис -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.excerpt, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.excerpt, {'attr': {
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Короткий опис для превью (необов\'язково)...'
+                }}) }}
+                <p class="text-xs text-gray-500 mt-1">✏️ Цей текст буде відображатися в картках статей</p>
+                {{ form_errors(form.excerpt) }}
+            </div>
+
+            <!-- Контент з Quill -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.content, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                <div id="editor" style="min-height: 400px;"></div>
+                {{ form_widget(form.content, {'attr': {'class': 'hidden', 'id': 'user_article_content'}}) }}
+                {{ form_errors(form.content) }}
+                <div class="text-xs text-gray-500 mt-2 flex justify-between">
+                    <span>📝 Використовуйте панель інструментів для форматування</span>
+                    <span x-text="'📊 Символів: ' + contentLength"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Права колонка - налаштування -->
+        <div class="space-y-6">
+            <!-- Категорія -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.category, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.category, {'attr': {
+                    'class': 'form-select',
+                    'x-model': 'category'
+                }}) }}
+                {{ form_errors(form.category) }}
+            </div>
+
+            <!-- Теги -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.tags, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                
+                <!-- Вибрана теги -->
+                <div class="tags-container mb-3">
+                    <template x-for="tag in selectedTags" :key="tag">
+                        <span class="tag-item selected">
+                            <span x-text="tag"></span>
+                            <span @click="removeTag(tag)" class="cursor-pointer hover:text-red-500 ml-1">✕</span>
+                        </span>
+                    </template>
+                    <span x-show="selectedTags.length === 0" class="text-gray-400 text-sm">Виберіть теги нижче</span>
+                </div>
+                
+                <!-- Список всіх тегів -->
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="tag in availableTags" :key="tag.id">
+                        <span class="tag-item" 
+                              :class="selectedTags.includes(tag.name) ? 'selected' : ''"
+                              @click="toggleTag(tag.name)">
+                            <span x-text="tag.name"></span>
+                            <span class="text-xs opacity-50" x-text="tag.count"></span>
+                        </span>
+                    </template>
+                </div>
+                
+                {{ form_errors(form.tags) }}
+            </div>
+
+            <!-- Зображення -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                <h3 class="text-lg font-semibold mb-4">🖼️ Зображення</h3>
+                
+                <!-- Встановлення обкладинки -->
+                <div class="mb-4">
+                    {{ form_label(form.coverImageFile, 'Обкладинка статті', {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                    
+                    <div class="flex flex-col gap-2">
+                        <!-- Завантаження файлу -->
+                        {{ form_widget(form.coverImageFile, {'attr': {
+                            'class': 'form-control',
+                            'accept': 'image/*'
+                        }}) }}
+                        
+                        <!-- Або вставка URL -->
+                        <div class="flex gap-2">
+                            <input type="text" 
+                                   x-model="coverImageUrl"
+                                   placeholder="Або вставте URL зображення..."
+                                   class="form-control flex-1">
+                            <button type="button" 
+                                    @click="setCoverFromUrl()"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition whitespace-nowrap">
+                                Додати
+                            </button>
+                        </div>
+                        
+                        <!-- Кнопка використання завантаженого -->
+                        <button type="button" 
+                                @click="useLastUploadedAsCover()"
+                                x-show="uploadedImages.length > 0"
+                                class="text-sm text-blue-600 hover:underline text-left">
+                            📷 Використати останнє завантажене
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Прогрес завантаження -->
+                <div x-show="uploading" x-cloak class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span x-text="uploadMessage"></span>
+                        <span x-text="uploadProgress + '%'"></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="'width: ' + uploadProgress + '%'"></div>
+                    </div>
+                </div>
+                
+                <!-- Drag & Drop зона -->
+                <div class="upload-area"
+                     @click="openFilePicker"
+                     @dragover.prevent="dragOver = true"
+                     @dragleave.prevent="dragOver = false"
+                     @drop.prevent="handleDrop($event)"
+                     :class="{'drag-over': dragOver}">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-500">Перетягніть зображення або клікніть для завантаження</p>
+                    <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WEBP (макс. 5MB)</p>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*" multiple @change="handleFileSelect($event)">
+                </div>
+                
+                <!-- Галерея -->
+                <div x-show="uploadedImages.length > 0" x-cloak class="mt-4">
+                    <h4 class="text-sm font-medium mb-2">📸 Завантажені зображення (<span x-text="uploadedImages.length"></span>)</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <template x-for="(image, index) in uploadedImages" :key="image.id">
+                            <div class="gallery-item">
+                                <img :src="image.url" :alt="image.name" loading="lazy">
+                                <div class="cover-badge" x-show="coverImage === image.url">
+                                    ⭐ Обкладинка
+                                </div>
+                                <div class="gallery-overlay">
+                                    <button @click="setAsCover(image.url)" 
+                                            class="bg-blue-500 hover:bg-blue-600 text-white"
+                                            x-show="coverImage !== image.url"
+                                            title="Встановити обкладинку">
+                                        ⭐
+                                    </button>
+                                    <button @click="insertIntoEditor(image.url)" 
+                                            class="bg-green-500 hover:bg-green-600 text-white"
+                                            title="Вставити в текст">
+                                        📝
+                                    </button>
+                                    <button @click="removeImage(index)" 
+                                            class="bg-red-500 hover:bg-red-600 text-white"
+                                            title="Видалити">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Прев'ю обкладинки -->
+                <div x-show="coverImage" x-cloak class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg animate-fade-in">
+                    <p class="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">🖼️ Поточна обкладинка:</p>
+                    <div class="relative inline-block">
+                        <img :src="coverImage" class="w-32 h-20 object-cover rounded-lg border-2 border-blue-500">
+                        <button @click="clearCoverImage()" 
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопка збереження -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border p-6">
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
+                    <i class="fas fa-save mr-2"></i>
+                    Зберегти зміни
+                </button>
+                <p class="text-xs text-gray-500 text-center mt-3">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Після збереження стаття буде відправлена на повторну модерацію
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    {{ form_end(form) }}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+function articleEditForm() {
+    return {
+        // Дані статті
+        title: '{{ article.title|e('js') }}',
+        slug: '{{ article.slug|e('js') }}',
+        coverImage: '{{ article.coverImage ? ('/uploads/articles/' ~ article.coverImage)|e('js') : '' }}',
+        coverImageUrl: '',
+        category: '{{ article.category ? article.category.id : '' }}',
+        editSlug: false,
+        selectedTags: {{ article.tags|map(tag => tag.name)|json_encode|raw }},
+        availableTags: {{ tags|map(tag => {id: tag.id, name: tag.name, count: tag.articles|length})|json_encode|raw }},
+        
+        // Завантаження зображень
+        uploadedImages: [],
+        dragOver: false,
+        uploading: false,
+        uploadProgress: 0,
+        uploadMessage: '',
+        
+        // Quill
+        quill: null,
+        contentLength: 0,
+        
+        // ==========================================
+        // МЕТОДИ ДЛЯ SLUG
+        // ==========================================
+        
+        generateSlug() {
+            if (!this.title.trim() || this.editSlug) return;
+            
+            const translit = {
+                'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ye',
+                'ж':'zh','з':'z','и':'y','і':'i','ї':'yi','й':'y','к':'k','л':'l',
+                'м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u',
+                'ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ю':'yu','я':'ya'
+            };
+            
+            let slug = this.title.toLowerCase()
+                .split('')
+                .map(char => translit[char] || char)
+                .join('')
+                .replace(/[^a-z0-9-]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '')
+                .substring(0, 100);
+            
+            this.slug = slug;
+        },
+        
+        // ==========================================
+        // МЕТОДИ ДЛЯ ТЕГІВ
+        // ==========================================
+        
+        toggleTag(tagName) {
+            const index = this.selectedTags.indexOf(tagName);
+            if (index === -1) {
+                if (this.selectedTags.length < 10) {
+                    this.selectedTags.push(tagName);
+                } else {
+                    alert('Можна вибрати максимум 10 тегів');
+                }
+            } else {
+                this.selectedTags.splice(index, 1);
+            }
+        },
+        
+        removeTag(tagName) {
+            const index = this.selectedTags.indexOf(tagName);
+            if (index !== -1) {
+                this.selectedTags.splice(index, 1);
+            }
+        },
+        
+        // ==========================================
+        // МЕТОДИ ДЛЯ QUILL
+        // ==========================================
+        
+        initQuill() {
+            const editorElement = document.getElementById('editor');
+            const hiddenField = document.getElementById('user_article_content');
+            
+            if (typeof Quill === 'undefined') {
+                console.error('Quill is not loaded');
+                return;
+            }
+            
+            if (editorElement && !this.quill) {
+                this.quill = new Quill(editorElement, {
+                    theme: 'snow',
+                    placeholder: 'Текст вашої статті...',
+                    modules: {
+                        toolbar: {
+                            container: [
+                                ['bold', 'italic', 'underline', 'strike'],
+                                ['blockquote', 'code-block'],
+                                ['link', 'image'],
+                                [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'script': 'sub'}, { 'script': 'super' }],
+                                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                                [{ 'align': [] }],
+                                ['clean']
+                            ]
+                        }
+                    }
+                });
+                
+                // Встановлюємо початковий контент
+                const content = hiddenField.value || '{{ article.content|e('js') }}';
+                this.quill.root.innerHTML = content;
+                this.contentLength = content.replace(/<[^>]*>/g, '').length;
+                
+                // Оновлюємо при зміні
+                this.quill.on('text-change', () => {
+                    const html = this.quill.root.innerHTML;
+                    hiddenField.value = html;
+                    this.contentLength = html.replace(/<[^>]*>/g, '').length;
+                });
+                
+                // Додаємо обробник для вставки зображень
+                const toolbar = this.quill.getModule('toolbar');
+                toolbar.addHandler('image', () => {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'file');
+                    input.setAttribute('accept', 'image/*');
+                    input.click();
+                    
+                    input.onchange = () => {
+                        const file = input.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const range = this.quill.getSelection();
+                                this.quill.insertEmbed(range.index, 'image', e.target.result);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    };
+                });
+            }
+        },
+        
+        // ==========================================
+        // МЕТОДИ ДЛЯ ЗОБРАЖЕНЬ
+        // ==========================================
+        
+        openFilePicker() {
+            document.getElementById('fileInput')?.click();
+        },
+        
+        async handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            await this.uploadFiles(files);
+            event.target.value = '';
+        },
+        
+        async handleDrop(event) {
+            event.preventDefault();
+            this.dragOver = false;
+            const files = Array.from(event.dataTransfer.files);
+            await this.uploadFiles(files);
+        },
+        
+        async uploadFiles(files) {
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) {
+                    alert('❌ Можна завантажувати тільки зображення');
+                    continue;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('❌ Файл занадто великий (макс. 5MB)');
+                    continue;
+                }
+                
+                this.uploading = true;
+                this.uploadProgress = 0;
+                this.uploadMessage = `⏳ Завантаження ${file.name}...`;
+                
+                // Симуляція завантаження
+                await new Promise((resolve) => {
+                    const interval = setInterval(() => {
+                        this.uploadProgress += 10;
+                        if (this.uploadProgress >= 100) {
+                            clearInterval(interval);
+                            resolve();
+                        }
+                    }, 50);
+                });
+                
+                // Читаємо файл
+                const reader = new FileReader();
+                const url = await new Promise((resolve) => {
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                
+                this.uploadedImages.push({
+                    id: Date.now() + Math.random(),
+                    url: url,
+                    name: file.name
+                });
+                
+                this.uploadMessage = `✅ ${file.name} завантажено!`;
+                
+                // Якщо це перше зображення і немає обкладинки
+                if (this.uploadedImages.length === 1 && !this.coverImage) {
+                    this.coverImage = url;
+                }
+                
+                await new Promise(r => setTimeout(r, 500));
+                this.uploading = false;
+                this.uploadProgress = 0;
+            }
+        },
+        
+        removeImage(index) {
+            this.uploadedImages.splice(index, 1);
+            if (this.coverImage === this.uploadedImages[index]?.url) {
+                this.coverImage = '';
+            }
+        },
+        
+        setAsCover(url) {
+            this.coverImage = url;
+        },
+        
+        setCoverFromUrl() {
+            if (!this.coverImageUrl.trim()) {
+                alert('Будь ласка, введіть URL зображення');
+                return;
+            }
+            
+            // Перевіряємо чи це зображення
+            const url = this.coverImageUrl.trim();
+            if (!url.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i)) {
+                alert('URL має вказувати на зображення (jpg, jpeg, png, gif, webp, svg)');
+                return;
+            }
+            
+            this.coverImage = url;
+            this.coverImageUrl = '';
+        },
+        
+        useLastUploadedAsCover() {
+            if (this.uploadedImages.length > 0) {
+                this.coverImage = this.uploadedImages[this.uploadedImages.length - 1].url;
+            }
+        },
+        
+        clearCoverImage() {
+            this.coverImage = '';
+            this.coverImageUrl = '';
+        },
+        
+        insertIntoEditor(url) {
+            if (this.quill) {
+                const range = this.quill.getSelection() || { index: this.quill.getLength() };
+                this.quill.insertEmbed(range.index, 'image', url);
+                this.quill.setSelection(range.index + 1);
+            }
+        },
+        
+        // ==========================================
+        // ІНІЦІАЛІЗАЦІЯ
+        // ==========================================
+        
+        init() {
+            // Ініціалізація Quill після рендеру
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.initQuill();
+                }, 100);
+            });
+            
+            // Встановлюємо категорію
+            const categoryField = document.getElementById('user_article_category');
+            if (categoryField) {
+                categoryField.addEventListener('change', (e) => {
+                    this.category = e.target.value;
+                });
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

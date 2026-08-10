@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Скидання пароля</title>
+</head>
+<body style="font-family: Arial, sans-serif; background: #f9fafb; padding: 20px;">
+    <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <h2 style="color: #1f2937;">Запит на скидання пароля</h2>
+        <p style="color: #4b5563; line-height: 1.6;">
+            Ви (або хтось) запросили скидання пароля для облікового запису <strong>{{ user.getMail() }}</strong>.
+        </p>
+        <p style="color: #4b5563; line-height: 1.6;">
+            Щоб скинути пароль, натисніть кнопку нижче. Посилання дійсне до {{ resetToken.expiresAt|date('H:i') }}.
+        </p>
+        <a href="{{ url('app_reset_password_reset', {token: resetToken.token}) }}"
+           style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 15px;">
+            Скинути пароль
+        </a>
+        <p style="color: #9ca3af; font-size: 0.9em; margin-top: 20px;">
+            Якщо ви не запитували скидання пароля, просто проігноруйте цей лист.
+        </p>
+    </div>
+</body>
+</html>

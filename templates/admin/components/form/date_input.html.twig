@@ -1,0 +1,482 @@
+{# templates/admin/components/form/date_input.html.twig #}
+
+{# Базове поле дати #}
+{% block date_input_basic %}
+    {% set field = field|default(null) %}
+    {% set placeholder = placeholder|default('Оберіть дату...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set icon = icon|default('fas fa-calendar-alt') %}
+    {% set show_label = show_label|default(true) %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label and field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10',
+                        'placeholder': placeholder
+                    }
+                }) }}
+            {% else %}
+                <input type="date" 
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10"
+                       placeholder="{{ placeholder }}">
+            {% endif %}
+            
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="{{ icon }} text-surface-400"></i>
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле дати з часом #}
+{% block datetime_input %}
+    {% set field = field|default(null) %}
+    {% set date_placeholder = date_placeholder|default('Дата') %}
+    {% set time_placeholder = time_placeholder|default('Час') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = show_label|default(true) %}
+    {% set value = value|default('') %}
+    
+    {% if value and value is not empty %}
+        {% set date_value = value|date('Y-m-d') %}
+        {% set time_value = value|date('H:i') %}
+    {% else %}
+        {% set date_value = '' %}
+        {% set time_value = '' %}
+    {% endif %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label %}
+            <label class="block text-sm font-medium text-surface-700">
+                <i class="fas fa-clock mr-1"></i> Дата та час
+            </label>
+        {% endif %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-calendar-day text-surface-400"></i>
+                </div>
+                <input type="date" 
+                       name="date"
+                       value="{{ date_value }}"
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pl-10"
+                       placeholder="{{ date_placeholder }}">
+            </div>
+            
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-clock text-surface-400"></i>
+                </div>
+                <input type="time" 
+                       name="time"
+                       value="{{ time_value }}"
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pl-10"
+                       placeholder="{{ time_placeholder }}">
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле дати з календарем Flatpickr #}
+{% block date_input_flatpickr %}
+    {% set field = field|default(null) %}
+    {% set placeholder = placeholder|default('Оберіть дату...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = show_label|default(true) %}
+    {% set options = options|default({}) %}
+    {% set input_id = field ? field.vars.id : 'date-' ~ random() %}
+    
+    {# Дефолтні опції Flatpickr #}
+    {% set flatpickr_options = {
+        'dateFormat': 'd.m.Y',
+        'locale': 'uk',
+        'allowInput': true,
+        'time_24hr': true
+    }|merge(options) %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label and field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 flatpickr-input',
+                        'placeholder': placeholder,
+                        'data-flatpickr': flatpickr_options|json_encode
+                    }
+                }) }}
+            {% else %}
+                <input type="text" 
+                       id="{{ input_id }}"
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 flatpickr-input"
+                       placeholder="{{ placeholder }}"
+                       data-flatpickr="{{ flatpickr_options|json_encode }}">
+            {% endif %}
+            
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-calendar-alt text-surface-400"></i>
+            </div>
+            
+            <button type="button" 
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-surface-400 hover:text-surface-600"
+                    onclick="document.getElementById('{{ input_id }}')._flatpickr.toggle()">
+                <i class="fas fa-calendar"></i>
+            </button>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле діапазону дат #}
+{% block date_range_input %}
+    {% set start_field = start_field|default(null) %}
+    {% set end_field = end_field|default(null) %}
+    {% set placeholder_start = placeholder_start|default('Дата початку') %}
+    {% set placeholder_end = placeholder_end|default('Дата завершення') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = show_label|default(true) %}
+    {% set label_text = label_text|default('Період') %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label %}
+            <label class="block text-sm font-medium text-surface-700">
+                <i class="fas fa-calendar-week mr-1"></i> {{ label_text }}
+            </label>
+        {% endif %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-play text-surface-400"></i>
+                </div>
+                
+                {% if start_field %}
+                    {{ form_widget(start_field, {
+                        'attr': {
+                            'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 date-range-start',
+                            'placeholder': placeholder_start
+                        }
+                    }) }}
+                {% else %}
+                    <input type="date" 
+                           class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 date-range-start"
+                           placeholder="{{ placeholder_start }}">
+                {% endif %}
+            </div>
+            
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-stop text-surface-400"></i>
+                </div>
+                
+                {% if end_field %}
+                    {{ form_widget(end_field, {
+                        'attr': {
+                            'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 date-range-end',
+                            'placeholder': placeholder_end
+                        }
+                    }) }}
+                {% else %}
+                    <input type="date" 
+                           class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10 date-range-end"
+                           placeholder="{{ placeholder_end }}">
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if start_field %}
+            {{ form_errors(start_field) }}
+        {% endif %}
+        
+        {% if end_field %}
+            {{ form_errors(end_field) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Поле дати з швидким вибором #}
+{% block date_input_with_quick_select %}
+    {% set field = field|default(null) %}
+    {% set placeholder = placeholder|default('Оберіть дату...') %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = show_label|default(true) %}
+    {% set input_id = field ? field.vars.id : 'date-quick-' ~ random() %}
+    
+    <div class="space-y-3 {{ extra_classes }}">
+        {% if show_label and field %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10',
+                        'placeholder': placeholder,
+                        'id': input_id
+                    }
+                }) }}
+            {% else %}
+                <input type="date" 
+                       id="{{ input_id }}"
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10"
+                       placeholder="{{ placeholder }}">
+            {% endif %}
+            
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-calendar-alt text-surface-400"></i>
+            </div>
+        </div>
+        
+        {# Швидкий вибір дат #}
+        <div class="flex flex-wrap gap-2">
+            <button type="button" 
+                    onclick="setDate('today', '{{ input_id }}')"
+                    class="text-xs px-3 py-1.5 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition">
+                Сьогодні
+            </button>
+            <button type="button" 
+                    onclick="setDate('tomorrow', '{{ input_id }}')"
+                    class="text-xs px-3 py-1.5 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition">
+                Завтра
+            </button>
+            <button type="button" 
+                    onclick="setDate('next_week', '{{ input_id }}')"
+                    class="text-xs px-3 py-1.5 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition">
+                Через тиждень
+            </button>
+            <button type="button" 
+                    onclick="setDate('next_month', '{{ input_id }}')"
+                    class="text-xs px-3 py-1.5 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition">
+                Через місяць
+            </button>
+            <button type="button" 
+                    onclick="clearDate('{{ input_id }}')"
+                    class="text-xs px-3 py-1.5 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition">
+                Очистити
+            </button>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+    </div>
+    
+    <script>
+        function setDate(type, inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const now = new Date();
+            let date = new Date();
+            
+            switch(type) {
+                case 'today':
+                    // Вже сьогодні
+                    break;
+                case 'tomorrow':
+                    date.setDate(now.getDate() + 1);
+                    break;
+                case 'next_week':
+                    date.setDate(now.getDate() + 7);
+                    break;
+                case 'next_month':
+                    date.setMonth(now.getMonth() + 1);
+                    break;
+            }
+            
+            // Форматуємо дату у форматі YYYY-MM-DD для input type="date"
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            input.value = `${year}-${month}-${day}`;
+            
+            // Тригеримо подію зміни для оновлення форми
+            input.dispatchEvent(new Event('change'));
+        }
+        
+        function clearDate(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+    </script>
+{% endblock %}
+
+{# Поле дати для публікації (з налаштуваннями) #}
+{% block publish_date_input %}
+    {% set field = field|default(null) %}
+    {% set article = article|default(null) %}
+    {% set help_text = help_text|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    
+    {% set now = 'now'|date('Y-m-d\\TH:i') %}
+    {% set tomorrow = '+1 day'|date('Y-m-d\\TH:i') %}
+    
+    <div class="space-y-3 {{ extra_classes }}">
+        <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-surface-700">
+                <i class="fas fa-calendar-check mr-1"></i> Дата публікації
+            </label>
+            
+            <button type="button" 
+                    onclick="setPublishNow()"
+                    class="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                Опублікувати зараз
+            </button>
+        </div>
+        
+        <div class="relative">
+            {% if field %}
+                {{ form_widget(field, {
+                    'attr': {
+                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10',
+                        'type': 'datetime-local'
+                    }
+                }) }}
+            {% else %}
+                <input type="datetime-local" 
+                       name="publish_date"
+                       class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 pl-10"
+                       value="{{ article and article.publishedAt ? article.publishedAt|date('Y-m-d\\TH:i') : '' }}">
+            {% endif %}
+            
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-clock text-surface-400"></i>
+            </div>
+        </div>
+        
+        {# Швидкий вибір #}
+        <div class="grid grid-cols-2 gap-2">
+            <button type="button" 
+                    onclick="setPublishTime('{{ now }}')"
+                    class="text-xs px-3 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition text-left">
+                <div class="font-medium">Зараз</div>
+                <div class="text-surface-500 text-xs">{{ 'now'|date('d.m.Y H:i') }}</div>
+            </button>
+            
+            <button type="button" 
+                    onclick="setPublishTime('{{ tomorrow }}')"
+                    class="text-xs px-3 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition text-left">
+                <div class="font-medium">Завтра</div>
+                <div class="text-surface-500 text-xs">{{ '+1 day'|date('d.m.Y H:i') }}</div>
+            </button>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {% if field %}
+            {{ form_errors(field) }}
+        {% endif %}
+        
+        {# Статус публікації #}
+        {% if article %}
+            <div class="p-3 border border-surface-200 rounded-lg bg-surface-50">
+                <div class="text-sm text-surface-700">
+                    {% if article.publishedAt %}
+                        {% if article.publishedAt > date() %}
+                            <div class="flex items-center gap-2 text-amber-700">
+                                <i class="fas fa-clock"></i>
+                                <span>Заплановано на {{ article.publishedAt|date('d.m.Y H:i') }}</span>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center gap-2 text-green-700">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Опубліковано {{ article.publishedAt|date('d.m.Y H:i') }}</span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="flex items-center gap-2 text-surface-600">
+                            <i class="fas fa-edit"></i>
+                            <span>Не опубліковано</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        function setPublishNow() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const datetimeInput = document.querySelector('input[type="datetime-local"]');
+            if (datetimeInput) {
+                datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                datetimeInput.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        function setPublishTime(datetime) {
+            const datetimeInput = document.querySelector('input[type="datetime-local"]');
+            if (datetimeInput) {
+                datetimeInput.value = datetime;
+                datetimeInput.dispatchEvent(new Event('change'));
+            }
+        }
+    </script>
+{% endblock %}

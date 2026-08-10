@@ -1,0 +1,115 @@
+<article class="group relative bg-white dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-200 dark:border-gray-700/50">
+    
+    <!-- Декоративний градієнт -->
+    <div class="absolute inset-0 bg-gradient-to-r from-red-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+    
+    <!-- Мініатюра -->
+    <a href="{{ path('admin_video_edit', {'id': video.id}) }}" class="block relative aspect-video overflow-hidden">
+        {% if video.thumbnail %}
+            <img src="{{ video.thumbnail }}" 
+                 alt="{{ video.title }}" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+        {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <svg class="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        {% endif %}
+        
+        <!-- Статус публікації -->
+        <div class="absolute top-2 left-2">
+            {% if video.isPublished %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs rounded-md">
+                    <i class="fas fa-check-circle"></i>
+                    Опубліковано
+                </span>
+            {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500 text-white text-xs rounded-md">
+                    <i class="fas fa-clock"></i>
+                    Чернетка
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- Тривалість -->
+        {% if video.duration %}
+        <div class="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium px-2 py-1 rounded-md">
+            {{ video.formattedDuration }}
+        </div>
+        {% endif %}
+        
+        <!-- Джерело -->
+        <div class="absolute top-2 right-2">
+            <span class="inline-flex items-center gap-1 px-2 py-1 bg-black/80 text-white text-xs rounded-md {{ video.providerColor }}">
+                <i class="{{ video.providerIcon }}"></i>
+            </span>
+        </div>
+    </a>
+    
+    <!-- Інформація -->
+    <div class="p-4">
+        <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-bold text-gray-900 dark:text-white line-clamp-2 flex-1">
+                <a href="{{ path('admin_video_edit', {'id': video.id}) }}" 
+                   class="hover:text-red-600 transition-colors">
+                    {{ video.title }}
+                </a>
+            </h3>
+            
+            <!-- Кнопка featured -->
+            <button onclick="toggleFeatured({{ video.id }}, this)"
+                    class="flex-shrink-0 w-8 h-8 rounded-full {{ video.isFeatured ? 'bg-yellow-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }} hover:scale-110 transition-all"
+                    title="{{ video.isFeatured ? 'Прибрати з рекомендацій' : 'Додати в рекомендації' }}">
+                <i class="fas fa-star"></i>
+            </button>
+        </div>
+        
+        <!-- Мета-інформація -->
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
+            <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1">
+                    <i class="far fa-eye"></i>
+                    {{ video.views }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="far fa-heart"></i>
+                    {{ video.likes }}
+                </span>
+            </div>
+            
+            {% if video.category %}
+                <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                    {{ video.category.name }}
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- Дата та дії -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+                <i class="far fa-calendar-alt mr-1"></i>
+                {{ video.createdAt|date('d.m.Y') }}
+            </span>
+            
+            <div class="flex gap-2">
+                <a href="{{ path('admin_video_edit', {'id': video.id}) }}" 
+                   class="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                   title="Редагувати">
+                    <i class="fas fa-edit"></i>
+                </a>
+                
+                <form method="post" action="{{ path('admin_video_delete', {'id': video.id}) }}" 
+      onsubmit="return confirm('Видалити це відео?');" class="inline">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ video.id) }}">
+    <button type="submit" 
+            class="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            title="Видалити">
+        <i class="fas fa-trash"></i>
+    </button>
+</form>
+            </div>
+        </div>
+    </div>
+</article>

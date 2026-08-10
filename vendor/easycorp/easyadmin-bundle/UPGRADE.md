@@ -1,0 +1,280 @@
+Upgrade Guide
+=============
+
+## EasyAdmin 5.2.0
+
+### HTML Markup Changes
+
+The HTML markup of the boolean switch has changed. Before, the element wrapping
+the switch applied the `.form-switch` CSS class and the checkbox used the
+`.form-check-input` class. Now, the switch is rendered with the new
+`<twig:ea:Switch>` component: the wrapping element uses the `.ea-switch` class and
+the checkbox uses the `.ea-switch-input` class. This affects both the switch shown
+in the `index` page and the one displayed in the `edit`/`new` forms. Update any
+custom CSS or JavaScript that targeted the old selectors.
+
+The HTML markup of the `<twig:ea:Flag>` component has changed slightly. There's a
+new `<span class="country-flag-wrapper">` element that wraps the `<svg>` image
+and the optional country name text. If your custom CSS or JavaScript selects
+country flags with direct-child or sibling selectors (e.g. `td > svg.country-flag`),
+update them; descendant selectors (e.g. `td svg.country-flag`) keep working as before.
+
+The HTML of icons when using a custom icon set has changed. Before, all HTML attributes
+were wrongly applied to both the wrapping `<span>` element and the inner `<svg>` element.
+Now, HTML attributes are only applied to the wrapping element. Update any custom CSS
+or JavaScript that targeted those attributes on the inner `<svg>` element.
+
+## Upgrading from Symfony 4.x to 5.x
+
+### Pretty URLs
+
+Using pretty URLs is now mandatory. They are created with a custom route loader
+that must be enabled in your application. If you use Symfony Flex, this file is
+created automatically for you. Otherwise, create this file manually:
+
+```yaml
+# config/routes/easyadmin.yaml
+easyadmin:
+    resource: .
+    type: easyadmin.routes
+```
+
+### Admin Context
+
+The global `ea` variable injected in all templates is removed in favor of the
+equivalent `ea()` Twig function, which returns the current context of the
+EasyAdmin application:
+
+```php
+// Before (4.x)
+{{ ea.i18n.translationDomain }}
+
+// After (5.x)
+{{ ea().i18n.translationDomain }}
+```
+
+### Main Menus
+
+The `linkToCrud()` method used to link to CRUD controllers from the main menu of the
+dashboard was removed in favor of the new `linkTo()` method:
+
+```php
+// Before (4.x)
+yield MenuItem::linkToCrud('Categories', 'fa fa-tags', Category::class);
+yield MenuItem::linkToCrud('Blog Posts', 'fa fa-file-text', BlogPost::class);
+yield MenuItem::linkToCrud(null, null, Comment::class);
+
+// After (5.x)
+yield MenuItem::linkTo(CategoryCrudController::class, 'Categories', 'fa fa-tags');
+yield MenuItem::linkTo(BlogPostCrudController::class, 'Blog Posts', 'fa fa-file-text');
+yield MenuItem::linkTo(CommentCrudController::class);
+```
+
+### Custom CRUD Actions
+
+Custom CRUD actions now require to apply the `#[AdminRoute]` attribute to them.
+Otherwise, they are ignored when generating routes for the backend and code
+like `->linkToCrudAction('foo')` will no longer work:
+
+```php
+// Before (4.x)
+use App\Entity\Comment;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use Symfony\Component\HttpFoundation\Response;
+
+class CommentCrudController extends AbstractCrudController
+{
+    // ...
+
+    public function configureActions(Actions $actions): Actions
+    {
+        return $actions
+            ->add(
+                Crud::PAGE_INDEX,
+                Action::new('markSpam', 'action.mark_spam')->linkToCrudAction('markCommentAsSpam')
+            )
+        ;
+    }
+
+    public function markCommentAsSpam(AdminContext $context): Response
+    {
+        /** @var Comment $comment */
+        $comment = $context->getEntity()->getInstance();
+
+        $comment->markAsSpam();
+        $this->entityManager->flush();
+
+        return $this->redirectToRoute('admin_comment_index');
+    }
+}
+
+// After (5.x)
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
+// ...
+
+class CommentCrudController extends AbstractCrudController
+{
+    // ...
+    
+    public function configureActions(Actions $actions): Actions
+    {
+        return $actions
+            ->add(
+                Crud::PAGE_INDEX,
+                Action::new('markSpam', 'action.mark_spam')->linkToCrudAction('markCommentAsSpam')
+            )
+        ;
+    }
+
+    #[AdminRoute('/{entityId:comment.id}/mark-as-spam')]
+    public function markCommentAsSpam(Comment $comment): Response
+    {
+        $comment->markAsSpam();
+        $this->entityManager->flush();
+
+        return $this->redirectToRoute('admin_comment_index');
+    }
+}
+```
+
+### Actions
+
+Some methods related to actions have been removed in favor of equivalent
+methods with better names:
+
+```php
+// Before (4.x)
+$action->displayAsLink()->...
+$action->displayAsButton()->...
+$action->displayAsForm()->...
+
+// After (5.x)
+$action->renderAsLink()->...
+$action->renderAsButton()->...
+$action->renderAsForm()->...
+```
+
+### Referrers
+
+EasyAdmin URLs no longer include the `referrer` query parameter, and the
+`AdminContext:getReferrer()` method was removed.
+
+The `referrerUrl` property and the `getReferrerUrl()` method of `BatchActionDto`
+were removed. The referrer URL is now handled automatically inside EasyAdmin.
+
+In your own actions, you can redirect to a specific URL (built with the
+`AdminUrlGenerator`) or get the referrer URL from the HTTP headers provided by browsers:
+
+```php
+// Before (4.x)
+return $this->redirect($context->getReferrer());
+return $this->redirect($batchActionDto->getReferrer());
+
+// After (5.x)
+return $this->redirect($adminContext->getRequest()->headers->get('referer'));
+```
+
+### Forms
+
+Form panels are now called Form fieldsets and the `FormField::addPanel()` method
+was removed:
+
+```php
+// Before (4.x)
+yield FormField::addPanel('...');
+
+// After (5.x)
+yield FormField::addFieldset('...');
+```
+
+### Attributes
+
+The `#[AdminCrud]` and `#[AdminAction]` attributes have been removed in favor
+of the `#[AdminRoute]` attribute.
+
+### Contracts
+
+The following contract interfaces changed:
+
+#### `Contracts\Context\AdminContextInterface`
+
+```php
+// Before (4.x)
+public function getCrudControllers(): CrudControllerRegistry;
+
+// After (5.x)
+public function getAdminControllers(): AdminControllerRegistry;
+```
+
+The `getSignedUrls()` and `getReferrer()` methods are removed.
+
+#### `Contracts\Controller\CrudControllerInterface`
+
+```php
+// Before (4.x)
+public function createEntity(string $entityFqcn);
+
+// After (5.x)
+public function createEntity(string $entityFqcn): object;
+```
+
+#### `Contracts\Orm\EntityPaginatorInterface`
+
+```php
+// Before (4.x)
+public function getResultsAsJson(): string;
+
+// After (5.x)
+public function getResultsAsJson(?callable $callback = null, ?string $twigTemplate = null, bool $renderAsHtml = false): string;
+```
+
+#### `Contracts\Provider\AdminContextInterface`
+
+```php
+// Before (4.x)
+public function hasContext(): bool;
+
+// After (5.x)
+// this method no longer exists;
+// alternative: check if getContext() return value is null
+```
+
+#### `Contracts\Menu\MenuItemMatcherInterface`
+
+The `isSelected()` and `isExpanded()` methods were removed. A new
+`markSelectedMenuItem(array<MenuItemDto> $menuItems, Request $request)` method
+has been added.
+
+#### `Contracts\Router\AdminRouteGeneratorInterface`
+
+```php
+// Before (4.x)
+public function findRouteName(string $dashboardFqcn, string $crudControllerFqcn, string $actionName): ?string;
+
+// After (5.x)
+public function findRouteName(string|null $dashboardFqcn = null, string|null $crudControllerFqcn = null, string|null $actionName = null): ?string;
+```
+
+The `usesPrettyUrls()` method was removed.
+
+### Static Analysis
+
+In 5.x, PHPStan will report an error if a class extends
+`AbstractCrudController` without specifying the entity type:
+
+> Class App\Controller\Admin\UserCrudController extends generic class
+> EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController
+> but does not specify its types: TEntity
+
+To fix this, update your controller like this:
+
+```diff
++ /**
++  * @extends AbstractCrudController<User>
++  */
+  class UserCrudController extends AbstractCrudController
+  {
+```

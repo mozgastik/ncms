@@ -1,0 +1,14 @@
+<footer class="w-full border-t border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-900 py-4 px-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-surface-500 dark:text-surface-400">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-copyright text-[10px]"></i>
+            <span>{{ "now"|date('Y') }} Новинний портал. Всі права захищено.</span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <span>Адмін-панель v{{ app_version|default('1.0.0') }}</span>
+            <span class="w-1 h-1 rounded-full bg-surface-300 dark:bg-surface-600"></span>
+            <span>Розроблено з <i class="fas fa-heart text-danger-500 text-[10px]"></i> для новин</span>
+        </div>
+    </div>
+</footer>

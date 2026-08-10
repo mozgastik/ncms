@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Категорії - Новинний портал{% endblock %}
+
+{% block body %}
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Усі категорії</h1>
+        <p class="text-gray-600">Оберіть категорію для перегляду статей</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for category in categories %}
+            <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition">
+                <h3 class="text-2xl font-bold mb-3 text-gray-800">
+                    <a href="{{ path('app_category_show', {slug: category.slug}) }}" 
+                       class="hover:text-blue-600 transition">
+                        {{ category.name }}
+                    </a>
+                </h3>
+                
+                {% if category.description %}
+                    <p class="text-gray-600 mb-4">{{ category.description|slice(0, 120) }}...</p>
+                {% endif %}
+                
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-500">
+                        Статей: {{ category.articles|length }}
+                    </span>
+                    <a href="{{ path('app_category_show', {slug: category.slug}) }}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        Перейти →
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-span-3 text-center py-12">
+                <p class="text-gray-500 text-lg">Категорій поки що немає</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

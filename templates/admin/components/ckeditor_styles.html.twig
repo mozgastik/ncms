@@ -1,0 +1,55 @@
+<link href="https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.css" rel="stylesheet">
+<style>
+    .ck-editor__editable {
+        min-height: 300px;
+    }
+    .image-preview-container {
+        position: relative;
+        margin-top: 10px;
+    }
+    .image-preview {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        border: 2px dashed #e5e7eb;
+    }
+    .remove-image-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .file-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .file-upload-area:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+    .file-upload-area.dragover {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    .form-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 1rem;
+        border-top: 1px solid #e5e7eb;
+        z-index: 100;
+    }
+</style>

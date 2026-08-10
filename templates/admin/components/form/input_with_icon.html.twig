@@ -1,0 +1,110 @@
+{# templates/admin/components/form/input_with_icon.html.twig #}
+
+{# Спрощена версія, яка працює з form_row #}
+{% macro input_with_icon(field, icon = null, placeholder = '', help_text = '', label = true, extra_classes = '') %}
+    {% set show_label = label %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {{ form_widget(field, {
+                'attr': {
+                    'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400' ~ (icon ? ' pl-10 pr-4' : ''),
+                    'placeholder': placeholder
+                }
+            }) }}
+            
+            {% if icon %}
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="{{ icon }} text-surface-400"></i>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {{ form_errors(field) }}
+    </div>
+{% endmacro %}
+
+{# Альтернативний підхід: компонент, що приймає готовий HTML #}
+{% block input_container %}
+    {% set show_label = label|default(true) %}
+    {% set container_class = container_class|default('') %}
+    {% set help_text = help_text|default('') %}
+    
+    <div class="space-y-2 {{ container_class }}">
+        {% if show_label and label_text is defined %}
+            <label class="block text-sm font-medium text-surface-700">
+                {{ label_text }}
+            </label>
+        {% endif %}
+        
+        {{ content|default('')|raw }}
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Компонент для відображення поля з іконкою (без використання form_widget) #}
+{% block custom_input_with_icon %}
+    {% set name = name|default('') %}
+    {% set value = value|default('') %}
+    {% set type = type|default('text') %}
+    {% set required = required|default(false) %}
+    {% set disabled = disabled|default(false) %}
+    {% set readonly = readonly|default(false) %}
+    {% set placeholder = placeholder|default('') %}
+    {% set icon = icon|default('') %}
+    {% set label_text = label_text|default('') %}
+    {% set help_text = help_text|default('') %}
+    {% set error = error|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = label|default(true) %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label and label_text %}
+            <label for="{{ name }}" class="block text-sm font-medium text-surface-700">
+                {{ label_text }}
+                {% if required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        {% endif %}
+        
+        <div class="relative">
+            <input type="{{ type }}"
+                   name="{{ name }}"
+                   id="{{ name }}"
+                   value="{{ value }}"
+                   {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                   {% if required %}required{% endif %}
+                   {% if disabled %}disabled{% endif %}
+                   {% if readonly %}readonly{% endif %}
+                   class="block w-full px-4 py-2.5 border {{ error ? 'border-red-300' : 'border-surface-300' }} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 {{ icon ? 'pl-10 pr-4' : 'px-4' }}">
+            
+            {% if icon %}
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="{{ icon }} text-surface-400"></i>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if error %}
+            <p class="text-xs text-red-600">{{ error }}</p>
+        {% endif %}
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}

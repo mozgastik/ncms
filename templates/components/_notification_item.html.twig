@@ -1,0 +1,36 @@
+{% set isPersonalUnread = notification.target == constant('App\\Entity\\Notification\\AdminNotification::TARGET_SPECIFIC') and not notification.isRead %}
+
+<a href="{{ notification.link ?: path('user_notifications') }}"
+   class="flex gap-3 px-4 py-3 transition border-b border-gray-100 dark:border-gray-800 last:border-0 {{ isPersonalUnread ? 'bg-blue-50/70 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {{ notification_bg_class(notification.type) }}">
+        <i class="fas {{ notification_icon_class(notification.type) }}"></i>
+    </div>
+
+    <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-2">
+            <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                {{ notification.title }}
+            </p>
+
+            <span class="shrink-0 text-[10px] font-bold uppercase {{ isPersonalUnread ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
+                {{ isPersonalUnread ? 'Нове' : 'Прочитане' }}
+            </span>
+        </div>
+
+        {% if notification.message %}
+            <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+                {{ notification.message }}
+            </p>
+        {% endif %}
+
+        <div class="flex items-center justify-between gap-2 mt-2">
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">
+                {{ notification_format_date(notification.createdAt) }}
+            </p>
+
+            {% if isPersonalUnread %}
+                <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0" aria-label="Непрочитане повідомлення"></span>
+            {% endif %}
+        </div>
+    </div>
+</a>

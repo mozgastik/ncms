@@ -1,0 +1,1381 @@
+<!-- ============================================ -->
+<!-- КОМЕНТАРІ З QUILL + EMOJI + AJAX (ФІНАЛЬНА ВЕРСІЯ) -->
+<!-- ============================================ -->
+
+<div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-gray-200 dark:border-gray-800" 
+     id="comments"
+     data-article-id="{{ article.id }}">
+    
+    <!-- Заголовок -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            Коментарі
+            <span class="ml-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium" id="comment-count">
+                {{ comments|length }}
+            </span>
+        </h2>
+        
+        {% if comments|length > 0 %}
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Сортувати:</span>
+                <select id="commentSort" 
+                        class="text-sm bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all">
+                    <option value="newest">Найновіші</option>
+                    <option value="oldest">Найстаріші</option>
+                    <option value="likes">Найпопулярніші</option>
+                </select>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- ФОРМА ДОДАВАННЯ КОМЕНТАРЯ -->
+    <!-- ============================================ -->
+    
+    <div class="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700" id="comment-form-container">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+            {% if app.user %}
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Додати коментар як <span class="text-blue-600 dark:text-blue-400">{{ app.user.username }}</span></span>
+            {% else %}
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Додати коментар (гість)</span>
+            {% endif %}
+        </h3>
+        
+        <form id="comment-form" class="space-y-4" novalidate>
+            <!-- Поля для гостей -->
+            {% if not app.user %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="comment_authorName">
+                            Ваше ім'я <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               id="comment_authorName" 
+                               name="comment[authorName]" 
+                               class="guest-field w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-all duration-300"
+                               placeholder="Введіть ваше ім'я"
+                               required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="comment_authorEmail">
+                            Ваш email
+                        </label>
+                        <input type="email" 
+                               id="comment_authorEmail" 
+                               name="comment[authorEmail]" 
+                               class="guest-field w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-all duration-300"
+                               placeholder="Введіть ваш email (необов'язково)">
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Ви коментуєте як: <span class="font-medium text-gray-900 dark:text-white">{{ app.user.username }}</span>
+                    {% if app.user.fullName %}
+                        <span class="text-gray-400 dark:text-gray-500">({{ app.user.fullName }})</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <!-- Quill Editor -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Ваш коментар <span class="text-red-500">*</span>
+                </label>
+                
+                <div id="comment-quill-editor" 
+                     class="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-blue-400 dark:hover:border-blue-600"
+                     style="min-height: 100px; max-height: 300px; background: white;"></div>
+                
+                <input type="hidden" id="comment-content" name="comment[content]" value="">
+                
+                <div id="comment-content-error" class="text-red-500 text-sm mt-1 hidden">Будь ласка, напишіть коментар</div>
+                
+                <div class="flex justify-between items-center mt-2">
+                    <div class="flex items-center gap-2">
+                        <!-- Кнопка емодзі -->
+                        <button type="button" id="emoji-btn" class="text-gray-500 hover:text-blue-500 transition p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" title="Емодзі">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+                        <div id="emoji-picker-container" style="display:none; position: absolute; z-index: 1000; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); padding: 8px;"></div>
+                        
+                        <!-- Кнопка очищення -->
+                        <button type="button" id="clear-editor-btn" class="text-gray-500 hover:text-red-500 transition p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="Очистити">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <span id="comment-char-count">0</span>
+                        <span>/1000</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CSRF Token -->
+            <input type="hidden" name="_token" value="{{ csrf_token('comment_form') }}">
+            
+            <!-- Кнопки -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    {% if app.user %}
+                        <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ app.user.username }}</span>
+                    {% else %}
+                        <svg class="w-4 h-4 inline-block mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span>Ви залишаєте коментар як гість</span>
+                    {% endif %}
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="reset" 
+                            id="reset-form-btn"
+                            class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300">
+                        Скасувати
+                    </button>
+                    <button type="submit" 
+                            id="submit-comment-btn"
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 w-full sm:w-auto group disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        <span>
+                        Надіслати</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- СПИСОК КОМЕНТАРІВ -->
+    <!-- ============================================ -->
+    
+    <div id="comments-list" class="space-y-6">
+        {% if comments|length > 0 %}
+            {% for comment in comments %}
+                <div class="comment-item bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-all duration-300 hover:scale-[1.01]" 
+                data-comment-id="{{ comment.id }}"
+                data-created="{{ comment.createdAt|date('U') }}"
+                data-likes="{{ comment.likes|length }}"
+                data-csrf-token="{{ csrf_token('comment_delete' ~ comment.id) }}">
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                        <div class="flex items-center gap-3">
+                            <!-- Аватар -->
+                            <div class="relative">
+                                {% if comment.user %}
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-0.5">
+                                        <div class="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                                        {# Створюємо унікальний URL з версією аватара #}
+                                        {% if comment.user.avatar %}
+                                                <img src="{{ asset('uploads/avatars/' ~ comment.user.avatar) }}" 
+                                                     alt="{{ comment.user.username }}" 
+                                                     class="w-full h-full object-cover">
+                                            {% else %}
+                                                <span class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                    {{ comment.user.username|first|upper }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                                {% else %}
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 p-0.5">
+                                        <div class="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">
+                                                {{ comment.authorName|first|upper }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Інформація про автора -->
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+                                    {{ comment.getDisplayName() }}
+                                    {% if comment.user %}
+                                        <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Авторизований
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">
+                                            Гість
+                                        </span>
+                                    {% endif %}
+                                    {% if comment.user == article.author %}
+                                        <span class="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs rounded-full">
+                                            Автор
+                                        </span>
+                                    {% endif %}
+                                </h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {{ comment.createdAt|date('d.m.Y H:i') }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Дії -->
+                        <div class="flex items-center gap-2">
+                            <!-- Лайк -->
+                            <!-- Кнопка лайка - ВИПРАВЛЕНО (видаліть перевірку userLiked) -->
+<button class="comment-like-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 group"
+        data-comment-id="{{ comment.id }}"
+        onclick="likeComment({{ comment.id }})">
+    <svg class="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:scale-110 transition-all" 
+         fill="none" 
+         stroke="currentColor" 
+         viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+    </svg>
+    <span class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-red-500">{{ comment.likes|length }}</span>
+</button>
+                            
+                            <!-- Відповісти -->
+                            <button class="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                                    onclick="replyToComment({{ comment.id }}, '{{ comment.getDisplayName()|escape('js') }}')"
+                                    title="Відповісти">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                </svg>
+                            </button>
+
+
+                            <!-- Кнопка видалення -->
+                    {% if is_granted('ROLE_ADMIN') or (app.user and comment.user and app.user.id == comment.user.id) %}
+        <button class="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                onclick="deleteComment({{ comment.id }})"
+                title="Видалити">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+        </button>
+    {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Текст коментаря -->
+                    <div class="pl-0 sm:pl-15">
+                        <div class="comment-content prose max-w-none text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
+                            {{ comment.content|raw }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            {% if comments|length > 10 %}
+                <div class="text-center mt-8">
+                    <button id="load-more-comments" 
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 hover:scale-105 transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Завантажити більше коментарів</span>
+                    </button>
+                </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- Немає коментарів -->
+            <div class="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl border border-gray-200 dark:border-gray-800" id="empty-comments">
+                <svg class="w-20 h-20 text-gray-400 dark:text-gray-600 mx-auto mb-4 animate-bounce" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Ще немає коментарів
+                </h4>
+                <p class="text-gray-600 dark:text-gray-400 text-lg">
+                    Будьте першим, хто залишить коментар!
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- МЕТА-ТЕГ ДЛЯ CSRF -->
+<!-- ============================================ -->
+
+<meta name="csrf-token" content="{{ csrf_token('comment_form') }}">
+
+<!-- ============================================ -->
+<!-- СТИЛІ ДЛЯ КОМЕНТАРІВ -->
+<!-- ============================================ -->
+
+<style>
+.comment-item {
+    transition: all 0.3s ease;
+}
+
+.comment-like-btn {
+    transition: all 0.2s ease;
+}
+
+.comment-like-btn svg {
+    transition: all 0.2s ease;
+}
+
+.comment-content p:last-child {
+    margin-bottom: 0;
+}
+
+.comment-content blockquote {
+    border-left: 3px solid #3b82f6;
+    padding-left: 1rem;
+    margin: 0.5rem 0;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.comment-content ul,
+.comment-content ol {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.comment-content a {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.comment-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.comment-content code {
+    background: #f3f4f6;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.dark .comment-content code {
+    background: #1f2937;
+}
+
+.dark .comment-content blockquote {
+    color: #9ca3af;
+}
+
+@keyframes commentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.comment-item {
+    animation: commentFadeIn 0.5s ease-out forwards;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+#comment-quill-editor .ql-toolbar {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background: #f8fafc;
+}
+
+#comment-quill-editor .ql-container {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    min-height: 100px;
+}
+
+#comment-quill-editor .ql-editor {
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#comment-quill-editor.border-red-500 {
+    border-color: #ef4444 !important;
+}
+
+#comment-quill-editor.border-2 {
+    border-width: 2px !important;
+}
+
+.custom-notification {
+    max-width: 90%;
+    word-break: break-word;
+}
+
+@media (min-width: 640px) {
+    .custom-notification {
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 640px) {
+    .comment-item {
+        padding: 1rem;
+    }
+}
+
+.dark #comment-quill-editor .ql-toolbar {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark #comment-quill-editor .ql-container {
+    background: #111827;
+    border-color: #374151;
+}
+
+.dark #comment-quill-editor .ql-editor {
+    color: #e5e7eb;
+}
+
+.dark #comment-quill-editor .ql-editor.ql-blank::before {
+    color: #6b7280;
+}
+
+.dark #comment-quill-editor .ql-stroke {
+    stroke: #9ca3af;
+}
+
+.dark #comment-quill-editor .ql-fill {
+    fill: #9ca3af;
+}
+
+.dark #comment-quill-editor .ql-picker-label {
+    color: #9ca3af;
+}
+
+.dark #comment-quill-editor .ql-picker-options {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark #comment-quill-editor .ql-picker-item {
+    color: #9ca3af;
+}
+
+.dark #comment-quill-editor .ql-picker-item:hover {
+    color: #e5e7eb;
+}
+
+#emoji-picker-container emoji-picker {
+    --background: white;
+    --border-color: #e5e7eb;
+}
+
+.dark #emoji-picker-container emoji-picker {
+    --background: #1f2937;
+    --border-color: #374151;
+}
+
+#comment-char-count {
+    transition: color 0.3s ease;
+}
+</style>
+
+<!-- ============================================ -->
+<!-- ОСНОВНИЙ JAVASCRIPT -->
+<!-- ============================================ -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.2/index.js"></script>
+<script>
+// ============================================
+// 1. ІНІЦІАЛІЗАЦІЯ
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Ініціалізація коментарів...');
+    
+    initQuillEditor();
+    initCommentForm();
+    initCommentSorting();
+    initLoadMoreComments();
+    initClearEditor();
+    initResetForm();
+    
+    console.log('✅ Коментарі ініціалізовано успішно!');
+});
+
+// ============================================
+// 2. ГЛОБАЛЬНІ ЗМІННІ
+// ============================================
+
+let quillInstance = null;
+let emojiPickerInstance = null;
+let isEmojiPickerVisible = false;
+
+// ============================================
+// 3. QUILL EDITOR
+// ============================================
+
+function initQuillEditor() {
+    if (typeof Quill === 'undefined') {
+        console.warn('⚠️ Quill library not loaded');
+        return;
+    }
+
+    const editor = document.getElementById('comment-quill-editor');
+    if (!editor || quillInstance) return;
+
+    try {
+        const icons = Quill.import('ui/icons');
+        if (icons) {
+            icons['emoji'] = '<svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="8" r="1"/><circle cx="12" cy="8" r="1"/><path d="M5 11 Q9 14 13 11" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+        }
+
+        quillInstance = new Quill(editor, {
+            theme: 'snow',
+            placeholder: 'Напишіть ваш коментар тут...',
+            modules: {
+                toolbar: {
+                    container: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'font': ['aref', 'mirza', 'roboto'] }],
+                    ],
+
+
+                    handlers: {
+                        'emoji': () => toggleEmojiPicker()
+                    }
+                }
+            }
+        });
+
+        quillInstance.on('text-change', function() {
+            const html = quillInstance.root.innerHTML;
+            const hiddenInput = document.getElementById('comment-content');
+            if (hiddenInput) {
+                hiddenInput.value = html;
+            }
+            updateCharCount(html);
+            
+            const errorElement = document.getElementById('comment-content-error');
+            if (errorElement && !errorElement.classList.contains('hidden')) {
+                const textContent = html.replace(/<[^>]*>/g, '').trim();
+                if (textContent.length > 0) {
+                    errorElement.classList.add('hidden');
+                    editor.classList.remove('border-2', 'border-red-500');
+                }
+            }
+        });
+
+        initEmojiPicker();
+
+    } catch (error) {
+        console.error('❌ Error initializing Quill:', error);
+    }
+}
+
+// ============================================
+// 4. ЛІЧИЛЬНИК СИМВОЛІВ
+// ============================================
+
+function updateCharCount(html) {
+    const charCount = document.getElementById('comment-char-count');
+    if (!charCount) return;
+    
+    const text = html ? html.replace(/<[^>]*>/g, '') : '';
+    const count = text.length;
+    charCount.textContent = count;
+    
+    if (count > 900) {
+        charCount.classList.add('text-orange-500', 'font-bold');
+    } else {
+        charCount.classList.remove('text-orange-500', 'font-bold');
+    }
+    
+    if (count > 1000 && quillInstance) {
+        const currentText = quillInstance.root.innerHTML;
+        const truncated = currentText.substring(0, 1000);
+        quillInstance.root.innerHTML = truncated;
+        charCount.textContent = 1000;
+    }
+}
+
+// ============================================
+// 5. ЕМОДЗІ ПІКЕР
+// ============================================
+
+function initEmojiPicker() {
+    try {
+        const container = document.getElementById('emoji-picker-container');
+        if (!container) return;
+
+        if (container.querySelector('emoji-picker')) {
+            return;
+        }
+
+        const picker = document.createElement('emoji-picker');
+        picker.setAttribute('locale', 'uk');
+        container.appendChild(picker);
+        emojiPickerInstance = picker;
+
+        picker.addEventListener('emoji-click', (event) => {
+            const emoji = event.detail.unicode;
+            if (emoji && quillInstance) {
+                const range = quillInstance.getSelection(true);
+                quillInstance.insertText(range.index, emoji);
+                quillInstance.setSelection(range.index + emoji.length);
+            }
+            hideEmojiPicker();
+        });
+
+        const emojiBtn = document.getElementById('emoji-btn');
+        if (emojiBtn) {
+            emojiBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleEmojiPicker();
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#emoji-btn') && 
+                !e.target.closest('emoji-picker') && 
+                !e.target.closest('#emoji-picker-container')) {
+                hideEmojiPicker();
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error initializing emoji picker:', error);
+    }
+}
+
+function toggleEmojiPicker() {
+    const container = document.getElementById('emoji-picker-container');
+    if (!container) return;
+    
+    isEmojiPickerVisible = !isEmojiPickerVisible;
+    container.style.display = isEmojiPickerVisible ? 'block' : 'none';
+}
+
+function hideEmojiPicker() {
+    const container = document.getElementById('emoji-picker-container');
+    if (container) {
+        container.style.display = 'none';
+        isEmojiPickerVisible = false;
+    }
+}
+
+// ============================================
+// 6. ВІДПРАВКА ФОРМИ (AJAX)
+// ============================================
+
+function initCommentForm() {
+    const form = document.getElementById('comment-form');
+    if (!form) return;
+    
+    const quillEditor = document.querySelector('#comment-quill-editor .ql-editor');
+    if (quillEditor) {
+        quillEditor.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    }
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let content = '';
+        if (quillInstance) {
+            content = quillInstance.root.innerHTML;
+        }
+        
+        const textContent = content.replace(/<[^>]*>/g, '').trim();
+        if (!textContent || textContent.length < 2) {
+            showNotification('Будь ласка, напишіть коментар', 'warning');
+            const editor = document.getElementById('comment-quill-editor');
+            if (editor) {
+                editor.classList.add('border-2', 'border-red-500', 'animate-shake');
+                setTimeout(() => {
+                    editor.classList.remove('border-2', 'border-red-500', 'animate-shake');
+                }, 2000);
+            }
+            return;
+        }
+        
+        const hiddenInput = document.getElementById('comment-content');
+        if (hiddenInput) {
+            hiddenInput.value = content;
+        }
+        
+        const formData = new FormData(form);
+        const articleId = document.querySelector('[data-article-id]')?.dataset.articleId;
+        formData.append('article_id', articleId);
+        
+        const submitBtn = document.getElementById('submit-comment-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = `
+            <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Відправка...
+        `;
+        submitBtn.disabled = true;
+        
+        const url = `/article/${articleId}/comment/ajax`;
+        
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error('Сервер повернув: ' + text.substring(0, 100));
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                if (data.comment) {
+                    addCommentToList(data.comment);
+                }
+                clearQuillEditor();
+                updateCommentCount();
+                showNotification(data.message || 'Коментар додано!', 'success');
+                
+                const guestFields = form.querySelectorAll('.guest-field');
+                guestFields.forEach(field => {
+                    if (field.tagName === 'INPUT') {
+                        field.value = '';
+                    }
+                });
+            } else {
+                showNotification(data.message || 'Помилка при додаванні коментаря', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Помилка:', error);
+            showNotification('Помилка: ' + error.message, 'error');
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+}
+
+// ============================================
+// 7. ОЧИЩЕННЯ РЕДАКТОРА
+// ============================================
+
+function clearQuillEditor() {
+    if (quillInstance) {
+        quillInstance.setContents([]);
+        quillInstance.history.clear();
+        quillInstance.update();
+    }
+    
+    const hiddenInput = document.getElementById('comment-content');
+    if (hiddenInput) {
+        hiddenInput.value = '';
+    }
+    
+    const charCount = document.getElementById('comment-char-count');
+    if (charCount) {
+        charCount.textContent = '0';
+        charCount.classList.remove('text-orange-500', 'font-bold');
+    }
+    
+    const errorElement = document.getElementById('comment-content-error');
+    if (errorElement) {
+        errorElement.classList.add('hidden');
+    }
+    
+    const editor = document.getElementById('comment-quill-editor');
+    if (editor) {
+        editor.classList.remove('border-2', 'border-red-500');
+    }
+}
+
+function initClearEditor() {
+    const clearBtn = document.getElementById('clear-editor-btn');
+    if (!clearBtn) return;
+    
+    clearBtn.addEventListener('click', function() {
+        clearQuillEditor();
+        showNotification('Редактор очищено', 'info');
+    });
+}
+
+function initResetForm() {
+    const resetBtn = document.getElementById('reset-form-btn');
+    if (!resetBtn) return;
+    
+    resetBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        clearQuillEditor();
+        
+        const guestFields = document.querySelectorAll('.guest-field');
+        guestFields.forEach(field => {
+            if (field.tagName === 'INPUT') {
+                field.value = '';
+            }
+        });
+        
+        showNotification('Форму скинуто', 'info');
+    });
+}
+
+// ============================================
+// 8. ДОДАВАННЯ КОМЕНТАРЯ В СПИСОК
+// ============================================
+
+function addCommentToList(comment) {
+    const commentsList = document.getElementById('comments-list');
+    if (!commentsList) return;
+    
+    const emptyMessage = commentsList.querySelector('#empty-comments');
+    if (emptyMessage) {
+        emptyMessage.remove();
+    }
+    
+    const commentElement = createCommentElement(comment);
+    commentsList.insertBefore(commentElement, commentsList.firstChild);
+    
+    setTimeout(() => {
+        commentElement.style.opacity = '1';
+        commentElement.style.transform = 'translateY(0)';
+    }, 10);
+    
+    commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function createCommentElement(comment) {
+    const div = document.createElement('div');
+    div.className = 'comment-item bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:shadow-xl transition-all duration-300 hover:scale-[1.01]';
+    div.dataset.commentId = comment.id;
+    div.dataset.created = comment.createdAt || Math.floor(Date.now() / 1000);
+    div.dataset.likes = comment.likes || 0;
+    div.dataset.author = comment.authorName || comment.user?.username || 'Анонім';
+    div.dataset.csrfToken = comment.csrfToken || '';
+    div.style.opacity = '0';
+    div.style.transform = 'translateY(20px)';
+    div.style.transition = 'all 0.5s ease-out';
+    
+    const authorName = comment.authorName || comment.user?.username || 'Анонім';
+    const initials = authorName.charAt(0).toUpperCase();
+    const isAuthorized = comment.user ? true : false;
+    const isAuthor = comment.isAuthor || false;
+    
+    const avatarColor = comment.user ? 'from-blue-500 to-purple-600' : 'from-gray-400 to-gray-500';
+    const statusBadge = isAuthorized 
+        ? `<span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Авторизований
+        </span>`
+        : `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">Гість</span>`;
+    
+    const authorBadge = isAuthor 
+        ? `<span class="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs rounded-full">Автор</span>`
+        : '';
+    
+    const date = comment.createdAt 
+        ? new Date(comment.createdAt).toLocaleString('uk-UA', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : new Date().toLocaleString('uk-UA');
+    
+    div.innerHTML = `
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br ${avatarColor} p-0.5">
+                        <div class="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                            ${comment.user?.avatar 
+                                ? `<img src="/uploads/avatars/${comment.user.avatar}" alt="${authorName}" class="w-full h-full object-cover">`
+                                : `<span class="text-lg font-bold ${comment.user ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}">${initials}</span>`
+                            }
+                        </div>
+                    </div>
+                    ${isAuthorized ? '<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>' : ''}
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+                        ${authorName}
+                        ${statusBadge}
+                        ${authorBadge}
+                    </h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ${date}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button class="comment-like-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 group"
+                        data-comment-id="${comment.id}"
+                        onclick="likeComment(${comment.id})">
+                    <svg class="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:scale-110 transition-all" 
+                         fill="none" 
+                         stroke="currentColor" 
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-red-500">${comment.likes || 0}</span>
+                </button>
+                
+                <button class="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                        onclick="replyToComment(${comment.id}, '${authorName.replace(/'/g, "\\'")}')"
+                        title="Відповісти">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                </button>
+                
+                ${comment.canDelete ? `
+                    <button class="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                            onclick="deleteComment(${comment.id})"
+                            title="Видалити">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+        
+        <div class="pl-0 sm:pl-15">
+            <div class="comment-content prose max-w-none text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
+                ${comment.content || ''}
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+// ============================================
+// 9. ОНОВЛЕННЯ ЛІЧИЛЬНИКА
+// ============================================
+
+function updateCommentCount() {
+    const countSpan = document.getElementById('comment-count');
+    if (!countSpan) return;
+    
+    const commentsList = document.getElementById('comments-list');
+    if (!commentsList) return;
+    
+    const commentItems = commentsList.querySelectorAll('.comment-item');
+    countSpan.textContent = commentItems.length;
+}
+
+// ============================================
+// 10. СОРТУВАННЯ
+// ============================================
+
+function initCommentSorting() {
+    const sortSelect = document.getElementById('commentSort');
+    const commentsList = document.getElementById('comments-list');
+    
+    if (!sortSelect || !commentsList) return;
+    
+    sortSelect.addEventListener('change', function() {
+        const comments = Array.from(commentsList.querySelectorAll('.comment-item'));
+        if (comments.length === 0) return;
+        
+        const sortBy = this.value;
+        
+        comments.sort((a, b) => {
+            const dateA = parseInt(a.dataset.created) || 0;
+            const dateB = parseInt(b.dataset.created) || 0;
+            const likesA = parseInt(a.dataset.likes) || 0;
+            const likesB = parseInt(b.dataset.likes) || 0;
+            
+            if (sortBy === 'newest') return dateB - dateA;
+            if (sortBy === 'oldest') return dateA - dateB;
+            if (sortBy === 'likes') return likesB - likesA;
+            return 0;
+        });
+        
+        comments.forEach(comment => {
+            commentsList.appendChild(comment);
+        });
+        
+        comments.forEach((comment, index) => {
+            setTimeout(() => {
+                comment.style.transition = 'all 0.3s ease';
+                comment.style.opacity = '1';
+                comment.style.transform = 'translateX(0)';
+            }, index * 50);
+        });
+    });
+}
+
+// ============================================
+// 11. ЗАВАНТАЖЕННЯ БІЛЬШЕ
+// ============================================
+
+function initLoadMoreComments() {
+    const loadMoreBtn = document.getElementById('load-more-comments');
+    if (!loadMoreBtn) return;
+    
+    let page = 1;
+    
+    loadMoreBtn.addEventListener('click', function() {
+        page++;
+        const articleId = document.querySelector('[data-article-id]')?.dataset.articleId;
+        
+        if (!articleId) {
+            showNotification('ID статті не знайдено', 'error');
+            return;
+        }
+        
+        const originalText = this.innerHTML;
+        this.innerHTML = `
+            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Завантаження...
+        `;
+        this.disabled = true;
+        
+        fetch(`/article/${articleId}/comments?page=${page}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.comments && data.comments.length > 0) {
+                const commentsList = document.getElementById('comments-list');
+                data.comments.forEach(comment => {
+                    const element = createCommentElement(comment);
+                    commentsList.appendChild(element);
+                });
+                updateCommentCount();
+                if (data.hasMore === false) {
+                    this.style.display = 'none';
+                }
+            } else {
+                this.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error loading comments:', error);
+            showNotification('Помилка завантаження коментарів', 'error');
+        })
+        .finally(() => {
+            this.innerHTML = originalText;
+            this.disabled = false;
+        });
+    });
+}
+
+
+// ============================================
+// ЛАЙК КОМЕНТАРЯ (ЧЕРЕЗ FORMDATA)
+// ============================================
+
+window.likeComment = function(commentId) {
+    const button = document.querySelector(`.comment-like-btn[data-comment-id="${commentId}"]`);
+    if (!button) return;
+    
+    const svg = button.querySelector('svg');
+    const countSpan = button.querySelector('span:last-child');
+    
+    // Анімація
+    button.classList.add('scale-125');
+    setTimeout(() => button.classList.remove('scale-125'), 300);
+    
+    // Формуємо дані
+    const formData = new FormData();
+    formData.append('action', 'like');
+    
+    fetch(`/article/comment/${commentId}/vote`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            countSpan.textContent = data.likes;
+            
+            if (data.userVote === 'like') {
+                svg.classList.add('text-red-500');
+                svg.setAttribute('fill', 'currentColor');
+            } else {
+                svg.classList.remove('text-red-500');
+                svg.setAttribute('fill', 'none');
+            }
+            
+            const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+            if (commentItem) {
+                commentItem.dataset.likes = data.likes;
+            }
+            
+            showNotification(data.message || 'Оцінку оновлено', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Помилка:', error);
+        showNotification('Помилка при оцінці коментаря', 'error');
+    });
+};
+// ============================================
+// 13. ВІДПОВІДЬ
+// ============================================
+
+window.replyToComment = function(commentId, authorName) {
+    if (!quillInstance) return;
+    
+    const text = `@${authorName}, `;
+    const range = quillInstance.getSelection(true);
+    quillInstance.insertText(range.index, text);
+    quillInstance.setSelection(range.index + text.length);
+    quillInstance.focus();
+    
+    const form = document.getElementById('comment-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.classList.add('animate-pulse');
+        setTimeout(() => form.classList.remove('animate-pulse'), 1000);
+    }
+};
+
+
+/// ============================================
+// 14.ВИДАЛЕННЯ КОМЕНТАРЯ (ПОВНА ВЕРСІЯ)
+// ============================================
+
+window.deleteComment = function(commentId) {
+    if (!confirm('Ви впевнені, що хочете видалити цей коментар?')) {
+        return;
+    }
+    
+    const commentElement = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+    if (!commentElement) {
+        showNotification('Коментар не знайдено', 'error');
+        return;
+    }
+    
+    // Отримуємо CSRF токен
+    let csrfToken = commentElement.dataset.csrfToken;
+    
+    if (!csrfToken) {
+        const formToken = document.querySelector('#comment-form input[name="_token"]');
+        if (formToken) {
+            csrfToken = formToken.value;
+        }
+    }
+    
+    if (!csrfToken) {
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken) {
+            csrfToken = metaToken.content;
+        }
+    }
+    
+    if (!csrfToken) {
+        showNotification('CSRF токен не знайдено', 'error');
+        return;
+    }
+    
+    // Анімація видалення
+    commentElement.style.transition = 'all 0.3s ease';
+    commentElement.style.opacity = '0';
+    commentElement.style.transform = 'scale(0.9)';
+    
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    
+    fetch(`/article/comment/${commentId}/delete`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            commentElement.remove();
+            updateCommentCount();
+            
+            const commentsList = document.getElementById('comments-list');
+            if (commentsList && commentsList.querySelectorAll('.comment-item').length === 0) {
+                showEmptyCommentsMessage();
+            }
+            
+            showNotification(data.message || 'Коментар видалено', 'success');
+        } else {
+            showNotification(data.message || 'Помилка при видаленні', 'error');
+            commentElement.style.opacity = '1';
+            commentElement.style.transform = 'scale(1)';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Помилка:', error);
+        showNotification('Помилка: ' + error.message, 'error');
+        commentElement.style.opacity = '1';
+        commentElement.style.transform = 'scale(1)';
+    });
+};
+
+// ============================================
+// 15. ПОВІДОМЛЕННЯ "НЕМАЄ КОМЕНТАРІВ"
+// ============================================
+
+function showEmptyCommentsMessage() {
+    const commentsList = document.getElementById('comments-list');
+    if (!commentsList) return;
+    
+    commentsList.innerHTML = `
+        <div class="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl border border-gray-200 dark:border-gray-800" id="empty-comments">
+            <svg class="w-20 h-20 text-gray-400 dark:text-gray-600 mx-auto mb-4 animate-bounce" 
+                 fill="none" 
+                 stroke="currentColor" 
+                 viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Ще немає коментарів
+            </h4>
+            <p class="text-gray-600 dark:text-gray-400 text-lg">
+                Будьте першим, хто залишить коментар!
+            </p>
+        </div>
+    `;
+}
+
+// ============================================
+// 16. СПОВІЩЕННЯ
+// ============================================
+
+function showNotification(message, type = 'info') {
+    if (window.app && typeof window.app.notify === 'function') {
+        window.app.notify(message, type);
+        return;
+    }
+    
+    const oldNotifications = document.querySelectorAll('.custom-notification');
+    oldNotifications.forEach(n => n.remove());
+    
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+    };
+    
+    const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+    
+    const notification = document.createElement('div');
+    notification.className = `custom-notification fixed top-4 right-4 z-50 ${colors[type] || colors.info} text-white px-6 py-4 rounded-lg shadow-2xl transform transition-all duration-500 translate-x-full max-w-md flex items-start gap-3`;
+    notification.innerHTML = `
+        <span class="text-xl font-bold">${icons[type] || 'ℹ'}</span>
+        <span class="flex-1">${message}</span>
+        <button class="text-white hover:text-gray-200 transition" onclick="this.parentElement.remove()">✕</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+        notification.classList.add('translate-x-0');
+    }, 10);
+    
+    setTimeout(() => {
+        notification.classList.remove('translate-x-0');
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 5000);
+}
+
+console.log('✅ Коментарі з Quill + Emoji + AJAX успішно завантажено!');
+</script>

@@ -1,0 +1,88 @@
+# https://help.github.com/en/actions
+name: Quality and Security CI
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    quality:
+        name: Quality checks for Quill bundle (PHP ${{ matrix.php-versions }})
+        runs-on: ubuntu-22.04
+        strategy:
+            fail-fast: true
+            matrix:
+                php-versions: ['8.1', '8.2', '8.3', '8.4']
+
+        steps:
+            # —— Setup Github actions 🐙 —————————————————————————————————————————————
+            # https://github.com/actions/checkout (official)
+            # Skip checkout when running locally with act
+            - name: Checkout
+              if: ${{ !env.ACT }}
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.ref }}
+                  fetch-depth: 0
+
+            # https://github.com/shivammathur/setup-php (community)
+            - name: Setup PHP, extensions and composer with shivammathur/setup-php
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php-versions }}
+                  extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json
+              env:
+                  update: true
+
+            - name: Check PHP Version
+              run: php -v
+
+            # —— Composer 🧙‍️ —————————————————————————————————————————————————————————
+            - name: Validate composer.json and composer.lock
+              run: composer validate
+
+            - name: Cache Composer packages
+              id: composer-cache
+              uses: actions/cache@v4
+              with:
+                  path: vendor
+                  key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-php-
+
+            - name: Install Dependencies
+              run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+            ## —— Coding standards ✨ ————————————————————————————————————————————————
+            - name: Coding standards checks (php-cs-fixer)
+              run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
+
+            ## —— Static analysis ✨ —————————————————————————————————————————————————
+            - name: Static analysis of PHP code (PHPStan)
+              run: |
+                  rm -rf /tmp/phpstan
+                  ./vendor/bin/phpstan --memory-limit=1G analyse
+
+            ## —— Twig cs fixer ✨ —————————————————————————————————————————————————
+            - name: Coding standards checks (twig-cs-fixer)
+              run: ./vendor/bin/twigcs ./src/templates/
+
+            ## —— Tests ✅ ———————————————————————————————————————————————————————————
+            - name: Run functionnal and unit tests
+              run: ./vendor/bin/phpunit
+
+    security:
+        name: Security checks for Quill bundle (PHP ${{ matrix.php-versions }})
+        runs-on: ubuntu-22.04
+        strategy:
+            fail-fast: true
+            matrix:
+                php-versions: ['8.1', '8.2', '8.3', '8.4']
+        steps:
+            # Skip checkout when running locally with act
+            - name: Checkout
+              if: ${{ !env.ACT }}
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.ref }}
+            - uses: symfonycorp/security-checker-action@v4

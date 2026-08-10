@@ -1,6 +1,6 @@
 /**
  * Bundled by jsDelivr using Rollup v2.79.2 and Terser v5.39.0.
- * Original file: /npm/eventemitter3@5.0.1/index.mjs
+ * Original file: /npm/eventemitter3@5.0.4/index.mjs
  *
  * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
  */

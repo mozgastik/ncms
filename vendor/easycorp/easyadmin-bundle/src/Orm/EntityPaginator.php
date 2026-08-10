@@ -1,0 +1,240 @@
+<?php
+
+namespace EasyCorp\Bundle\EasyAdminBundle\Orm;
+
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\CountWalker;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Orm\EntityPaginatorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\PaginatorDto;
+use EasyCorp\Bundle\EasyAdminBundle\Factory\EntityFactory;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGeneratorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Util\PageRangeCalculator;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Twig\Environment;
+use Twig\Error\Error;
+
+/**
+ * @author Javier Eguiluz <javier.eguiluz@gmail.com>
+ */
+final class EntityPaginator implements EntityPaginatorInterface
+{
+    private ?int $currentPage = null;
+    private ?int $pageSize = null;
+    private ?int $rangeSize = null;
+    private ?int $rangeEdgeSize = null;
+    /** @var iterable<mixed>|null */
+    private ?iterable $results = null;
+    private ?int $numResults = null;
+    private ?int $rangeFirstResultNumber = null;
+    private ?int $rangeLastResultNumber = null;
+
+    public function __construct(
+        private readonly AdminUrlGeneratorInterface $adminUrlGenerator,
+        private readonly EntityFactory $entityFactory,
+        private readonly RequestStack $requestStack,
+        private readonly Environment $twig,
+    ) {
+    }
+
+    public function paginate(PaginatorDto $paginatorDto, QueryBuilder $queryBuilder): EntityPaginatorInterface
+    {
+        $this->pageSize = $paginatorDto->getPageSize();
+        $this->rangeSize = $paginatorDto->getRangeSize();
+        $this->rangeEdgeSize = $paginatorDto->getRangeEdgeSize();
+        $this->currentPage = max(1, $paginatorDto->getPageNumber());
+        $firstResult = ($this->currentPage - 1) * $this->pageSize;
+        $this->rangeFirstResultNumber = $this->pageSize * ($this->currentPage - 1) + 1;
+        $this->rangeLastResultNumber = $this->rangeFirstResultNumber + $this->pageSize - 1;
+
+        $query = $queryBuilder
+            ->setFirstResult($firstResult)
+            ->setMaxResults($this->pageSize)
+            ->getQuery();
+
+        if (0 === \count($queryBuilder->getDQLPart('join'))) {
+            $query->setHint(CountWalker::HINT_DISTINCT, false);
+        }
+
+        $paginator = new Paginator($query, $paginatorDto->fetchJoinCollection());
+
+        if (null === $useOutputWalkers = $paginatorDto->useOutputWalkers()) {
+            $havingPart = $queryBuilder->getDQLPart('having');
+            if (\is_array($havingPart)) {
+                $useOutputWalkers = \count($havingPart) > 0;
+            } else {
+                $useOutputWalkers = null !== $havingPart;
+            }
+        }
+        $paginator->setUseOutputWalkers($useOutputWalkers);
+
+        $this->results = $paginator->getIterator();
+        $this->numResults = $paginator->count();
+        if ($this->rangeLastResultNumber > $this->numResults) {
+            $this->rangeLastResultNumber = $this->numResults;
+        }
+
+        return $this;
+    }
+
+    public function generateUrlForPage(int $page): string
+    {
+        $currentRequest = $this->requestStack->getCurrentRequest();
+        if (null === $currentRequest) {
+            throw new \RuntimeException('The URL for the paginator page cannot be generated because there is no current HTTP request.');
+        }
+
+        return $this->adminUrlGenerator
+            ->set(EA::PAGE, $page)
+            ->setController($currentRequest->attributes->get(EA::CRUD_CONTROLLER_FQCN))
+            ->setAction($currentRequest->attributes->get(EA::CRUD_ACTION))
+            ->generateUrl()
+        ;
+    }
+
+    public function getCurrentPage(): int
+    {
+        return $this->currentPage;
+    }
+
+    public function getLastPage(): int
+    {
+        return max(1, (int) ceil($this->numResults / $this->pageSize));
+    }
+
+    /**
+     * It returns the closest available pages around the current page.
+     * E.g. a paginator with 35 pages, if current page = 1, returns [1, 2, 3, 4, null, 35]
+     *      if current page = 18, returns [1, null, 15, 16, 17, 18, 19, 20, 21, null, 35]
+     * NULL values mean a gap in the pagination (they can be represented as ellipsis in the templates).
+     *
+     * @return iterable<int|null>
+     */
+    public function getPageRange(?int $pagesOnEachSide = null, ?int $pagesOnEdges = null): iterable
+    {
+        return PageRangeCalculator::calculate($this->getCurrentPage(), $this->getLastPage(), $pagesOnEachSide ?? $this->rangeSize, $pagesOnEdges ?? $this->rangeEdgeSize);
+    }
+
+    public function getPageSize(): int
+    {
+        return $this->pageSize;
+    }
+
+    public function hasPreviousPage(): bool
+    {
+        return $this->currentPage > 1;
+    }
+
+    public function getPreviousPage(): int
+    {
+        return max(1, $this->currentPage - 1);
+    }
+
+    public function hasNextPage(): bool
+    {
+        return $this->currentPage < $this->getLastPage();
+    }
+
+    public function getNextPage(): int
+    {
+        return min($this->getLastPage(), $this->currentPage + 1);
+    }
+
+    public function hasToPaginate(): bool
+    {
+        return $this->numResults > $this->pageSize;
+    }
+
+    public function isOutOfRange(): bool
+    {
+        if (1 === $this->currentPage) {
+            return false;
+        }
+
+        return $this->currentPage < 1 || $this->currentPage > $this->getLastPage();
+    }
+
+    public function getNumResults(): int
+    {
+        return $this->numResults;
+    }
+
+    public function getResults(): ?iterable
+    {
+        return $this->results;
+    }
+
+    /*
+     * Returns the result number (e.g. 21) of the first value
+     * included in the current results range. It's useful to
+     * display a message like: "Showing 21 to 40 of 135 entries"
+     */
+    public function getRangeFirstResultNumber(): int
+    {
+        return $this->rangeFirstResultNumber;
+    }
+
+    /*
+     * Returns the result number (e.g. 40) of the last value
+     * included in the current results range. It's useful to
+     * display a message like: "Showing 21 to 40 of 135 entries"
+     */
+    public function getRangeLastResultNumber(): int
+    {
+        return $this->rangeLastResultNumber;
+    }
+
+    public function getResultsAsJson(?callable $callback = null, ?string $twigTemplate = null, bool $renderAsHtml = false): string
+    {
+        $jsonResult = ['results' => []];
+        foreach ($this->getResults() ?? [] as $entityInstance) {
+            $entityDto = $this->entityFactory->createForEntityInstance($entityInstance);
+
+            if (null !== $twigTemplate) {
+                try {
+                    $entityAsString = $this->twig->render($twigTemplate, ['entity' => $entityInstance]);
+                } catch (Error $e) {
+                    throw new \RuntimeException(sprintf(
+                        'Error rendering autocomplete template "%s" for entity "%s": %s',
+                        $twigTemplate,
+                        $entityInstance::class,
+                        $e->getMessage()
+                    ), 0, $e);
+                }
+
+                if (!$renderAsHtml) {
+                    $entityAsString = htmlspecialchars($entityAsString, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+                }
+            } elseif (null !== $callback) {
+                $entityAsString = (string) $callback($entityInstance);
+
+                if (!$renderAsHtml) {
+                    $entityAsString = htmlspecialchars($entityAsString, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+                }
+            } else {
+                $entityAsString = (string) $entityDto;
+            }
+
+            $jsonResult['results'][] = [
+                EA::ENTITY_ID => $entityDto->getPrimaryKeyValueAsString(),
+                'entityAsString' => $entityAsString,
+            ];
+        }
+
+        $currentRequest = $this->requestStack->getCurrentRequest();
+        if (null === $currentRequest) {
+            throw new \RuntimeException('The URL for the paginator next page cannot be generated because there is no current HTTP request.');
+        }
+        $nextPageUrl = !$this->hasNextPage() ? null : $this->adminUrlGenerator
+            ->set(EA::PAGE, $this->getNextPage())
+            ->setController($currentRequest->attributes->get(EA::CRUD_CONTROLLER_FQCN))
+            ->setAction($currentRequest->attributes->get(EA::CRUD_ACTION))
+            ->generateUrl()
+        ;
+
+        $jsonResult['next_page'] = $nextPageUrl;
+
+        return json_encode($jsonResult, \JSON_THROW_ON_ERROR);
+    }
+}

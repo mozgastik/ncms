@@ -1,0 +1,43 @@
+/* Utilities */
+/* ------------------------------------------------------------------------- */
+
+/* Shared primitive tokens, modeled on the shadcn/ui (Tailwind) system.
+   New primitives use the --ea- prefix to avoid clashes with host-app / Bootstrap /
+   third-party CSS variables.*/
+:root {
+    /* Components reference these for all animations instead of defining their own timing. */
+    /* Easing curves */
+    --ea-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ea-ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ea-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Duration scale */
+    --ea-duration-fast: 100ms; /* overlay fades */
+    --ea-duration-default: 150ms; /* default — colors / interactive controls */
+    --ea-duration-slow: 200ms; /* rotations, transforms */
+    --ea-duration-slower: 300ms; /* drawer / panel slides */
+
+    /* Convenience defaults (used when a component doesn't need to pick) */
+    --ea-transition-duration: var(--ea-duration-default);
+    --ea-transition-timing: var(--ea-ease-in-out);
+}
+
+/* Shared border-radius tokens, modeled on the shadcn/ui radius scale and tied to
+   the project's --border-radius* variables. Components expose a "radius" option
+   that adds one of these classes; when unset, they inherit the default radius.
+   These are loaded last so they reliably override component default radii. */
+.ea-rounded-none {
+    border-radius: var(--border-radius-none);
+}
+.ea-rounded-sm {
+    border-radius: var(--border-radius-sm);
+}
+.ea-rounded-md {
+    border-radius: var(--border-radius);
+}
+.ea-rounded-lg {
+    border-radius: var(--border-radius-lg);
+}
+.ea-rounded-full {
+    border-radius: var(--border-radius-full);
+}

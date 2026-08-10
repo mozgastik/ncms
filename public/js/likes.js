@@ -1,5 +1,3 @@
-// public/js/likes.js
-
 document.addEventListener('DOMContentLoaded', function() {
     // Обробка лайків для всіх елементів
     document.querySelectorAll('.like-button, .dislike-button').forEach(button => {

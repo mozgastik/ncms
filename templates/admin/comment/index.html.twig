@@ -1,0 +1,561 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Управління коментарями - Адмін панель{% endblock %}
+
+{% block body %}
+<div x-data="commentManager()" x-init="init()" class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-600">comment</span>
+                        Коментарі
+                    </h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Управління коментарями користувачів</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    {# Статистика #}
+                    <div class="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="material-symbols-outlined text-green-600">check_circle</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <span x-text="stats.approved">0</span> схвалено
+                        </span>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        <span class="material-symbols-outlined text-base">pending</span>
+                        <span x-text="pendingCount">{{ pending_count }}</span> очікують
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {# Флеш повідомлення з анімацією #}
+        <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-xl flex items-center gap-3 shadow-lg border-l-4 
+                                {% if label == 'success' %}
+                                    bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-500
+                                {% elseif label == 'error' %}
+                                    bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-500
+                                {% else %}
+                                    bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-500
+                                {% endif %}">
+                        <span class="material-symbols-outlined">
+                            {{ label == 'success' ? 'check_circle' : (label == 'error' ? 'error' : 'info') }}
+                        </span>
+                        <span class="flex-1">{{ message }}</span>
+                        <button @click="show = false" class="hover:opacity-70 transition-opacity">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        {# Панель швидких дій #}
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            {# Фільтри #}
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ path('admin_comment_index') }}" 
+                   class="group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
+                          {{ app.request.query.get('filter') is null 
+                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">inbox</span>
+                        Всі
+                    </span>
+                </a>
+                <a href="{{ path('admin_comment_index', {'filter': 'pending'}) }}" 
+                   class="group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
+                          {{ app.request.query.get('filter') == 'pending' 
+                              ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' 
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">pending_actions</span>
+                        Очікують
+                    </span>
+                    {% if pending_count > 0 %}
+                        <span class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                            {{ pending_count }}
+                        </span>
+                    {% endif %}
+                </a>
+                <a href="{{ path('admin_comment_index', {'filter': 'approved'}) }}" 
+                   class="group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
+                          {{ app.request.query.get('filter') == 'approved' 
+                              ? 'bg-green-600 text-white shadow-lg shadow-green-600/30' 
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                        Схвалені
+                    </span>
+                </a>
+                <a href="{{ path('admin_comment_index', {'filter': 'spam'}) }}" 
+                   class="group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
+                          {{ app.request.query.get('filter') == 'spam' 
+                              ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' 
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">report</span>
+                        Спам
+                    </span>
+                </a>
+            </div>
+
+            {# Пошук та дії #}
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
+                    <input type="text" 
+                           placeholder="Пошук коментарів..." 
+                           x-model="searchQuery"
+                           @input="filterComments()"
+                           class="pl-10 pr-4 py-2.5 w-64 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+                
+                {# Масові дії #}
+                <div x-data="{ bulkOpen: false }" class="relative">
+                    <button @click="bulkOpen = !bulkOpen" 
+                            :disabled="selectedComments.length === 0"
+                            class="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined">more_vert</span>
+                            Дії (<span x-text="selectedComments.length">0</span>)
+                        </span>
+                    </button>
+                    
+                    <div x-show="bulkOpen" 
+                         @click.away="bulkOpen = false"
+                         x-transition
+                         class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <button @click="bulkApprove(); bulkOpen = false" 
+                                class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-green-600">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Схвалити вибрані
+                        </button>
+                        <button @click="bulkSpam(); bulkOpen = false" 
+                                class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-orange-600">
+                            <span class="material-symbols-outlined">report</span>
+                            Позначити як спам
+                        </button>
+                        <button @click="bulkDelete(); bulkOpen = false" 
+                                class="w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600">
+                            <span class="material-symbols-outlined">delete</span>
+                            Видалити вибрані
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Таблиця коментарів #}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left">
+                                <input type="checkbox" 
+                                       @click="toggleSelectAll($event)" 
+                                       :checked="isAllSelected"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Автор</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Коментар</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Стаття</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Дата</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Статус</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for comment in comments %}
+                            <tr x-data="{ showDetails: false }" 
+                                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors {{ comment.isSpam ? 'bg-red-50/30 dark:bg-red-900/10' : '' }}"
+                                :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': selectedComments.includes('{{ comment.id }}') }">
+                                
+                                {# Чекбокс #}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" 
+                                           value="{{ comment.id }}"
+                                           x-model="selectedComments"
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                </td>
+                                
+                                {# Автор #}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center
+                                                    {% if comment.user and comment.user.avatar %}
+                                                        {# З аватаром #}
+                                                    {% else %}
+                                                        bg-gradient-to-br from-blue-500 to-purple-600
+                                                    {% endif %}">
+                                            {% if comment.user and comment.user.avatar %}
+                                                <img src="{{ asset('uploads/avatars/' ~ comment.user.avatar) }}" 
+                                                     alt="{{ comment.displayName }}"
+                                                     class="h-10 w-10 rounded-full object-cover">
+                                            {% else %}
+                                                <span class="text-white font-medium text-sm">
+                                                    {{ comment.displayName|first|upper }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                {% if comment.user %}
+                                                    <div class="flex items-center gap-2">
+                                                        {{ comment.displayName }}
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
+                                                            <span class="material-symbols-outlined text-sm">verified</span>
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ comment.user.email }}</div>
+                                                {% else %}
+                                                    <div class="flex items-center gap-2">
+                                                        {{ comment.displayName }}
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                                            <span class="material-symbols-outlined text-sm">person</span>
+                                                            гість
+                                                        </span>
+                                                    </div>
+                                                    {% if comment.authorEmail %}
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ comment.authorEmail }}</div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if comment.authorIp %}
+                                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-sm">dns</span>
+                                                    <span>{{ comment.authorIp }}</span>
+                                                    <button @click="copyToClipboard('{{ comment.authorIp }}')" 
+                                                            class="ml-1 text-blue-500 hover:text-blue-700 transition-colors"
+                                                            title="Копіювати IP">
+                                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                {# Коментар #}
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900 dark:text-gray-200 max-w-xs">
+                                        <span x-show="!showDetails">{{ comment.content|slice(0, 100)|nl2br }}{{ comment.content|length > 100 ? '...' : '' }}</span>
+                                        <span x-show="showDetails" x-cloak>{{ comment.content|nl2br }}</span>
+                                        {% if comment.content|length > 100 %}
+                                            <button @click="showDetails = !showDetails" 
+                                                    class="text-blue-600 dark:text-blue-400 text-xs hover:underline mt-1">
+                                                <span x-show="!showDetails">Показати більше</span>
+                                                <span x-show="showDetails" x-cloak>Згорнути</span>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    {% if comment.parent %}
+                                        <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">subdirectory_arrow_right</span>
+                                            Відповідь на #{{ comment.parent.id }}
+                                        </div>
+                                    {% endif %}
+                                    {% if comment.replies|length > 0 %}
+                                        <div class="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">chat</span>
+                                            {{ comment.replies|length }} {{ comment.replies|length == 1 ? 'відповідь' : 'відповіді' }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                
+                                {# Стаття #}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if comment.article %}
+                                        <a href="{{ path('app_article_show', {'slug': comment.article.slug}) }}" 
+                                           target="_blank"
+                                           class="group flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
+                                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                            {{ comment.article.title|slice(0, 40) }}{{ comment.article.title|length > 40 ? '...' : '' }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-sm text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">article</span>
+                                            Статтю видалено
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                
+                                {# Дата #}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 dark:text-white">
+                                        {{ comment.createdAt|date('d.m.Y') }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ comment.createdAt|date('H:i') }}
+                                    </div>
+                                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">schedule</span>
+                                        {{ comment.createdAt|ago }}
+                                    </div>
+                                </td>
+                                
+                                {# Статус #}
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if comment.isApproved %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                                            Схвалено
+                                        </span>
+                                    {% elseif comment.isSpam %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
+                                            <span class="material-symbols-outlined text-sm">report</span>
+                                            Спам
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400">
+                                            <span class="material-symbols-outlined text-sm">pending</span>
+                                            Очікує
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                
+                                {# Дії #}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center gap-1">
+                                        {# Схвалити #}
+                                        {% if not comment.isApproved and not comment.isSpam %}
+                                            <form method="post" action="{{ path('admin_comment_approve', {'id': comment.id}) }}" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ comment.id) }}">
+                                                <button type="submit" 
+                                                        class="p-2 text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-all hover:scale-110"
+                                                        title="Схвалити"
+                                                        @click="confirmAction($event, 'Схвалити цей коментар?')">
+                                                    <span class="material-symbols-outlined">check_circle</span>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        {# Спам #}
+                                        {% if not comment.isSpam %}
+                                            <form method="post" action="{{ path('admin_comment_spam', {'id': comment.id}) }}" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('spam' ~ comment.id) }}">
+                                                <button type="submit" 
+                                                        class="p-2 text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition-all hover:scale-110"
+                                                        title="Позначити як спам"
+                                                        @click="confirmAction($event, 'Позначити цей коментар як спам?')">
+                                                    <span class="material-symbols-outlined">report</span>
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            {# Відновити зі спаму #}
+                                            <form method="post" action="{{ path('admin_comment_unspam', {'id': comment.id}) }}" class="inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('unspam' ~ comment.id) }}">
+                                                <button type="submit" 
+                                                        class="p-2 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all hover:scale-110"
+                                                        title="Відновити зі спаму"
+                                                        @click="confirmAction($event, 'Відновити цей коментар зі спаму?')">
+                                                    <span class="material-symbols-outlined">undo</span>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        {# Видалити #}
+                                        <form method="post" action="{{ path('admin_comment_delete', {'id': comment.id}) }}" class="inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ comment.id) }}">
+                                            <button type="submit" 
+                                                    class="p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all hover:scale-110"
+                                                    title="Видалити"
+                                                    @click="confirmAction($event, 'Ви впевнені, що хочете видалити цей коментар?')">
+                                                <span class="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">comment</span>
+                                        <p class="text-lg font-medium text-gray-700 dark:text-gray-300">Немає коментарів</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Коментарі з'являться тут після їх додавання</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {# Індикатор завантаження #}
+        <div x-show="loading" x-cloak class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl flex items-center gap-3">
+                <span class="material-symbols-outlined animate-spin text-blue-600">progress_activity</span>
+                <span class="text-gray-700 dark:text-gray-300">Обробка...</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function commentManager() {
+    return {
+        // Стан
+        selectedComments: [],
+        searchQuery: '',
+        loading: false,
+        stats: {
+            approved: {{ comments|filter(c => c.isApproved)|length }},
+            pending: {{ pending_count }},
+            spam: {{ comments|filter(c => c.isSpam)|length }}
+        },
+        pendingCount: {{ pending_count }},
+        
+        // Обчислювані властивості
+        get isAllSelected() {
+            const visibleIds = this.getVisibleCommentIds();
+            return visibleIds.length > 0 && visibleIds.every(id => this.selectedComments.includes(id));
+        },
+        
+        // Методи
+        init() {
+            this.filterComments();
+        },
+        
+        getVisibleCommentIds() {
+            const rows = document.querySelectorAll('tbody tr[data-comment-id]');
+            return Array.from(rows).map(row => row.dataset.commentId);
+        },
+        
+        toggleSelectAll(event) {
+            const checked = event.target.checked;
+            const visibleIds = this.getVisibleCommentIds();
+            
+            if (checked) {
+                this.selectedComments = [...new Set([...this.selectedComments, ...visibleIds])];
+            } else {
+                this.selectedComments = this.selectedComments.filter(id => !visibleIds.includes(id));
+            }
+        },
+        
+        filterComments() {
+            const query = this.searchQuery.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (query === '' || text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        },
+        
+        confirmAction(event, message) {
+            if (!confirm(message)) {
+                event.preventDefault();
+                return false;
+            }
+            this.loading = true;
+            return true;
+        },
+        
+        async copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                this.showToast('IP скопійовано: ' + text, 'success');
+            } catch (err) {
+                prompt('Скопіюйте вручну:', text);
+            }
+        },
+        
+        showToast(message, type = 'info') {
+            // Створюємо toast повідомлення
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 z-50 animate-slide-in
+                               ${type === 'success' ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'info'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        },
+        
+        async bulkApprove() {
+            if (this.selectedComments.length === 0) return;
+            if (!confirm(`Схвалити ${this.selectedComments.length} коментарів?`)) return;
+            
+            this.loading = true;
+            // Тут логіка масового схвалення
+            this.loading = false;
+            location.reload();
+        },
+        
+        async bulkSpam() {
+            if (this.selectedComments.length === 0) return;
+            if (!confirm(`Позначити ${this.selectedComments.length} коментарів як спам?`)) return;
+            
+            this.loading = true;
+            // Тут логіка масового позначення спаму
+            this.loading = false;
+            location.reload();
+        },
+        
+        async bulkDelete() {
+            if (this.selectedComments.length === 0) return;
+            if (!confirm(`Видалити ${this.selectedComments.length} коментарів? Цю дію неможливо скасувати.`)) return;
+            
+            this.loading = true;
+            // Тут логіка масового видалення
+            this.loading = false;
+            location.reload();
+        }
+    };
+}
+
+// Додаємо data-атрибути для коментарів
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('tbody tr').forEach((row, index) => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            const commentId = checkbox.value;
+            row.setAttribute('data-comment-id', commentId);
+        }
+    });
+});
+
+// Анімація для toast
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slide-in {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out;
+    }
+    [x-cloak] {
+        display: none !important;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

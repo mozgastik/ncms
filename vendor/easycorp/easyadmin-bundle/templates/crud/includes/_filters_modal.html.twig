@@ -1,0 +1,17 @@
+<twig:ea:Modal id="modal-filters" size="lg" headerClass="justify-content-between" bodyClass="p-0">
+    <twig:block name="header">
+        <twig:ea:Button type="button" size="sm" icon="internal:xmark" data-bs-dismiss="modal" id="modal-clear-button" formtarget="_self">
+            {{ 'filter.button.clear'|trans(domain: 'EasyAdminBundle') }}
+        </twig:ea:Button>
+        <h5 class="modal-title">
+            <twig:ea:Icon name="internal:filter" /> {{ 'filter.title'|trans(domain: 'EasyAdminBundle') }}
+        </h5>
+        <twig:ea:Button type="button" variant="primary" size="sm" data-bs-dismiss="modal" class="btn btn-sm btn-primary" id="modal-apply-button" formtarget="_self" icon="internal:check">
+            {{ 'filter.button.apply'|trans(domain: 'EasyAdminBundle') }}
+        </twig:ea:Button>
+    </twig:block>
+    <twig:block name="body">
+        {# The filters form will be loaded via AJAX for better performance #}
+        {# See @EasyAdmin/default/filters.html.twig template #}
+    </twig:block>
+</twig:ea:Modal>

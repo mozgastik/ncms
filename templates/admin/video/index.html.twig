@@ -1,0 +1,218 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Управління відео{% endblock %}
+
+{% block body %}
+<div class="content-container py-6">
+    <!-- Заголовок -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold gradient-text">Управління відео</h1>
+            <p class="text-surface-600 dark:text-surface-400 mt-1">
+                Всього {{ videos|length }} відео
+            </p>
+        </div>
+        
+        <div class="flex gap-3">
+            <a href="{{ path('admin_video_new') }}" 
+               class="px-4 py-2 bg-gradient-to-r from-red-500 to-purple-600 text-white rounded-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-xl">
+                <i class="fas fa-plus"></i>
+                <span>Додати відео</span>
+            </a>
+            
+            <a href="{{ path('admin_video_export') }}" 
+               class="px-4 py-2 glass-light rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 border border-surface-200/50 dark:border-surface-700/50">
+                <i class="fas fa-download"></i>
+                <span class="hidden sm:inline">Експорт</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Фільтри -->
+    <div class="glass-light rounded-xl p-4 mb-6 border border-surface-200/50 dark:border-surface-700/50">
+        <form method="get" action="" class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           name="search" 
+                           value="{{ app.request.query.get('search') }}"
+                           placeholder="Пошук відео за назвою..."
+                           class="w-full pl-12 pr-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all">
+                </div>
+            </div>
+            
+            <div class="w-40">
+                <select name="status" 
+                        class="w-full px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all">
+                    <option value="">Всі статуси</option>
+                    <option value="published" {{ app.request.query.get('status') == 'published' ? 'selected' : '' }}>Опубліковані</option>
+                    <option value="draft" {{ app.request.query.get('status') == 'draft' ? 'selected' : '' }}>Чернетки</option>
+                </select>
+            </div>
+            
+            <div class="w-40">
+                <select name="source" 
+                        class="w-full px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all">
+                    <option value="">Всі джерела</option>
+                    <option value="youtube" {{ app.request.query.get('source') == 'youtube' ? 'selected' : '' }}>YouTube</option>
+                    <option value="vimeo" {{ app.request.query.get('source') == 'vimeo' ? 'selected' : '' }}>Vimeo</option>
+                    <option value="rutube" {{ app.request.query.get('source') == 'rutube' ? 'selected' : '' }}>Rutube</option>
+                    <option value="local" {{ app.request.query.get('source') == 'local' ? 'selected' : '' }}>Локальні</option>
+                </select>
+            </div>
+            
+            <button type="submit" 
+                    class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center gap-2">
+                <i class="fas fa-filter"></i>
+                <span>Фільтрувати</span>
+            </button>
+            
+            {% if app.request.query.all|length > 0 %}
+            <a href="{{ path('admin_video_index') }}" 
+               class="px-4 py-2 glass-light rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-2">
+                <i class="fas fa-times"></i>
+                <span>Скинути</span>
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Список відео -->
+    {% if videos|length > 0 %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for video in videos %}
+                {% include 'admin/video/_card.html.twig' with {video: video} %}
+            {% endfor %}
+        </div>
+        
+        <!-- Пагінація -->
+        {% if totalPages is defined and totalPages > 1 %}
+        <div class="mt-8 flex justify-center">
+            <div class="flex gap-2">
+                {% if currentPage > 1 %}
+                <a href="{{ path('admin_video_index', {page: currentPage - 1, search: app.request.query.get('search'), status: app.request.query.get('status'), source: app.request.query.get('source')}) }}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-lg glass-light hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                
+                {% for i in 1..totalPages %}
+                    <a href="{{ path('admin_video_index', {page: i, search: app.request.query.get('search'), status: app.request.query.get('status'), source: app.request.query.get('source')}) }}" 
+                       class="w-10 h-10 flex items-center justify-center rounded-lg transition-colors {{ i == currentPage ? 'bg-gradient-to-r from-red-500 to-purple-600 text-white shadow-md' : 'glass-light hover:bg-surface-100 dark:hover:bg-surface-800' }}">
+                        {{ i }}
+                    </a>
+                {% endfor %}
+                
+                {% if currentPage < totalPages %}
+                <a href="{{ path('admin_video_index', {page: currentPage + 1, search: app.request.query.get('search'), status: app.request.query.get('status'), source: app.request.query.get('source')}) }}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-lg glass-light hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- Пустий стан -->
+        <div class="text-center py-16 glass-light rounded-xl border border-surface-200/50 dark:border-surface-700/50">
+            <div class="flex justify-center mb-4">
+                <div class="w-24 h-24 bg-gradient-to-br from-red-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-video text-4xl text-red-500/50"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-semibold text-surface-800 dark:text-surface-200 mb-2">Відео не знайдено</h3>
+            <p class="text-surface-500 dark:text-surface-400 mb-6 max-w-md mx-auto">
+                {% if app.request.query.get('search') %}
+                    За запитом "{{ app.request.query.get('search') }}" нічого не знайдено.
+                {% else %}
+                    Почніть з додавання першого відео до вашого сайту.
+                {% endif %}
+            </p>
+            <div class="flex gap-4 justify-center">
+                {% if app.request.query.all|length > 0 %}
+                <a href="{{ path('admin_video_index') }}" 
+                   class="px-6 py-3 glass-light rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-2">
+                    <i class="fas fa-times"></i>
+                    <span>Скинути фільтри</span>
+                </a>
+                {% endif %}
+                <a href="{{ path('admin_video_new') }}" 
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-purple-600 text-white rounded-lg hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus"></i>
+                    <span>Додати відео</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block javascripts %}
+{{ parent() }}
+
+<script>
+function deleteVideo(id, title) {
+    if (confirm(`Ви впевнені, що хочете видалити відео "${title}"?`)) {
+        // Отримуємо правильний токен для конкретного відео
+        const token = document.querySelector(`#delete-token-${id}`)?.value;
+        
+        if (!token) {
+            console.error('Токен не знайдено');
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/videos/${id}/delete`;
+        
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '_token';
+        tokenInput.value = token;
+        
+        form.appendChild(tokenInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Перемикання featured статусу
+function toggleFeatured(id, button) {
+    fetch(`/admin/videos/${id}/toggle-featured`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.classList.toggle('bg-yellow-500');
+            button.classList.toggle('text-white');
+            button.classList.toggle('bg-gray-200');
+            button.classList.toggle('text-gray-600');
+            
+            button.title = data.featured ? 'Прибрати з рекомендацій' : 'Додати в рекомендації';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Помилка при зміні статусу');
+    });
+}
+
+// Автоматичне приховування повідомлень
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            alert.style.transition = 'opacity 0.3s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 5000);
+});
+</script>
+{% endblock %}

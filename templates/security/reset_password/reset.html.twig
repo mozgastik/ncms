@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Новий пароль{% endblock %}
+
+{% block body %}
+<div class="min-h-[80vh] flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            Встановіть новий пароль
+        </h1>
+
+        {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+            {% for field in form.plainPassword %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {{ loop.first ? 'Новий пароль' : 'Повторіть пароль' }}
+                    </label>
+                    {{ form_widget(field, {
+                        'attr': {
+                            'class': 'w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all'
+                        }
+                    }) }}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors duration-200">
+                Змінити пароль
+            </button>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

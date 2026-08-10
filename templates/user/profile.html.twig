@@ -1,0 +1,815 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Редагування профілю - Новинний портал{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar Menu -->
+            <div class="lg:w-1/4">
+                {{ include('user/_sidebar.html.twig') }}
+            </div>
+            
+            <!-- Main Content -->
+            <div class="lg:w-3/4">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/50 p-6 md:p-8 border border-gray-100 dark:border-gray-700">
+                    
+                    <!-- Заголовок -->
+                    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-4 mb-8">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
+                                <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                    Редагування профілю
+                                </span>
+                            </h1>
+                            <p class="text-gray-600 dark:text-gray-400 mt-1">Оновіть вашу особисту інформацію</p>
+                        </div>
+                        <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                            <i class="fas fa-sync-alt text-xs mr-1"></i>
+                            Зміни зберігаються миттєво
+                        </span>
+                    </header>
+                    
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <!-- Avatar Section -->
+                        <div class="md:w-1/3">
+                            <div class="sticky top-8">
+                                <div class="text-center mb-6" x-data="avatarManager()">
+                                    <div class="relative inline-block">
+                                        <!-- Аватар -->
+                                        <div class="w-40 h-40 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4 overflow-hidden border-4 border-blue-100 dark:border-blue-900 shadow-lg relative">
+                                            {% if app.user.avatar %}
+                                                <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" 
+                                                     alt="{{ app.user.username }}" 
+                                                     class="w-full h-full object-cover"
+                                                     x-ref="avatarImage">
+                                            {% else %}
+                                                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center" x-ref="avatarPlaceholder">
+                                                    <span class="text-white text-4xl font-bold">
+                                                        {{ app.user.username|first|upper }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Прогрес завантаження -->
+                                            <div x-show="isUploading" 
+                                                 class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center flex-col transition-opacity duration-300"
+                                                 style="display: none;">
+                                                <div class="relative w-16 h-16">
+                                                    <svg class="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                                                        <circle cx="18" cy="18" r="16" fill="none" 
+                                                                class="stroke-white/20" stroke-width="3"/>
+                                                        <circle cx="18" cy="18" r="16" fill="none" 
+                                                                class="stroke-white transition-all duration-300" 
+                                                                stroke-width="3"
+                                                                stroke-dasharray="100"
+                                                                :stroke-dashoffset="100 - uploadProgress + '%'"
+                                                                stroke-linecap="round"/>
+                                                    </svg>
+                                                    <span class="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold" 
+                                                          x-text="Math.round(uploadProgress) + '%'">0%</span>
+                                                </div>
+                                                <span class="text-white text-xs mt-2">Завантаження...</span>
+                                            </div>
+                                            
+                                            <!-- Іконка завантаження (hover) -->
+                                            <label for="avatar_upload" 
+                                                   class="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 cursor-pointer shadow-lg transition-all hover:scale-110"
+                                                   :class="isUploading ? 'opacity-50 pointer-events-none' : ''">
+                                                <i class="fas fa-camera text-sm"></i>
+                                                <input type="file" id="avatar_upload" accept="image/*" class="hidden" 
+                                                       @change="uploadAvatar($event)"
+                                                       :disabled="isUploading">
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Інформація про поточний аватар -->
+                                        <div x-show="!isUploading && currentAvatar" 
+                                             class="mt-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                            <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                            Поточний аватар: <span x-text="currentAvatar"></span>
+                                        </div>
+                                        
+                                        <!-- Статус завантаження -->
+                                        <div x-show="uploadStatus" 
+                                             class="mt-2 text-sm p-2 rounded-lg transition-all duration-300"
+                                             :class="{
+                                                'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20': uploadStatus.type === 'success',
+                                                'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20': uploadStatus.type === 'error'
+                                             }"
+                                             style="display: none;">
+                                            <i class="fas" :class="uploadStatus.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                                            <span x-text="uploadStatus.message"></span>
+                                        </div>
+                                        
+                                        <!-- Вимоги до зображення -->
+                                        <div class="text-sm text-gray-500 dark:text-gray-400 mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700 text-left">
+                                            <p class="font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                                <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                                                Вимоги до зображення:
+                                            </p>
+                                            <ul class="space-y-1">
+                                                <li class="flex items-center gap-2">
+                                                    <i class="fas fa-check text-green-500 w-4"></i>
+                                                    <span>Розмір: до 2MB</span>
+                                                </li>
+                                                <li class="flex items-center gap-2">
+                                                    <i class="fas fa-check text-green-500 w-4"></i>
+                                                    <span>Формат: JPG, PNG, GIF</span>
+                                                </li>
+                                                <li class="flex items-center gap-2">
+                                                    <i class="fas fa-check text-green-500 w-4"></i>
+                                                    <span>Макс. розміри: 500x500px</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Section -->
+                        <div class="md:w-2/3" x-data="profileForm()">
+                            {{ form_start(form, {'attr': {'class': 'space-y-6', 'enctype': 'multipart/form-data', 'x-ref': 'profileForm'}}) }}
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Email -->
+                                <div class="md:col-span-2" x-data="inlineEditor({ 
+                                    editorId: 'profile-email',
+                                    inputValue: '{{ app.user.mail|e('js') }}',
+                                    fieldName: 'mail'
+                                })">
+                                    <div class="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                                        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Email</p>
+                                        <div x-show="!isEditing" class="mt-2 flex flex-wrap items-center gap-3">
+                                            <p class="text-base text-gray-900 dark:text-white" x-text="inputValue">{{ app.user.mail }}</p>
+                                            <button type="button" x-ref="emailTrigger" 
+                                                    class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                                    @click="enterEditMode()">
+                                                <i class="fas fa-pen text-xs mr-1"></i> Edit
+                                            </button>
+                                        </div>
+                                        <div x-show="isEditing" x-ref="inlineEditor" 
+                                             class="mt-2 flex flex-wrap items-center gap-2" 
+                                             @keydown="trapFocus($event)" style="display: none;">
+                                            <label :for="editorId + '-input'" class="sr-only">Email</label>
+                                            <input :id="editorId + '-input'" 
+                                                   x-ref="inlineEditorInput" 
+                                                   x-model="draftValue" 
+                                                   type="email" 
+                                                   autocomplete="email"
+                                                   :aria-describedby="editorId + '-help'"
+                                                   @focus="handleInputFocus($event)" 
+                                                   @keydown="handleInputKeydown($event)"
+                                                   class="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                            <button type="button" class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition" @click="commitChanges()">
+                                                <i class="fas fa-save text-xs mr-1"></i> Зберегти
+                                            </button>
+                                            <button type="button" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition" @click="revertChanges()">
+                                                <i class="fas fa-times text-xs mr-1"></i> Анулювати
+                                            </button>
+                                            <p :id="editorId + '-help'" class="mt-1 w-full text-xs text-gray-500 dark:text-gray-400">Press Enter to save, Escape to cancel</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Username -->
+                                <div x-data="inlineEditor({ 
+                                    editorId: 'profile-username',
+                                    inputValue: '{{ app.user.username|e('js') }}',
+                                    fieldName: 'username'
+                                })">
+                                    <div class="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                                        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Нік</p>
+                                        <div x-show="!isEditing" class="mt-2 flex flex-wrap items-center gap-3">
+                                            <p class="text-base text-gray-900 dark:text-white" x-text="inputValue">{{ app.user.username }}</p>
+                                            <button type="button" x-ref="usernameTrigger" 
+                                                    class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                                    @click="enterEditMode()">
+                                                <i class="fas fa-pen text-xs mr-1"></i> 
+                                            </button>
+                                        </div>
+                                        <div x-show="isEditing" x-ref="inlineEditor" 
+                                             class="mt-2 flex flex-wrap items-center gap-2" 
+                                             @keydown="trapFocus($event)" style="display: none;">
+                                            <label :for="editorId + '-input'" class="sr-only">Нік</label>
+                                            <input :id="editorId + '-input'" 
+                                                   x-ref="inlineEditorInput" 
+                                                   x-model="draftValue" 
+                                                   type="text" 
+                                                   autocomplete="username"
+                                                   :aria-describedby="editorId + '-help'"
+                                                   @focus="handleInputFocus($event)" 
+                                                   @keydown="handleInputKeydown($event)"
+                                                   class="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                            <button type="button" class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition" @click="commitChanges()">
+                                                <i class="fas fa-save text-xs mr-1"></i> Save
+                                            </button>
+                                            <button type="button" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition" @click="revertChanges()">
+                                                <i class="fas fa-times text-xs mr-1"></i>
+                                            </button>
+                                            <p :id="editorId + '-help'" class="mt-1 w-full text-xs text-gray-500 dark:text-gray-400">Press Enter to save, Escape to cancel</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Full Name -->
+                                <div x-data="inlineEditor({ 
+                                    editorId: 'profile-fullname',
+                                    inputValue: '{{ app.user.fullName|e('js') }}',
+                                    fieldName: 'fullName'
+                                })">
+                                    <div class="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                                        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Ім'я</p>
+                                        <div x-show="!isEditing" class="mt-2 flex flex-wrap items-center gap-3">
+                                            <p class="text-base text-gray-900 dark:text-white" x-text="inputValue">{{ app.user.fullName }}</p>
+                                            <button type="button" x-ref="fullnameTrigger" 
+                                                    class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                                    @click="enterEditMode()">
+                                                <i class="fas fa-pen text-xs mr-1"></i>
+                                            </button>
+                                        </div>
+                                        <div x-show="isEditing" x-ref="inlineEditor" 
+                                             class="mt-2 flex flex-wrap items-center gap-2" 
+                                             @keydown="trapFocus($event)" style="display: none;">
+                                            <label :for="editorId + '-input'" class="sr-only">Ім'я</label>
+                                            <input :id="editorId + '-input'" 
+                                                   x-ref="inlineEditorInput" 
+                                                   x-model="draftValue" 
+                                                   type="text" 
+                                                   autocomplete="name"
+                                                   :aria-describedby="editorId + '-help'"
+                                                   @focus="handleInputFocus($event)" 
+                                                   @keydown="handleInputKeydown($event)"
+                                                   class="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                            <button type="button" class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition" @click="commitChanges()">
+                                                <i class="fas fa-save text-xs mr-1"></i>
+                                            </button>
+                                            <button type="button" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition" @click="revertChanges()">
+                                                <i class="fas fa-times text-xs mr-1"></i>
+                                            </button>
+                                            <p :id="editorId + '-help'" class="mt-1 w-full text-xs text-gray-500 dark:text-gray-400">Press Enter to save, Escape to cancel</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Birth Date -->
+                                <div class="md:col-span-2" x-data="inlineEditor({ 
+                                    editorId: 'profile-birthdate',
+                                    inputValue: '{{ app.user.birthDate ? app.user.birthDate|date('Y-m-d') : '' }}',
+                                    fieldName: 'birthDate'
+                                })">
+                                    <div class="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                                        <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Дата народження</p>
+                                        <div x-show="!isEditing" class="mt-2 flex flex-wrap items-center gap-3">
+                                            <p class="text-base text-gray-900 dark:text-white" x-text="inputValue || 'Not set'">{{ app.user.birthDate ? app.user.birthDate|date('Y-m-d') : 'Not set' }}</p>
+                                            <button type="button" x-ref="birthdateTrigger" 
+                                                    class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                                    @click="enterEditMode()">
+                                                <i class="fas fa-pen text-xs mr-1"></i>
+                                            </button>
+                                        </div>
+                                        <div x-show="isEditing" x-ref="inlineEditor" 
+                                             class="mt-2 flex flex-wrap items-center gap-2" 
+                                             @keydown="trapFocus($event)" style="display: none;">
+                                            <label :for="editorId + '-input'" class="sr-only">Дата народження</label>
+                                            <input :id="editorId + '-input'" 
+                                                   x-ref="inlineEditorInput" 
+                                                   x-model="draftValue" 
+                                                   type="date" 
+                                                   :aria-describedby="editorId + '-help'"
+                                                   @focus="handleInputFocus($event)" 
+                                                   @keydown="handleInputKeydown($event)"
+                                                   class="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                            <button type="button" class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition" @click="commitChanges()">
+                                                <i class="fas fa-save text-xs mr-1"></i>
+                                            </button>
+                                            <button type="button" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition" @click="revertChanges()">
+                                                <i class="fas fa-times text-xs mr-1"></i>
+                                            </button>
+                                            <p :id="editorId + '-help'" class="mt-1 w-full text-xs text-gray-500 dark:text-gray-400">Press Enter to save, Escape to cancel</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bio -->
+                            <div x-data="inlineEditor({ 
+                                editorId: 'profile-bio',
+                                inputValue: '{{ app.user.bio|e('js') }}',
+                                fieldName: 'bio',
+                                isTextarea: true
+                            })">
+                                <div class="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                                    <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 uppercase">Про себе</p>
+                                    <div x-show="!isEditing" class="mt-2 flex flex-wrap items-start gap-3">
+                                        <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap" x-text="inputValue || 'No bio yet'">{{ app.user.bio ?: 'No bio yet' }}</p>
+                                        <button type="button" x-ref="bioTrigger" 
+                                                class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                                @click="enterEditMode()">
+                                            <i class="fas fa-pen text-xs mr-1"></i>
+                                        </button>
+                                    </div>
+                                    <div x-show="isEditing" x-ref="inlineEditor" 
+                                         class="mt-2 flex flex-wrap items-start gap-2" 
+                                         @keydown="trapFocus($event)" style="display: none;">
+                                        <label :for="editorId + '-input'" class="sr-only">Про себе</label>
+                                        <textarea :id="editorId + '-input'" 
+                                                  x-ref="inlineEditorInput" 
+                                                  x-model="draftValue" 
+                                                  :aria-describedby="editorId + '-help'"
+                                                  @focus="handleInputFocus($event)" 
+                                                  @keydown="handleInputKeydown($event)"
+                                                  rows="3"
+                                                  class="min-w-0 flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                  placeholder="Tell us about yourself..."></textarea>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" class="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition" @click="commitChanges()">
+                                                <i class="fas fa-save text-xs mr-1"></i>
+                                            </button>
+                                            <button type="button" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition" @click="revertChanges()">
+                                                <i class="fas fa-times text-xs mr-1"></i>
+                                            </button>
+                                        </div>
+                                        <p :id="editorId + '-help'" class="mt-1 w-full text-xs text-gray-500 dark:text-gray-400">Press Escape to cancel (Ctrl+Enter to save)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden fields for form submission -->
+                            <div style="display: none;">
+                                {{ form_widget(form.mail) }}
+                                {{ form_widget(form.username) }}
+                                {{ form_widget(form.fullName) }}
+                                {{ form_widget(form.birthDate) }}
+                                {{ form_widget(form.bio) }}
+                            </div>
+                            
+                            <!-- Buttons -->
+                            <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <a href="{{ path('user_dashboard') }}" 
+                                   class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+                                    <i class="fas fa-times"></i>
+                                    Скасувати
+                                </a>
+                                <button type="submit" 
+                                        class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 flex items-center gap-2">
+                                    <i class="fas fa-save"></i>
+                                    Зберегти зміни
+                                </button>
+                            </div>
+                            
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('alpine:init', () => {
+    // Inline Editor Component
+    Alpine.data('inlineEditor', (initialConfig = {}) => ({
+        isEditing: false,
+        inputValue: initialConfig.inputValue || '',
+        draftValue: initialConfig.inputValue || '',
+        editorId: initialConfig.editorId || null,
+        fieldName: initialConfig.fieldName || null,
+        isTextarea: initialConfig.isTextarea || false,
+        inputTemplateRefName: 'inlineEditorInput',
+        focusTrapTemplateRefName: 'inlineEditor',
+        returnFocusTemplateRefName: null,
+        _returnFocusElement: null,
+        _activeInputElement: null,
+        _focusInputRetryFrameId: null,
+
+        get hasChanges() {
+            return this.draftValue !== this.inputValue
+        },
+
+        enterEditMode() {
+            this.cancelFocusInputRetry()
+            this._returnFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : null
+            this.draftValue = this.inputValue
+            this.isEditing = true
+
+            this.$nextTick(() => {
+                this.focusInputWithRetry()
+            })
+        },
+
+        commitChanges() {
+            this.cancelFocusInputRetry()
+            
+            // Відправка AJAX запиту для збереження
+            if (this.fieldName) {
+                this.saveField(this.fieldName, this.draftValue)
+            }
+            
+            this.inputValue = this.draftValue
+            this.isEditing = false
+            this._activeInputElement = null
+            this.restoreFocus()
+            this.dispatchEditorEvent('commit')
+        },
+
+        revertChanges() {
+            this.cancelFocusInputRetry()
+            this.draftValue = this.inputValue
+            this.isEditing = false
+            this._activeInputElement = null
+            this.restoreFocus()
+            this.dispatchEditorEvent('revert')
+        },
+
+        async saveField(fieldName, value) {
+            try {
+                const response = await fetch('{{ path('user_profile_update_field') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        field: fieldName,
+                        value: value
+                    })
+                })
+                
+                const data = await response.json()
+                
+                if (data.success) {
+                    // Показуємо успішне збереження
+                    this.showNotification('success', 'Поле успішно оновлено')
+                } else {
+                    this.showNotification('error', data.message || 'Помилка при збереженні')
+                    // Відкатуємо значення
+                    this.draftValue = this.inputValue
+                }
+            } catch (error) {
+                this.showNotification('error', 'Помилка при збереженні')
+                this.draftValue = this.inputValue
+            }
+        },
+
+        showNotification(type, message) {
+            // Створюємо тимчасове сповіщення
+            const notification = document.createElement('div')
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white transition-transform transform translate-x-full ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `
+            document.body.appendChild(notification)
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full')
+                notification.classList.add('translate-x-0')
+            }, 100)
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-0')
+                notification.classList.add('translate-x-full')
+                setTimeout(() => notification.remove(), 300)
+            }, 3000)
+        },
+
+        handleInputFocus(event) {
+            if (!this.isTextarea) {
+                this.selectInputText(event?.target ?? null)
+            }
+        },
+
+        registerInput(targetElement) {
+            if (!(targetElement instanceof HTMLInputElement) && !(targetElement instanceof HTMLTextAreaElement)) {
+                return
+            }
+
+            this._activeInputElement = targetElement
+
+            if (!this.isEditing) {
+                return
+            }
+
+            targetElement.focus()
+            if (!this.isTextarea) {
+                this.selectInputText(targetElement)
+            }
+        },
+
+        handleInputKeydown(event) {
+            if (event.key === 'Enter' && !this.isTextarea) {
+                event.preventDefault()
+                this.commitChanges()
+                return
+            }
+
+            if (event.key === 'Enter' && this.isTextarea && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault()
+                this.commitChanges()
+                return
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                this.revertChanges()
+            }
+        },
+
+        trapFocus(event) {
+            if (!this.isEditing || event.key !== 'Tab') {
+                return
+            }
+
+            const focusableElements = this.getFocusableElements()
+
+            if (focusableElements.length === 0) {
+                event.preventDefault()
+                return
+            }
+
+            const firstFocusableElement = focusableElements[0]
+            const lastFocusableElement = focusableElements.at(-1)
+            const activeElement = document.activeElement
+
+            if (event.shiftKey && activeElement === firstFocusableElement) {
+                event.preventDefault()
+                lastFocusableElement.focus()
+                return
+            }
+
+            if (!event.shiftKey && activeElement === lastFocusableElement) {
+                event.preventDefault()
+                firstFocusableElement.focus()
+            }
+        },
+
+        selectInputText(targetElement) {
+            if (!(targetElement instanceof HTMLInputElement) && !(targetElement instanceof HTMLTextAreaElement)) {
+                return
+            }
+            targetElement.select()
+        },
+
+        resolveInputElement() {
+            if (this._activeInputElement instanceof HTMLInputElement || this._activeInputElement instanceof HTMLTextAreaElement) {
+                return this._activeInputElement
+            }
+
+            const inputElement = this.$refs[this.inputTemplateRefName]
+
+            if (inputElement instanceof HTMLInputElement || inputElement instanceof HTMLTextAreaElement) {
+                return inputElement
+            }
+
+            const focusTrapRoot = this.$refs[this.focusTrapTemplateRefName] ?? this.$el
+
+            if (!(focusTrapRoot instanceof HTMLElement)) {
+                return null
+            }
+
+            const fallbackInputElement = focusTrapRoot.querySelector('input, textarea')
+
+            if (fallbackInputElement instanceof HTMLInputElement || fallbackInputElement instanceof HTMLTextAreaElement) {
+                return fallbackInputElement
+            }
+
+            return null
+        },
+
+        focusInputWithRetry(remainingAttempts = 5) {
+            if (!this.isEditing) {
+                this.cancelFocusInputRetry()
+                return
+            }
+
+            const inputElement = this.resolveInputElement()
+
+            if (inputElement) {
+                this.cancelFocusInputRetry()
+                inputElement.focus()
+                if (!this.isTextarea) {
+                    this.selectInputText(inputElement)
+                }
+                return
+            }
+
+            if (remainingAttempts <= 0) {
+                this.cancelFocusInputRetry()
+                console.error(`[inlineEditor] Unable to resolve input or textarea target for ${this.inputTemplateRefName}.`)
+                return
+            }
+
+            this._focusInputRetryFrameId = requestAnimationFrame(() => {
+                this._focusInputRetryFrameId = null
+                this.focusInputWithRetry(remainingAttempts - 1)
+            })
+        },
+
+        cancelFocusInputRetry() {
+            if (typeof this._focusInputRetryFrameId !== 'number') {
+                return
+            }
+
+            cancelAnimationFrame(this._focusInputRetryFrameId)
+            this._focusInputRetryFrameId = null
+        },
+
+        getFocusableElements() {
+            const focusTrapRoot = this.$refs[this.focusTrapTemplateRefName] ?? this.$el
+            return this.getFocusableElementsFromRoot(focusTrapRoot)
+        },
+
+        getFocusableElementsFromRoot(rootElement) {
+            if (!(rootElement instanceof HTMLElement)) {
+                return []
+            }
+
+            return [...rootElement.querySelectorAll(
+                '[tabindex]:not([tabindex="-1"]), a[href], button, input, select, textarea'
+            )]
+            .filter((focusableElement) => focusableElement instanceof HTMLElement)
+            .filter((focusableElement) =>
+                focusableElement.tabIndex >= 0 &&
+                !focusableElement.hasAttribute('disabled') &&
+                focusableElement.getAttribute('aria-hidden') !== 'true'
+            )
+        },
+
+        resolveReturnFocusElement(returnFocusElement) {
+            if (returnFocusElement instanceof HTMLElement && returnFocusElement.isConnected) {
+                return returnFocusElement
+            }
+
+            const refBasedFocusElement = this.returnFocusTemplateRefName
+                ? this.$refs[this.returnFocusTemplateRefName]
+                : null
+
+            if (refBasedFocusElement instanceof HTMLElement && refBasedFocusElement.isConnected) {
+                return refBasedFocusElement
+            }
+
+            const fallbackFocusableElement = this.getFocusableElementsFromRoot(this.$el).at(0)
+
+            if (fallbackFocusableElement instanceof HTMLElement) {
+                return fallbackFocusableElement
+            }
+
+            return null
+        },
+
+        restoreFocus() {
+            const returnFocusElement = this._returnFocusElement
+            this._returnFocusElement = null
+
+            this.$nextTick(() => {
+                const focusTarget = this.resolveReturnFocusElement(returnFocusElement)
+                if (!focusTarget) {
+                    return
+                }
+                focusTarget.focus()
+            })
+        },
+
+        dispatchEditorEvent(eventName) {
+            const scopedEventName = this.editorId
+                ? `inline-editor:${this.editorId}:${eventName}`
+                : `inline-editor:${eventName}`
+
+            this.$dispatch(scopedEventName, {
+                editorId: this.editorId,
+                inputValue: this.inputValue,
+            })
+        }
+    }))
+
+    // Avatar Manager Component
+    Alpine.data('avatarManager', () => ({
+        isUploading: false,
+        uploadProgress: 0,
+        currentAvatar: '{{ app.user.avatar|e('js') }}',
+        uploadStatus: null,
+
+        async uploadAvatar(event) {
+            const file = event.target.files[0]
+            if (!file) return
+
+            // Перевірка файлу
+            if (!file.type.startsWith('image/')) {
+                this.showUploadStatus('error', 'Будь ласка, виберіть файл зображення')
+                return
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                this.showUploadStatus('error', 'Розмір файлу перевищує 2MB')
+                return
+            }
+
+            const formData = new FormData()
+            formData.append('avatar', file)
+
+            this.isUploading = true
+            this.uploadProgress = 0
+            this.uploadStatus = null
+
+            try {
+                const xhr = new XMLHttpRequest()
+                
+                const promise = new Promise((resolve, reject) => {
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            this.uploadProgress = (e.loaded / e.total) * 100
+                        }
+                    })
+
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status === 200) {
+                            try {
+                                const response = JSON.parse(xhr.responseText)
+                                resolve(response)
+                            } catch {
+                                resolve({ success: true })
+                            }
+                        } else {
+                            reject(new Error('Помилка завантаження'))
+                        }
+                    })
+
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Помилка мережі'))
+                    })
+
+                    xhr.open('POST', '{{ path('user_upload_avatar') }}')
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+                    xhr.send(formData)
+                })
+
+                const response = await promise
+                
+                if (response.success) {
+                    this.showUploadStatus('success', 'Аватар успішно оновлено!')
+                    // Оновлюємо зображення
+                    if (response.avatarUrl) {
+                        const img = this.$refs.avatarImage
+                        if (img) {
+                            img.src = response.avatarUrl + '?' + Date.now()
+                        }
+                        this.currentAvatar = response.avatarFilename || ''
+                    }
+                    // Перезавантажуємо сторінку через 1.5 секунди для оновлення даних
+                    setTimeout(() => {
+                        window.location.reload()
+                    }, 1500)
+                } else {
+                    this.showUploadStatus('error', response.message || 'Помилка завантаження')
+                }
+            } catch (error) {
+                this.showUploadStatus('error', 'Помилка при завантаженні аватара')
+            } finally {
+                this.isUploading = false
+                event.target.value = ''
+            }
+        },
+
+        showUploadStatus(type, message) {
+            this.uploadStatus = {
+                type: type,
+                message: message
+            }
+            
+            // Автоматичне приховування через 5 секунд
+            setTimeout(() => {
+                this.uploadStatus = null
+            }, 5000)
+        }
+    }))
+})
+</script>
+
+<script>
+// Синхронізація значень інлайн-редактора з прихованими полями форми
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('inline-editor:commit', function(event) {
+        const fieldName = event.detail.fieldName
+        const value = event.detail.inputValue
+        
+        if (fieldName) {
+            const hiddenField = document.querySelector(`input[name="user_profile[${fieldName}]"]`)
+            if (hiddenField) {
+                hiddenField.value = value
+            }
+        }
+    })
+})
+</script>
+{% endblock %}

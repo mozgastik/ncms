@@ -1,0 +1,374 @@
+{# templates/admin/components/form/textarea.html.twig #}
+
+{# Макрос для текстових областей #}
+{% macro textarea(field, placeholder = '', help_text = '', rows = 3, icon = null, label = true, extra_classes = '') %}
+    {% set show_label = label %}
+    {% set has_icon = icon is not null %}
+    
+    <div class="space-y-2 {{ extra_classes }}">
+        {% if show_label %}
+            {{ form_label(field, null, {
+                'label_attr': {
+                    'class': 'block text-sm font-medium text-surface-700'
+                }
+            }) }}
+        {% endif %}
+        
+        <div class="relative">
+            {{ form_widget(field, {
+                'attr': {
+                    'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 resize-y min-h-[100px]' ~ (has_icon ? ' pl-10 pr-4' : ''),
+                    'placeholder': placeholder,
+                    'rows': rows
+                }
+            }) }}
+            
+            {% if has_icon %}
+                <div class="absolute top-3 left-3 flex items-start pointer-events-none">
+                    <i class="{{ icon }} text-surface-400 mt-1"></i>
+                </div>
+            {% endif %}
+            
+            {# Счетчик символов (опционально) #}
+            {% if field.vars.attr['data-char-count'] is defined %}
+                <div class="absolute bottom-2 right-2 text-xs text-surface-500 bg-white px-1 rounded">
+                    <span id="char-count-{{ field.vars.id }}">0</span>/{{ field.vars.attr['data-max-length']|default('∞') }}
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+        
+        {{ form_errors(field) }}
+    </div>
+{% endmacro %}
+
+{# Базовий блок для текстових областей #}
+{% block textarea_basic %}
+    {% set name = name|default('') %}
+    {% set value = value|default('') %}
+    {% set placeholder = placeholder|default('') %}
+    {% set rows = rows|default(3) %}
+    {% set required = required|default(false) %}
+    {% set disabled = disabled|default(false) %}
+    {% set readonly = readonly|default(false) %}
+    {% set label_text = label_text|default('') %}
+    {% set help_text = help_text|default('') %}
+    {% set error = error|default('') %}
+    {% set extra_classes = extra_classes|default('') %}
+    {% set show_label = label|default(true) %}
+    {% set icon = icon|default('') %}
+    {% set maxlength = maxlength|default(null) %}
+    {% set char_count = char_count|default(false) %}
+    
+    <div class="space-y-2 {{ extra_classes }}" {% if char_count and maxlength %}data-char-counter="true"{% endif %}>
+        {% if show_label and label_text %}
+            <label for="{{ name }}" class="block text-sm font-medium text-surface-700">
+                {{ label_text }}
+                {% if required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        {% endif %}
+        
+        <div class="relative">
+            <textarea name="{{ name }}"
+                      id="{{ name }}"
+                      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                      rows="{{ rows }}"
+                      {% if required %}required{% endif %}
+                      {% if disabled %}disabled{% endif %}
+                      {% if readonly %}readonly{% endif %}
+                      {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+                      class="block w-full px-4 py-2.5 border {{ error ? 'border-red-300' : 'border-surface-300' }} rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 resize-y min-h-[100px] {{ icon ? 'pl-10 pr-4' : 'px-4' }}">{{ value }}</textarea>
+            
+            {% if icon %}
+                <div class="absolute top-3 left-3 flex items-start pointer-events-none">
+                    <i class="{{ icon }} text-surface-400 mt-1"></i>
+                </div>
+            {% endif %}
+            
+            {% if char_count and maxlength %}
+                <div class="absolute bottom-2 right-2 text-xs text-surface-500 bg-white px-1 rounded">
+                    <span class="char-count">0</span>/{{ maxlength }}
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if error %}
+            <p class="text-xs text-red-600">{{ error }}</p>
+        {% endif %}
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Текстова область з кнопками форматування #}
+{% block textarea_with_toolbar %}
+    {% set name = name|default('') %}
+    {% set value = value|default('') %}
+    {% set placeholder = placeholder|default('') %}
+    {% set rows = rows|default(5) %}
+    {% set label_text = label_text|default('') %}
+    {% set help_text = help_text|default('') %}
+    {% set toolbar_buttons = toolbar_buttons|default(['bold', 'italic', 'link', 'list']) %}
+    
+    <div class="space-y-2">
+        {% if label_text %}
+            <label for="{{ name }}" class="block text-sm font-medium text-surface-700">
+                {{ label_text }}
+            </label>
+        {% endif %}
+        
+        <div class="border border-surface-300 rounded-lg overflow-hidden">
+            {# Панель інструментів #}
+            <div class="bg-surface-50 border-b border-surface-300 px-3 py-2 flex gap-1">
+                {% if 'bold' in toolbar_buttons %}
+                    <button type="button" class="p-1 hover:bg-surface-100 rounded" title="Жирний">
+                        <i class="fas fa-bold text-surface-600"></i>
+                    </button>
+                {% endif %}
+                
+                {% if 'italic' in toolbar_buttons %}
+                    <button type="button" class="p-1 hover:bg-surface-100 rounded" title="Курсив">
+                        <i class="fas fa-italic text-surface-600"></i>
+                    </button>
+                {% endif %}
+                
+                {% if 'link' in toolbar_buttons %}
+                    <button type="button" class="p-1 hover:bg-surface-100 rounded" title="Посилання">
+                        <i class="fas fa-link text-surface-600"></i>
+                    </button>
+                {% endif %}
+                
+                {% if 'list' in toolbar_buttons %}
+                    <button type="button" class="p-1 hover:bg-surface-100 rounded" title="Список">
+                        <i class="fas fa-list text-surface-600"></i>
+                    </button>
+                {% endif %}
+                
+                {% if 'code' in toolbar_buttons %}
+                    <button type="button" class="p-1 hover:bg-surface-100 rounded" title="Код">
+                        <i class="fas fa-code text-surface-600"></i>
+                    </button>
+                {% endif %}
+            </div>
+            
+            {# Текстова область #}
+            <textarea name="{{ name }}"
+                      id="{{ name }}"
+                      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                      rows="{{ rows }}"
+                      class="block w-full px-4 py-3 border-0 focus:ring-0 focus:outline-none resize-y min-h-[150px]">{{ value }}</textarea>
+        </div>
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{# Текстова область для CKEditor (поле з підтримкою CKEditor) #}
+{% block textarea_ckeditor %}
+    {% set name = name|default('') %}
+    {% set value = value|default('') %}
+    {% set label_text = label_text|default('') %}
+    {% set help_text = help_text|default('') %}
+    {% set ckeditor_config = ckeditor_config|default('basic') %}
+    
+    <div class="space-y-2">
+        {% if label_text %}
+            <div class="flex items-center justify-between">
+                <label for="{{ name }}" class="block text-sm font-medium text-surface-700">
+                    {{ label_text }}
+                </label>
+                <span class="text-xs text-surface-500" id="char-count-{{ name }}">0 символів</span>
+            </div>
+        {% endif %}
+        
+        <textarea name="{{ name }}"
+                  id="{{ name }}"
+                  class="ckeditor block w-full px-4 py-3 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  rows="15">{{ value }}</textarea>
+        
+        {% if help_text %}
+            <div class="text-xs text-surface-500 flex items-center gap-4">
+                <span>{{ help_text }}</span>
+                <button type="button" 
+                        onclick="insertTemplate('{{ name }}')"
+                        class="text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                    <i class="fas fa-code text-xs"></i>
+                    Вставити шаблон
+                </button>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof CKEDITOR !== 'undefined') {
+                CKEDITOR.replace('{{ name }}', {
+                    {% if ckeditor_config == 'basic' %}
+                    toolbar: [
+                        ['Bold', 'Italic', 'Underline'],
+                        ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+                        ['Link', 'Unlink'],
+                        ['Image', 'Table'],
+                        ['Source']
+                    ],
+                    {% elseif ckeditor_config == 'standard' %}
+                    toolbar: [
+                        { name: 'document', items: ['Source', '-', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates'] },
+                        { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+                        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
+                        { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+                        { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+                        { name: 'insert', items: ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak'] },
+                        '/',
+                        { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                        { name: 'colors', items: ['TextColor', 'BGColor'] }
+                    ],
+                    {% endif %}
+                    language: 'uk',
+                    height: 400
+                });
+                
+                // Оновлення лічильника символів
+                CKEDITOR.instances['{{ name }}'].on('change', function() {
+                    const content = this.getData();
+                    const textOnly = content.replace(/<[^>]*>/g, ' ');
+                    const charCount = textOnly.length;
+                    document.getElementById('char-count-{{ name }}').textContent = charCount + ' символів';
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
+{# Текстова область з превью #}
+{% block textarea_with_preview %}
+    {% set name = name|default('') %}
+    {% set value = value|default('') %}
+    {% set placeholder = placeholder|default('') %}
+    {% set rows = rows|default(5) %}
+    {% set label_text = label_text|default('') %}
+    {% set help_text = help_text|default('') %}
+    {% set preview_tab = preview_tab|default(false) %}
+    
+    <div class="space-y-2">
+        {% if label_text %}
+            <label for="{{ name }}" class="block text-sm font-medium text-surface-700">
+                {{ label_text }}
+            </label>
+        {% endif %}
+        
+        {% if preview_tab %}
+            <div class="border border-surface-300 rounded-lg overflow-hidden">
+                <div class="bg-surface-50 border-b border-surface-300">
+                    <div class="flex">
+                        <button type="button" 
+                                class="px-4 py-2 text-sm font-medium text-primary-600 border-b-2 border-primary-600 bg-white"
+                                data-tab="editor">
+                            Редактор
+                        </button>
+                        <button type="button" 
+                                class="px-4 py-2 text-sm font-medium text-surface-500 hover:text-surface-700"
+                                data-tab="preview">
+                            Попередній перегляд
+                        </button>
+                    </div>
+                </div>
+                
+                <div data-tab-content="editor" class="p-0">
+                    <textarea name="{{ name }}"
+                              id="{{ name }}"
+                              {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                              rows="{{ rows }}"
+                              class="block w-full px-4 py-3 border-0 focus:ring-0 focus:outline-none resize-y min-h-[150px]">{{ value }}</textarea>
+                </div>
+                
+                <div data-tab-content="preview" class="p-4 hidden">
+                    <div class="prose prose-sm max-w-none" id="preview-{{ name }}">
+                        Завантаження попереднього перегляду...
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <textarea name="{{ name }}"
+                      id="{{ name }}"
+                      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                      rows="{{ rows }}"
+                      class="block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 resize-y min-h-[100px]">{{ value }}</textarea>
+        {% endif %}
+        
+        {% if help_text %}
+            <p class="text-xs text-surface-500">{{ help_text }}</p>
+        {% endif %}
+    </div>
+    
+    {% if preview_tab %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('{{ name }}');
+            const preview = document.getElementById('preview-{{ name }}');
+            const tabButtons = document.querySelectorAll('[data-tab]');
+            const tabContents = document.querySelectorAll('[data-tab-content]');
+            
+            // Обробка переключения вкладок
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    
+                    // Оновлення активних кнопок
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('text-primary-600', 'border-b-2', 'border-primary-600', 'bg-white');
+                        btn.classList.add('text-surface-500', 'hover:text-surface-700');
+                    });
+                    
+                    this.classList.remove('text-surface-500', 'hover:text-surface-700');
+                    this.classList.add('text-primary-600', 'border-b-2', 'border-primary-600', 'bg-white');
+                    
+                    // Показ відповідного контенту
+                    tabContents.forEach(content => {
+                        if (content.dataset.tabContent === tabName) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Оновлення превью при переключенні на вкладку превью
+                    if (tabName === 'preview') {
+                        updatePreview();
+                    }
+                });
+            });
+            
+            // Оновлення превью при зміні тексту
+            textarea.addEventListener('input', function() {
+                if (document.querySelector('[data-tab-content="preview"]:not(.hidden)')) {
+                    updatePreview();
+                }
+            });
+            
+            function updatePreview() {
+                const content = textarea.value;
+                // Простий парсинг Markdown (можна замінити на бібліотеку)
+                const html = content
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                    .replace(/`(.*?)`/gim, '<code>$1</code>')
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    .replace(/\n/g, '<br>');
+                
+                preview.innerHTML = html || '<em class="text-surface-400">Немає контенту для перегляду</em>';
+            }
+        });
+    </script>
+    {% endif %}
+{% endblock %}

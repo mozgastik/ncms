@@ -1,0 +1,32 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+{% set ea = ea() %}
+{% trans_default_domain 'EasyAdminBundle' %}
+
+{% if ea.crud.currentAction == 'detail' or not field.customOptions.get('renderAsSwitch') %}
+    {% set badge_is_hidden = ea.crud.currentAction == 'index'
+        and (
+            (field.value == true and field.customOptions.get('hideValueWhenTrue') == true)
+            or
+            (field.value == false and field.customOptions.get('hideValueWhenFalse') == true)
+        ) %}
+
+    {% if not badge_is_hidden %}
+        <twig:ea:Badge variant="{{ field.value == true ? 'boolean-true' : 'boolean-false' }}">
+            {{ (field.value == true ? 'label.true' : 'label.false')|trans(domain: 'EasyAdminBundle') }}
+        </twig:ea:Badge>
+    {% endif %}
+{% else %}
+    {# a TranslatableMessage can't be stringified directly, so translate it before passing it as an attribute #}
+    {% set switch_aria_label = (field.label is ea_is_not_empty)
+        ? field.label|trans(domain: ea.i18n.translationDomain) : null %}
+    <twig:ea:Switch
+        id="{{ field.uniqueId }}"
+        checked="{{ true == field.value }}"
+        disabled="{{ true == field.formTypeOption('disabled') }}"
+        variant="{{ field.customOptions.get('switchVariant') }}"
+        ariaLabel="{{ switch_aria_label }}"
+        data-toggle-url="{{ field.customOptions.get('toggleUrl')|default('') }}"
+    />
+{% endif %}

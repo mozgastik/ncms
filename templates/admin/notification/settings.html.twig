@@ -1,0 +1,36 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Налаштування сповіщень{% endblock %}
+
+{% block body %}
+<main class="flex-1 p-2 sm:p-3 md:p-4 lg:p-6">
+    <div class="max-w-3xl mx-auto">
+        {# Заголовок #}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-(--color-surface-900) dark:text-(--color-surface-100)">
+                    ⚙️ Налаштування сповіщень
+                </h1>
+                <p class="text-(--color-surface-500) dark:text-(--color-surface-400) text-sm mt-1">
+                    Керуйте частотою та типами сповіщень
+                </p>
+            </div>
+            <a href="{{ path('admin_notification_index') }}" 
+               class="text-sm text-(--color-surface-600) dark:text-(--color-surface-400) hover:text-(--color-primary-600) dark:hover:text-(--color-primary-400) transition-colors">
+                ← Назад до списку
+            </a>
+        </div>
+
+        {# Заглушка майбутніх налаштувань #}
+        <div class="bg-(--color-surface-0) dark:bg-(--color-surface-800) rounded-2xl shadow-(--shadow-md) border border-(--color-surface-200) dark:border-(--color-surface-700) p-6">
+            <div class="text-center py-12">
+                <div class="w-20 h-20 mx-auto bg-(--color-surface-100) dark:bg-(--color-surface-700) rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-cog text-3xl text-(--color-surface-400) dark:text-(--color-surface-500)"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-(--color-surface-900) dark:text-(--color-surface-100) mb-2">Незабаром</h3>
+                <p class="text-(--color-surface-500) dark:text-(--color-surface-400)">Розділ налаштувань сповіщень знаходиться в розробці</p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

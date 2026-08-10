@@ -1,0 +1,251 @@
+{# templates/user/notification_settings.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Налаштування сповіщень{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                            Налаштування сповіщень
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-400 mt-2">
+                            Керуйте способами отримання сповіщень
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <form method="POST" action="{{ path('user_notification_settings_disable_all') }}">
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                                Вимкнути всі
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ path('user_notification_settings_enable_essential') }}">
+                            <button type="submit"
+                                    class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                                Основні
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {{ form_start(form, {'attr': {'class': 'space-y-8'}}) }}
+
+                <!-- Мова -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        Загальні
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        {% for child in form.language %}
+                            <label class="flex items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                                {{ form_widget(child, {'attr': {'class': 'mr-3'}}) }}
+                                <span class="text-gray-700 dark:text-gray-300">{{ child.vars.label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Email сповіщення -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                            <i class="fas fa-envelope text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Email сповіщення
+                        </h2>
+                    </div>
+                    
+                    <div class="grid gap-3">
+                        {{ form_row(form.emailNewArticle, {
+                            'label_attr': {'class': 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-pointer'},
+                            'attr': {'class': 'ml-4'}
+                        }) }}
+                        {{ form_row(form.emailNewComment) }}
+                        {{ form_row(form.emailCommentReply) }}
+                        {{ form_row(form.emailWeeklyDigest) }}
+                        {{ form_row(form.emailNewsletter) }}
+                    </div>
+                </div>
+
+
+                <!-- Push-сповіщення -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <i class="fas fa-bell text-green-600 dark:text-green-400"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Push-сповіщення (браузер)
+                        </h2>
+                    </div>
+                    
+                    {{ form_row(form.pushEnabled, {
+                        'label_attr': {'class': 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-pointer mb-4'},
+                        'attr': {'class': 'ml-4'}
+                    }) }}
+                    
+                    <div x-show="{{ form.pushEnabled.vars.value ? 'true' : 'false' }}" 
+                         x-transition
+                         class="grid gap-3 pl-8 border-l-2 border-green-200 dark:border-green-800 ml-4">
+                        {{ form_row(form.pushNewArticle) }}
+                        {{ form_row(form.pushNewComment) }}
+                        {{ form_row(form.pushCommentReply) }}
+                    </div>
+
+                    <!-- Кнопка тесту push -->
+                    <div x-data="pushTester()" x-init="init()" class="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Перевірте, чи працюють push-сповіщення у вашому браузері
+                        </p>
+                        <button @click="testPush" 
+                                :disabled="loading"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 transition">
+                            <i :class="loading ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane'"></i>
+                            <span x-text="loading ? 'Відправка...' : 'Надіслати тестове push'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Розширені налаштування -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        Розширені налаштування
+                    </h2>
+                    
+                    {{ form_row(form.doNotDisturb, {
+                        'label_attr': {'class': 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-pointer mb-4'},
+                        'attr': {'class': 'ml-4'}
+                    }) }}
+                    
+                    <div x-show="{{ form.doNotDisturb.vars.value ? 'true' : 'false' }}" 
+                         x-transition
+                         class="grid grid-cols-2 gap-4 pl-8 ml-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ form.quietHoursStart.vars.label }}
+                            </label>
+                            {{ form_widget(form.quietHoursStart, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white'}
+                            }) }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ form.quietHoursEnd.vars.label }}
+                            </label>
+                            {{ form_widget(form.quietHoursEnd, {
+                                'attr': {'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white'}
+                            }) }}
+                        </div>
+                    </div>
+
+                    {{ form_row(form.marketingAllowed, {
+                        'label_attr': {'class': 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-pointer mt-4'},
+                        'attr': {'class': 'ml-4'}
+                    }) }}
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-end gap-4 pt-4">
+                    <a href="{{ path('user_dashboard') }}" 
+                       class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        Скасувати
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition">
+                        <i class="fas fa-save mr-2"></i>
+                        Зберегти налаштування
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function pushTester() {
+    return {
+        loading: false,
+
+        async testPush() {
+            this.loading = true;
+
+            try {
+                await this.subscribe();
+
+                const response = await fetch('/api/push/test', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Тестове сповіщення надіслано!');
+                } else {
+                    alert('Помилка: ' + (result.error || 'Невідома помилка'));
+                }
+            } catch (error) {
+                alert('Помилка: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async subscribe() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                throw new Error('Ваш браузер не підтримує push-сповіщення.');
+            }
+
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Дозвіл на push-сповіщення не надано.');
+            }
+
+            const existingSubscription = await registration.pushManager.getSubscription();
+
+            const subscription = existingSubscription || await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array('{{ vapid_public_key }}')
+            });
+
+            await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(subscription)
+            });
+        },
+
+        urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+
+            return outputArray;
+        }
+    }
+}
+</script>
+{% endblock %}

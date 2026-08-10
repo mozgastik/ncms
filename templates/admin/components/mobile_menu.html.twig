@@ -1,0 +1,143 @@
+<!-- Мобильное меню -->
+<div id="mobile-menu" class="fixed inset-0 z-40 bg-surface-0 dark:bg-surface-900 transform -translate-x-full transition-transform duration-300 lg:hidden">
+    <div class="h-full flex flex-col">
+        <!-- Заголовок -->
+        <div class="p-6 border-b border-surface-200 dark:border-surface-800">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
+                        <i class="fas fa-newspaper text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg text-surface-900 dark:text-surface-100">Адмін-панель</h2>
+                        <p class="text-xs text-surface-500">Новинний портал</p>
+                    </div>
+                </div>
+                <button onclick="toggleMobileMenu()" 
+                        class="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
+                    <i class="fas fa-times text-surface-600 dark:text-surface-400"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Меню навигации -->
+        <nav class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Головне</p>
+                <a href="{{ path('admin_dashboard') }}" 
+                   class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                    <i class="fas fa-tachometer-alt w-5 mr-3"></i>
+                    Панель керування
+                </a>
+            </div>
+            
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Управління контентом</p>
+                <div class="space-y-1">
+                    <a href="{{ path('admin_article_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-newspaper w-5 mr-3"></i>
+                        Статті
+                    </a>
+                    <a href="{{ path('admin_category_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-folder w-5 mr-3"></i>
+                        Категорії
+                    </a>
+                    <a href="{{ path('admin_tag_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-tags w-5 mr-3"></i>
+                        Теги
+                    </a>
+                    <a href="{{ path('admin_comment_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-comments w-5 mr-3"></i>
+                        Коментарі
+                        {% if pending_comments is defined and pending_comments > 0 %}
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_comments }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Блоки та вміст</p>
+                <div class="space-y-1">
+                    {% if path('admin_blog_index') is defined %}
+                    <a href="{{ path('admin_blog_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-blog w-5 mr-3"></i>
+                        Блог (Новини)
+                    </a>
+                    {% endif %}
+                    
+                    {% if path('admin_quote_index') is defined %}
+                    <a href="{{ path('admin_quote_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-quote-right w-5 mr-3"></i>
+                        Цитати
+                    </a>
+                    {% endif %}
+                    
+                    {% if path('admin_slider_index') is defined %}
+                    <a href="{{ path('admin_slider_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-images w-5 mr-3"></i>
+                        Слайдер
+                    </a>
+                    {% endif %}
+                    
+                    {% if path('admin_gallery_index') is defined %}
+                    <a href="{{ path('admin_gallery_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-photo-video w-5 mr-3"></i>
+                        Галерея
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Система</p>
+                <div class="space-y-1">
+                    <a href="{{ path('admin_user_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-users w-5 mr-3"></i>
+                        Користувачі
+                    </a>
+                    
+                    {% if path('admin_settings_index') is defined %}
+                    <a href="{{ path('admin_settings_index') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-cog w-5 mr-3"></i>
+                        Налаштування
+                    </a>
+                    {% endif %}
+                    
+                    {% if path('admin_stats') is defined %}
+                    <a href="{{ path('admin_stats') }}" 
+                       class="flex items-center px-3 py-3 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 transition-colors">
+                        <i class="fas fa-chart-line w-5 mr-3"></i>
+                        Статистика
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Информация о пользователе -->
+        <div class="p-4 border-t border-surface-200 dark:border-surface-800">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                    <i class="fas fa-user text-primary-600 dark:text-primary-400"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-surface-900 dark:text-surface-100 truncate">
+                        {{ app.user.username }}
+                    </p>
+                    <p class="text-xs text-surface-500">Адміністратор</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

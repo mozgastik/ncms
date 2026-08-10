@@ -1,0 +1,361 @@
+{# templates/user/favorites.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Моє обране - Новинний портал{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Menu -->
+        <div class="lg:w-1/4">
+            {{ include('user/_sidebar.html.twig') }}
+        </div>
+        
+        <!-- Main Content -->
+        <div class="lg:w-3/4">
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Моє обране</h1>
+                        <p class="text-gray-600 mt-2">Статті та блоги, які ви зберегли</p>
+                    </div>
+                    <div class="bg-purple-100 text-purple-600 px-4 py-2 rounded-full font-semibold">
+                        {{ favorites|length }} елементів
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex gap-2 mb-6 p-1 bg-gray-100 rounded-2xl w-fit">
+                    <button onclick="filterFavorites('all')" 
+                            id="tab-all"
+                            class="px-6 py-2 rounded-xl font-medium transition-all tab-button active">
+                        Всі
+                    </button>
+                    <button onclick="filterFavorites('articles')" 
+                            id="tab-articles"
+                            class="px-6 py-2 rounded-xl font-medium transition-all tab-button">
+                        Статті
+                    </button>
+                    <button onclick="filterFavorites('blogs')" 
+                            id="tab-blogs"
+                            class="px-6 py-2 rounded-xl font-medium transition-all tab-button">
+                        Блоги
+                    </button>
+                </div>
+
+                {% if favorites is empty %}
+                    <!-- Empty State -->
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
+                            <i class="fas fa-heart text-gray-400 text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">У вас ще немає обраного</h3>
+                        <p class="text-gray-600 mb-6">Позначайте статті та блоги, щоб швидко повернутися до них пізніше</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="{{ path('app_article_index') }}" 
+                               class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition">
+                                <i class="fas fa-newspaper"></i>
+                                <span>Переглянути новини</span>
+                            </a>
+                            <a href="{{ path('blog_index') }}" 
+                               class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg transition">
+                                <i class="fas fa-blog"></i>
+                                <span>Переглянути блоги</span>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Favorites Grid -->
+                    <div class="grid grid-cols-1 gap-6" id="favorites-grid">
+                        {% for favorite in favorites %}
+                            {% if favorite.entityType == 'article' %}
+                                <!-- Article Card -->
+                                <div class="favorite-item article-item group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
+                                    <div class="flex flex-col md:flex-row">
+                                        <!-- Image -->
+                                        <div class="md:w-1/4 h-48 md:h-auto overflow-hidden">
+                                            {% if favorite.article.coverImage %}
+                                                <img src="{{ favorite.article.coverImage }}" 
+                                                     alt="{{ favorite.article.title }}" 
+                                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                            {% else %}
+                                                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                    <i class="fas fa-newspaper text-white text-4xl"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Content -->
+                                        <div class="flex-1 p-6">
+                                            <div class="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                                                        <i class="fas fa-newspaper"></i>
+                                                        Стаття
+                                                    </span>
+                                                    {% if favorite.article.category %}
+                                                        <span class="ml-2 text-sm text-gray-500">
+                                                            {{ favorite.article.category.name }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <button onclick="removeFromFavorites('article', {{ favorite.article.id }})"
+                                                        class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                                                    <i class="fas fa-heart"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">
+                                                <a href="{{ path('app_article_show', {slug: favorite.article.slug}) }}" 
+                                                   class="hover:text-blue-600 transition-colors">
+                                                    {{ favorite.article.title }}
+                                                </a>
+                                            </h3>
+                                            
+                                            <p class="text-gray-600 mb-4 line-clamp-2">
+                                                {{ favorite.article.excerpt|slice(0, 150) }}...
+                                            </p>
+                                            
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                            {% if favorite.article.author.avatar %}
+                                                                <img src="{{ asset('uploads/avatars/' ~ favorite.article.author.avatar) }}" 
+                                                                     alt="{{ favorite.article.author.username }}" 
+                                                                     class="w-full h-full rounded-full object-cover">
+                                                            {% else %}
+                                                                <span class="text-white text-sm font-semibold">
+                                                                    {{ favorite.article.author.username|first|upper }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <span class="text-sm font-medium text-gray-700">
+                                                            {{ favorite.article.author.username }}
+                                                        </span>
+                                                    </div>
+                                                    <span class="text-sm text-gray-500">
+                                                        <i class="far fa-calendar mr-1"></i>
+                                                        {{ favorite.article.publishedAt|date('d.m.Y') }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-3 text-gray-500">
+                                                    <span class="flex items-center gap-1 text-sm">
+                                                        <i class="far fa-eye"></i>
+                                                        {{ favorite.article.views }}
+                                                    </span>
+                                                    <span class="flex items-center gap-1 text-sm">
+                                                        <i class="far fa-comment"></i>
+                                                        {{ favorite.article.comments|length }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% elseif favorite.entityType == 'blog' %}
+                                <!-- Blog Card -->
+                                <div class="favorite-item blog-item group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
+                                    <div class="flex flex-col md:flex-row">
+                                        <!-- Image -->
+                                        <div class="md:w-1/4 h-48 md:h-auto overflow-hidden">
+                                            {% if favorite.blog.featuredImage %}
+                                                <img src="{{ asset('uploads/blogs/' ~ favorite.blog.featuredImage.filename) }}" 
+                                                     alt="{{ favorite.blog.title }}" 
+                                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                            {% else %}
+                                                <div class="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                                    <i class="fas fa-blog text-white text-4xl"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Content -->
+                                        <div class="flex-1 p-6">
+                                            <div class="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">
+                                                        <i class="fas fa-blog"></i>
+                                                        Блог
+                                                    </span>
+                                                    {% if favorite.blog.category %}
+                                                        <span class="ml-2 text-sm text-gray-500">
+                                                            {{ favorite.blog.category.name }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <button onclick="removeFromFavorites('blog', {{ favorite.blog.id }})"
+                                                        class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                                                    <i class="fas fa-heart"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">
+                                                <a href="{{ path('blog_show', {slug: favorite.blog.slug}) }}" 
+                                                   class="hover:text-purple-600 transition-colors">
+                                                    {{ favorite.blog.title }}
+                                                </a>
+                                            </h3>
+                                            
+                                            {% if favorite.blog.excerpt %}
+                                                <p class="text-gray-600 mb-4 line-clamp-2">
+                                                    {{ favorite.blog.excerpt|slice(0, 150) }}...
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                                            {% if favorite.blog.author.avatar %}
+                                                                <img src="{{ asset('uploads/avatars/' ~ favorite.blog.author.avatar) }}" 
+                                                                     alt="{{ favorite.blog.author.username }}" 
+                                                                     class="w-full h-full rounded-full object-cover">
+                                                            {% else %}
+                                                                <span class="text-white text-sm font-semibold">
+                                                                    {{ favorite.blog.author.username|first|upper }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <span class="text-sm font-medium text-gray-700">
+                                                            {{ favorite.blog.author.username }}
+                                                        </span>
+                                                    </div>
+                                                    <span class="text-sm text-gray-500">
+                                                        <i class="far fa-calendar mr-1"></i>
+                                                        {{ favorite.blog.publishedAt|date('d.m.Y') }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-3 text-gray-500">
+                                                    <span class="flex items-center gap-1 text-sm">
+                                                        <i class="far fa-eye"></i>
+                                                        {{ favorite.blog.views }}
+                                                    </span>
+                                                    <span class="flex items-center gap-1 text-sm">
+                                                        <i class="far fa-comment"></i>
+                                                        {{ favorite.blog.comments|length }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if totalPages > 1 %}
+                        <div class="flex justify-center mt-8">
+                            <div class="flex gap-2">
+                                {% for i in 1..totalPages %}
+                                    <a href="{{ path('user_favorites', {'page': i, 'type': currentFilter}) }}" 
+                                       class="w-10 h-10 flex items-center justify-center rounded-lg {% if page == i %}bg-purple-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition">
+                                        {{ i }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFilter = 'all';
+
+function filterFavorites(type) {
+    currentFilter = type;
+    
+    // Update tabs
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('bg-purple-600', 'text-white');
+        btn.classList.add('text-gray-700');
+    });
+    
+    const activeTab = document.getElementById('tab-' + type);
+    activeTab.classList.remove('text-gray-700');
+    activeTab.classList.add('bg-purple-600', 'text-white');
+    
+    // Filter items
+    const items = document.querySelectorAll('.favorite-item');
+    items.forEach(item => {
+        if (type === 'all') {
+            item.style.display = 'block';
+        } else if (type === 'articles') {
+            item.style.display = item.classList.contains('article-item') ? 'block' : 'none';
+        } else if (type === 'blogs') {
+            item.style.display = item.classList.contains('blog-item') ? 'block' : 'none';
+        }
+    });
+}
+
+function removeFromFavorites(type, id) {
+    if (confirm('Видалити з обраного?')) {
+        fetch('/user/favorites/' + type + '/' + id + '/remove', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-up';
+                toast.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Видалено з обраного';
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                    location.reload();
+                }, 1500);
+            } else {
+                alert('Помилка при видаленні');
+            }
+        });
+    }
+}
+
+// Initialize active tab
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type') || 'all';
+    filterFavorites(type);
+});
+</script>
+
+<style>
+.animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-button {
+    cursor: pointer;
+}
+
+.tab-button.active {
+    background: linear-gradient(135deg, #9333ea, #db2777);
+    color: white;
+}
+</style>
+{% endblock %}

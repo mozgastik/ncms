@@ -1,0 +1,303 @@
+<?php
+
+namespace EasyCorp\Bundle\EasyAdminBundle\Router;
+
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\CacheKey;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Controller\DashboardControllerInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Provider\AdminContextProviderInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Registry\AdminControllerRegistryInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Contracts\Router\AdminRouteGeneratorInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+/**
+ * @author Javier Eguiluz <javier.eguiluz@gmail.com>
+ */
+final class AdminUrlGenerator implements \Stringable, AdminUrlGeneratorInterface
+{
+    private bool $isInitialized = false;
+    private ?string $dashboardRoute = null;
+    /** @var array<string, mixed> */
+    private array $routeParameters = [];
+
+    public function __construct(
+        private readonly AdminContextProviderInterface $adminContextProvider,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly AdminControllerRegistryInterface $adminControllers,
+        private readonly AdminRouteGeneratorInterface $adminRouteGenerator,
+        private readonly CacheItemPoolInterface $cache,
+    ) {
+    }
+
+    public function setDashboard(string $dashboardControllerFqcn): AdminUrlGeneratorInterface
+    {
+        $this->setRouteParameter(EA::DASHBOARD_CONTROLLER_FQCN, $dashboardControllerFqcn);
+
+        return $this;
+    }
+
+    public function setController(string $crudControllerFqcn): AdminUrlGeneratorInterface
+    {
+        $this->setRouteParameter(EA::CRUD_CONTROLLER_FQCN, $crudControllerFqcn);
+        $this->unset(EA::ROUTE_NAME);
+        $this->unset(EA::ROUTE_PARAMS);
+
+        return $this;
+    }
+
+    public function setAction(string $action): AdminUrlGeneratorInterface
+    {
+        $this->setRouteParameter(EA::CRUD_ACTION, $action);
+        $this->unset(EA::ROUTE_NAME);
+        $this->unset(EA::ROUTE_PARAMS);
+
+        return $this;
+    }
+
+    public function setRoute(string $routeName, array $routeParameters = []): AdminUrlGeneratorInterface
+    {
+        $this->unsetAllExcept(EA::DASHBOARD_CONTROLLER_FQCN);
+        $this->setRouteParameter(EA::ROUTE_NAME, $routeName);
+        $this->setRouteParameter(EA::ROUTE_PARAMS, $routeParameters);
+
+        return $this;
+    }
+
+    public function setEntityId(mixed $entityId): AdminUrlGeneratorInterface
+    {
+        $this->setRouteParameter(EA::ENTITY_ID, $entityId);
+
+        return $this;
+    }
+
+    /**
+     * Convenient alias of setEntityId() that reads better in templates, where "id" is
+     * more intuitive than "entityId". It works for routes using either the "{id}" or the
+     * "{entityId}" placeholder because it sets the canonical "entityId" parameter, which
+     * generateUrl() then translates to "id" when the target route uses the "{id}" alias.
+     *
+     * Note: this method is not part of AdminUrlGeneratorInterface yet (to avoid a BC break);
+     * it will be added to the interface in the next major version of EasyAdmin. Its return
+     * type is "self" (not the interface) so it can be chained in statically-analyzed code.
+     */
+    public function setId(mixed $id): self
+    {
+        $this->setEntityId($id);
+
+        return $this;
+    }
+
+    public function get(string $paramName): mixed
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        return $this->routeParameters[$paramName] ?? null;
+    }
+
+    public function set(string $paramName, mixed $paramValue): AdminUrlGeneratorInterface
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        $this->setRouteParameter($paramName, $paramValue);
+
+        return $this;
+    }
+
+    public function setAll(array $parameters): AdminUrlGeneratorInterface
+    {
+        foreach ($parameters as $paramName => $paramValue) {
+            $this->setRouteParameter($paramName, $paramValue);
+        }
+
+        return $this;
+    }
+
+    public function unset(string $paramName): AdminUrlGeneratorInterface
+    {
+        $this->unsetRouteParameter($paramName);
+
+        return $this;
+    }
+
+    public function unsetAll(): AdminUrlGeneratorInterface
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        $this->routeParameters = [];
+
+        return $this;
+    }
+
+    public function unsetAllExcept(string ...$namesOfParamsToKeep): AdminUrlGeneratorInterface
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        $this->routeParameters = array_intersect_key($this->routeParameters, array_flip($namesOfParamsToKeep));
+
+        return $this;
+    }
+
+    // this method allows to omit the 'generateUrl()' call in templates, making code more concise
+    public function __toString(): string
+    {
+        return $this->generateUrl();
+    }
+
+    public function generateUrl(): string
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        // this avoids forcing users to always be explicit about the action to execute
+        if (null !== $this->get(EA::CRUD_CONTROLLER_FQCN) && null === $this->get(EA::CRUD_ACTION)) {
+            $this->set(EA::CRUD_ACTION, Action::INDEX);
+        }
+
+        // if the Dashboard FQCN is defined, find its route and use it to override
+        // the current route (this is needed to allow generating links to different dashboards)
+        if (null !== $dashboardControllerFqcn = $this->get(EA::DASHBOARD_CONTROLLER_FQCN)) {
+            if (null === $dashboardRoute = $this->adminControllers->getDashboardRoute($dashboardControllerFqcn)) {
+                throw new \InvalidArgumentException(sprintf('The given "%s" class is not a valid Dashboard controller. Make sure it extends from "%s" or implements "%s".', $dashboardControllerFqcn, AbstractDashboardController::class, DashboardControllerInterface::class));
+            }
+
+            $this->dashboardRoute = $dashboardRoute;
+        }
+
+        // if the current action is 'index' and an entity ID is defined, remove the entity ID to prevent exceptions automatically
+        if (Action::INDEX === $this->get(EA::CRUD_ACTION) && null !== $this->get(EA::ENTITY_ID)) {
+            $this->unset(EA::ENTITY_ID);
+        }
+
+        // this happens when generating URLs from outside EasyAdmin (AdminContext is null) and
+        // no Dashboard FQCN has been defined explicitly
+        if (null === $this->dashboardRoute) {
+            if ($this->adminControllers->getDashboardCount() > 1) {
+                throw new \RuntimeException('When generating admin URLs from outside EasyAdmin or without a related HTTP request (e.g. in tests, console commands, etc.), if your application has more than one Dashboard, you must associate the URL to a specific Dashboard using the "setDashboard()" method.');
+            }
+
+            $this->setDashboard($this->adminControllers->getFirstDashboard());
+            $this->dashboardRoute = $this->adminControllers->getFirstDashboardRoute();
+        }
+
+        // if present, remove the suffix of i18n route names (it's the content after the last dot
+        // in the route name; e.g. 'dashboard.en' -> remove '.en', 'admin.index.en_US' -> remove '.en_US')
+        $this->dashboardRoute = preg_replace('~\.[a-z]{2}(_[A-Z]{2})?$~', '', $this->dashboardRoute);
+
+        // remove null values and sort the route parameters before generating the URL
+        $canonicalRouteParameters = array_filter(
+            $this->routeParameters,
+            static fn ($parameterValue): bool => null !== $parameterValue
+        );
+        ksort($canonicalRouteParameters, \SORT_STRING);
+
+        $context = $this->adminContextProvider->getContext();
+        $urlType = null !== $context && false === $context->getAbsoluteUrls() ? UrlGeneratorInterface::ABSOLUTE_PATH : UrlGeneratorInterface::ABSOLUTE_URL;
+
+        // if no route attributes are passed, the route doesn't point to any CRUD controller
+        // action or to any custom action/route; consider it a link to the current dashboard
+        if ([] === $this->routeParameters) {
+            return $this->urlGenerator->generate($this->dashboardRoute, [], $urlType);
+        }
+
+        if (null !== $routeName = $this->get(EA::ROUTE_NAME)) {
+            $adminRoutes = $this->cache->getItem(CacheKey::ROUTE_NAME_TO_ATTRIBUTES)->get();
+            if (null !== $adminRoutes && \array_key_exists($routeName, $adminRoutes)) {
+                return $this->urlGenerator->generate($routeName, $canonicalRouteParameters[EA::ROUTE_PARAMS] ?? [], $urlType);
+            }
+
+            return $this->urlGenerator->generate($this->dashboardRoute, $canonicalRouteParameters, $urlType);
+        }
+
+        $dashboardControllerFqcn = $this->get(EA::DASHBOARD_CONTROLLER_FQCN) ?? $context?->getRequest()->attributes->get(EA::DASHBOARD_CONTROLLER_FQCN) ?? $context?->getDashboardControllerFqcn() ?? $this->adminControllers->getFirstDashboard();
+        $crudControllerFqcn = $this->get(EA::CRUD_CONTROLLER_FQCN) ?? $context?->getRequest()->attributes->get(EA::CRUD_CONTROLLER_FQCN);
+        $actionName = $this->get(EA::CRUD_ACTION) ?? $context?->getRequest()->attributes->get(EA::CRUD_ACTION);
+
+        $routeName = $this->adminRouteGenerator->findRouteName($dashboardControllerFqcn, $crudControllerFqcn, $actionName) ?? $this->dashboardRoute;
+
+        unset($canonicalRouteParameters[EA::DASHBOARD_CONTROLLER_FQCN], $canonicalRouteParameters[EA::CRUD_CONTROLLER_FQCN], $canonicalRouteParameters[EA::CRUD_ACTION]);
+
+        // if the target route identifies the current entity with the "{id}" alias (instead of the
+        // canonical "{entityId}" placeholder), generate the URL using "id" so the value fills the
+        // route placeholder instead of leaking into the query string. An explicit "id" parameter (if
+        // any) is preserved, but the canonical "entityId" is always dropped on these routes.
+        $adminRoutes = $this->cache->getItem(CacheKey::ROUTE_NAME_TO_ATTRIBUTES)->get() ?? [];
+        if ('id' === ($adminRoutes[$routeName]['entityIdParamName'] ?? null) && \array_key_exists(EA::ENTITY_ID, $canonicalRouteParameters)) {
+            $canonicalRouteParameters['id'] ??= $canonicalRouteParameters[EA::ENTITY_ID];
+            unset($canonicalRouteParameters[EA::ENTITY_ID]);
+        }
+
+        $url = $this->urlGenerator->generate($routeName, $canonicalRouteParameters, $urlType);
+        $url = '' === $url ? '?' : $url;
+
+        // this is important to start the generation of each URL from the same initial state
+        // otherwise, some parameters used when generating some URL could leak to other URLs
+        $this->isInitialized = false;
+
+        return $url;
+    }
+
+    private function setRouteParameter(string $parameterName, mixed $parameterValue): void
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        if (\is_resource($parameterValue)) {
+            throw new \InvalidArgumentException(sprintf('The value of the "%s" parameter is a PHP resource, which is not supported as a route parameter.', $parameterName));
+        }
+
+        if (\is_object($parameterValue)) {
+            if ($parameterValue instanceof \Stringable) {
+                $parameterValue = (string) $parameterValue;
+            } else {
+                throw new \InvalidArgumentException(sprintf('The object passed as the value of the "%s" parameter must implement the "__toString()" method to allow using its value as a route parameter.', $parameterName));
+            }
+        }
+
+        $this->routeParameters[$parameterName] = $parameterValue;
+    }
+
+    private function unsetRouteParameter(string $parameterName): void
+    {
+        if (false === $this->isInitialized) {
+            $this->initialize();
+        }
+
+        unset($this->routeParameters[$parameterName]);
+    }
+
+    private function initialize(): void
+    {
+        $adminContext = $this->adminContextProvider->getContext();
+
+        $this->dashboardRoute = $adminContext?->getDashboardRouteName();
+
+        $defaultParameters = array_filter(
+            [
+                EA::DASHBOARD_CONTROLLER_FQCN => $adminContext?->getRequest()->attributes->get(EA::DASHBOARD_CONTROLLER_FQCN),
+                EA::CRUD_CONTROLLER_FQCN => $adminContext?->getRequest()->attributes->get(EA::CRUD_CONTROLLER_FQCN),
+                EA::CRUD_ACTION => $adminContext?->getRequest()->attributes->get(EA::CRUD_ACTION),
+                // read the entity ID through EntityIdReader so it's also seeded from the "{id}" alias
+                // (and from mapped placeholders), and not only from the canonical "entityId" attribute
+                EA::ENTITY_ID => null === $adminContext ? null : EntityIdReader::fromRequest($adminContext->getRequest()),
+            ],
+            static fn (mixed $value): bool => null !== $value
+        );
+
+        $this->routeParameters = array_merge($defaultParameters, $adminContext?->getRequest()->query->all() ?? []);
+
+        $this->isInitialized = true;
+    }
+}

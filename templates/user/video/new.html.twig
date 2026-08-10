@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Додати відео{% endblock %}
+
+{% block body %}
+<div class="content-container py-6 max-w-2xl mx-auto">
+    <!-- Заголовок -->
+    <div class="flex items-center gap-4 mb-6">
+        <a href="{{ path('user_video_index') }}" 
+           class="w-10 h-10 rounded-lg glass-light flex items-center justify-center hover:scale-110 transition-transform">
+            <i class="fas fa-arrow-left text-red-500"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold gradient-text">Додати нове відео</h1>
+            <p class="text-surface-600 dark:text-surface-400">Поділіться відео зі спільнотою</p>
+        </div>
+    </div>
+
+    <!-- Форма -->
+    <div class="glass-light rounded-xl p-6 border border-surface-200/50 dark:border-surface-700/50">
+        {{ form_start(form) }}
+        
+            <div class="space-y-6">
+                <!-- URL -->
+                <div>
+                    {{ form_label(form.url, null, {'label_attr': {'class': 'block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1'}}) }}
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400">
+                            <i class="fas fa-link"></i>
+                        </span>
+                        {{ form_widget(form.url, {'attr': {
+                            'class': 'w-full pl-12 pr-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all',
+                            'placeholder': 'https://youtube.com/watch?v=...'
+                        }}) }}
+                    </div>
+                    {{ form_errors(form.url) }}
+                    <p class="text-xs text-surface-500 mt-1">{{ form_help(form.url) }}</p>
+                </div>
+
+                <!-- Назва -->
+                <div>
+                    {{ form_label(form.title, null, {'label_attr': {'class': 'block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1'}}) }}
+                    {{ form_widget(form.title, {'attr': {
+                        'class': 'w-full px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all',
+                        'placeholder': 'Назва вашого відео'
+                    }}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+
+                <!-- Опис -->
+                <div>
+                    {{ form_label(form.description, null, {'label_attr': {'class': 'block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1'}}) }}
+                    {{ form_widget(form.description, {'attr': {
+                        'class': 'w-full px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all',
+                        'rows': 5,
+                        'placeholder': 'Розкажіть про ваше відео...'
+                    }}) }}
+                    {{ form_errors(form.description) }}
+                </div>
+
+                <!-- Теги -->
+                <div>
+                    {{ form_label(form.tags, null, {'label_attr': {'class': 'block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1'}}) }}
+                    {{ form_widget(form.tags, {'attr': {
+                        'class': 'w-full px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all',
+                        'placeholder': 'теги, через, кому'
+                    }}) }}
+                    {{ form_errors(form.tags) }}
+                    <p class="text-xs text-surface-500 mt-1">{{ form_help(form.tags) }}</p>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-end gap-3 pt-6 border-t border-surface-200 dark:border-surface-700">
+                    <a href="{{ path('user_video_index') }}" 
+                       class="px-6 py-2 rounded-lg glass-light hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                        Скасувати
+                    </a>
+                    <button type="submit" 
+                            class="px-8 py-2 bg-gradient-to-r from-red-500 to-purple-600 text-white rounded-lg hover:scale-105 hover:shadow-xl transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Завантажити відео</span>
+                    </button>
+                </div>
+            </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    <!-- Підказки -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glass-light rounded-xl p-4 border border-surface-200/50 dark:border-surface-700/50">
+            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                <i class="fab fa-youtube"></i>
+            </div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">YouTube</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Вставте посилання на YouTube відео</p>
+        </div>
+        
+        <div class="glass-light rounded-xl p-4 border border-surface-200/50 dark:border-surface-700/50">
+            <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3">
+                <i class="fab fa-vimeo-v"></i>
+            </div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Vimeo</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Вставте посилання на Vimeo відео</p>
+        </div>
+        
+        <div class="glass-light rounded-xl p-4 border border-surface-200/50 dark:border-surface-700/50">
+            <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-3">
+                <i class="fas fa-play-circle"></i>
+            </div>
+            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Rutube</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Вставте посилання на Rutube відео</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

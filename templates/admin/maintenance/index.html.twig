@@ -1,0 +1,501 @@
+{# templates/admin/maintenance/index.html.twig #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Режим обслуговування – Адмін панель{% endblock %}
+
+{% block body %}
+<div x-data="maintenanceManager()" x-init="init()" class="space-y-6">
+    <!-- Флеш повідомлення -->
+    <div id="flash-messages">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="p-4 rounded-xl flex items-center gap-3 shadow-sm border-l-4 animate-fade-in
+                            {% if label == 'success' %}
+                                bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-500
+                            {% elseif label == 'error' %}
+                                bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-500
+                            {% else %}
+                                bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-500
+                            {% endif %}">
+                    <span>{{ message }}</span>
+                    <button @click="$el.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        ✕
+                    </button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <!-- Заголовок -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                Режим обслуговування
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Управління режимом обслуговування сайту
+            </p>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Статус -->
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                  :class="isEnabled ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'">
+                <span class="w-2 h-2 rounded-full" :class="isEnabled ? 'bg-red-500 animate-pulse' : 'bg-green-500'"></span>
+                <span x-text="isEnabled ? 'Увімкнено' : 'Вимкнено'"></span>
+            </span>
+
+            <!-- Toggle Switch -->
+            <button type="button"
+                    @click="toggleMaintenance()"
+                    :disabled="loading"
+                    class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="isEnabled ? 'bg-red-600 dark:bg-red-500' : 'bg-gray-200 dark:bg-gray-600'"
+                    role="switch"
+                    :aria-checked="isEnabled">
+                <span class="sr-only">Toggle maintenance mode</span>
+                <span aria-hidden="true"
+                      class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                      :class="isEnabled ? 'translate-x-5' : 'translate-x-0'">
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Форма налаштувань -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                    Налаштування режиму обслуговування
+                </h3>
+
+                <form id="maintenance-form" class="space-y-6" @submit.prevent="saveSettings()">
+                    <!-- Toggle: Увімкнути режим обслуговування -->
+                    <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-medium text-gray-900 dark:text-white">
+                                    Увімкнути режим обслуговування
+                                </label>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    Вимкніть або увімкніть режим обслуговування
+                                </p>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox"
+                                       id="maintenance_enabled"
+                                       x-model="isEnabled"
+                                       @change="updateField('enabled', isEnabled)"
+                                       class="sr-only peer">
+                                <label for="maintenance_enabled" 
+                                       class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                       :class="isEnabled ? 'bg-red-600 dark:bg-red-500' : 'bg-gray-200 dark:bg-gray-600'">
+                                    <span class="sr-only">Toggle</span>
+                                    <span aria-hidden="true"
+                                          class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                                          :class="isEnabled ? 'translate-x-5' : 'translate-x-0'">
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggle: Доступ адміністраторів -->
+                    <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-medium text-gray-900 dark:text-white">
+                                    Доступ адміністраторів
+                                </label>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    Дозволити доступ до адмін-панелі під час обслуговування
+                                </p>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox"
+                                       id="maintenance_admin_access"
+                                       x-model="allowAdminAccess"
+                                       @change="updateField('allowAdminAccess', allowAdminAccess)"
+                                       class="sr-only peer">
+                                <label for="maintenance_admin_access" 
+                                       class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                       :class="allowAdminAccess ? 'bg-green-600 dark:bg-green-500' : 'bg-gray-200 dark:bg-gray-600'">
+                                    <span class="sr-only">Toggle admin access</span>
+                                    <span aria-hidden="true"
+                                          class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                                          :class="allowAdminAccess ? 'translate-x-5' : 'translate-x-0'">
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Заголовок
+                        </label>
+                        <input type="text"
+                               id="maintenance_title"
+                               x-model="title"
+                               @input="updateField('title', title)"
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                               placeholder="Введіть заголовок...">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Повідомлення
+                        </label>
+                        <textarea id="maintenance_message"
+                                  x-model="message"
+                                  @input="updateField('message', message)"
+                                  rows="4"
+                                  class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                  placeholder="Введіть повідомлення..."></textarea>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            Підтримується HTML
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Початок
+                            </label>
+                            <input type="datetime-local"
+                                   id="maintenance_start_at"
+                                   x-model="startAt"
+                                   @input="updateField('startAt', startAt)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Завершення
+                            </label>
+                            <input type="datetime-local"
+                                   id="maintenance_end_at"
+                                   x-model="endAt"
+                                   @input="updateField('endAt', endAt)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Колір фону
+                            </label>
+                            <input type="color"
+                                   id="maintenance_bg_color"
+                                   x-model="bgColor"
+                                   @input="updateField('backgroundColor', bgColor)"
+                                   class="w-full h-10 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Колір тексту
+                            </label>
+                            <input type="color"
+                                   id="maintenance_text_color"
+                                   x-model="textColor"
+                                   @input="updateField('textColor', textColor)"
+                                   class="w-full h-10 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Акцентний колір
+                            </label>
+                            <input type="color"
+                                   id="maintenance_accent_color"
+                                   x-model="accentColor"
+                                   @input="updateField('accentColor', accentColor)"
+                                   class="w-full h-10 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="submit"
+                                :disabled="loading"
+                                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span x-show="!loading">💾 Зберегти налаштування</span>
+                            <span x-show="loading" class="flex items-center gap-2">
+                                <span class="animate-spin">⟳</span>
+                                Збереження...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Статистика та інформація -->
+        <div class="space-y-6">
+            <!-- Статус -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Статус системи
+                </h3>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Режим обслуговування</span>
+                        <span class="inline-flex items-center gap-1 text-sm font-medium" :class="isEnabled ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+                            <span class="w-2 h-2 rounded-full" :class="isEnabled ? 'bg-red-500 animate-pulse' : 'bg-green-500'"></span>
+                            <span x-text="isEnabled ? 'Увімкнено' : 'Вимкнено'"></span>
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Доступ адмінів</span>
+                        <span class="text-sm font-medium" :class="allowAdminAccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                            <span x-text="allowAdminAccess ? 'Дозволено' : 'Заборонено'"></span>
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Заголовок</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[120px]" x-text="title || '—'"></span>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Оновлено</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="updatedAt || '—'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Безпека -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Безпека
+                </h3>
+
+                <div class="space-y-3">
+                    <div class="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Дозволені IP</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            IP-адреси, які можуть бачити сайт під час обслуговування
+                        </p>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            {% if settings.allowedIps is not empty %}
+                                {% for ip in settings.allowedIps %}
+                                    <span class="inline-flex items-center px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">
+                                        {{ ip }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-xs text-gray-400 dark:text-gray-500">Не налаштовано</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Дозволені маршрути</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Маршрути, доступні під час обслуговування
+                        </p>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            {% for route in settings.allowedRoutes %}
+                                <span class="inline-flex items-center px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs font-mono">
+                                    {{ route }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Швидкі дії -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Швидкі дії
+                </h3>
+                <div class="space-y-2">
+                    <a href="{{ path('admin_maintenance_preview') }}" 
+                       target="_blank"
+                       class="block w-full text-center px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium">
+                        Переглянути сторінку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Індикатор завантаження -->
+    <div x-show="loading" x-cloak
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl flex items-center gap-3">
+            <span class="animate-spin">⟳</span>
+            <span class="text-gray-900 dark:text-white">Виконується...</span>
+        </div>
+    </div>
+</div>
+
+<script>
+function maintenanceManager() {
+    return {
+        // Дані
+        isEnabled: {{ settings.isEnabled ? 'true' : 'false' }},
+        allowAdminAccess: {{ settings.isAllowAdminAccess ? 'true' : 'false' }},
+        title: '{{ settings.title|default('')|e('js') }}',
+        message: '{{ settings.message|default('')|e('js') }}',
+        startAt: '{{ settings.startAt ? settings.startAt|date('Y-m-d\\TH:i') : '' }}',
+        endAt: '{{ settings.endAt ? settings.endAt|date('Y-m-d\\TH:i') : '' }}',
+        bgColor: '{{ settings.backgroundColor|default('#1a1a2e') }}',
+        textColor: '{{ settings.textColor|default('#ffffff') }}',
+        accentColor: '{{ settings.accentColor|default('#4f46e5') }}',
+        updatedAt: '{{ settings.updatedAt ? settings.updatedAt|date('d.m.Y H:i') : '—' }}',
+        loading: false,
+        pendingChanges: false,
+        
+        init() {
+            // Автоматичне збереження при зміні
+            this.$watch('isEnabled', () => { this.pendingChanges = true; });
+            this.$watch('allowAdminAccess', () => { this.pendingChanges = true; });
+        },
+        
+        async toggleMaintenance() {
+            this.loading = true;
+            try {
+                const response = await fetch('{{ path('admin_maintenance_toggle') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        enabled: this.isEnabled ? 0 : 1,
+                        _token: '{{ csrf_token('maintenance_toggle') }}'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.isEnabled = data.enabled;
+                    this.updatedAt = new Date().toLocaleString('uk-UA');
+                    this.showNotification('Статус оновлено!', 'success');
+                } else {
+                    this.showNotification(data.message || 'Помилка', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Помилка при оновленні статусу', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async updateField(field, value) {
+            // Автоматичне збереження через 500ms після зупинки введення
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = setTimeout(() => {
+                this.saveSettings();
+            }, 500);
+        },
+        
+        async saveSettings() {
+            this.loading = true;
+            try {
+                const data = {
+                    enabled: this.isEnabled,
+                    allowAdminAccess: this.allowAdminAccess,
+                    title: this.title,
+                    message: this.message,
+                    startAt: this.startAt,
+                    endAt: this.endAt,
+                    backgroundColor: this.bgColor,
+                    textColor: this.textColor,
+                    accentColor: this.accentColor,
+                    _token: '{{ csrf_token('maintenance_settings') }}'
+                };
+                
+                const response = await fetch('{{ path('admin_maintenance_save') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    this.updatedAt = new Date().toLocaleString('uk-UA');
+                    this.pendingChanges = false;
+                    this.showNotification('Налаштування збережено!', 'success');
+                } else {
+                    this.showNotification(result.message || 'Помилка збереження', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Помилка при збереженні', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-500',
+                error: 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-500',
+                info: 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 border-blue-500'
+            };
+            
+            const container = document.getElementById('flash-messages');
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-xl flex items-center gap-3 shadow-sm border-l-4 animate-fade-in ${colors[type] || colors.info}`;
+            div.innerHTML = `
+                <span>${message}</span>
+                <button @click="$el.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">✕</button>
+            `;
+            
+            container.prepend(div);
+            
+            // Автоматичне видалення через 5 секунд
+            setTimeout(() => {
+                if (div.parentElement) {
+                    div.remove();
+                }
+            }, 5000);
+        }
+    };
+}
+</script>
+
+<style>
+/* Анімація для toggle */
+.peer:checked + label .peer-checked\:translate-x-6 {
+    transform: translateX(1.5rem);
+}
+
+label .inline-block {
+    transition: transform 0.2s ease-in-out;
+}
+
+.peer:focus + label {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,1116 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{% if article.id %}Редагування статті{% else %}Нова стаття{% endif %} - Адмін панель{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+<!-- Select2 for tags -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Flatpickr для datetime picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .ck-editor__editable {
+        min-height: 300px;
+    }
+    .ck.ck-editor {
+        margin-top: 0.5rem;
+    }
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+    }
+    .select2-container .select2-selection--multiple .select2-selection__choice {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 0.375rem;
+    }
+    .image-upload-area {
+        border: 2px dashed #d1d5db;
+        transition: all 0.3s ease;
+    }
+    .image-upload-area:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+    .image-upload-area.dragover {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    .upload-preview {
+        max-height: 200px;
+        object-fit: contain;
+    }
+    /* Стилі для toggle switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+        background-color: #3b82f6;
+    }
+    input:checked + .toggle-slider:before {
+        transform: translateX(30px);
+    }
+    .toggle-slider.disabled {
+        background-color: #e5e7eb;
+        cursor: not-allowed;
+    }
+    /* Анімації */
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fade-in 0.3s ease-out; }
+    .ck-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
+    .ck-fullscreen-body { overflow: hidden !important; }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="flex-1 p-4 lg:p-6" 
+      x-data="articleForm()" 
+      x-init="init()"
+      @drop.prevent="handleDrop($event)"
+      @dragover.prevent="dragOver = true"
+      @dragleave.prevent="dragOver = false"
+      @dragend.prevent="dragOver = false">
+    
+    <!-- Global Drag Overlay -->
+    <div x-show="dragOver && showGlobalDragOverlay" 
+         x-cloak
+         class="fixed inset-0 bg-blue-500/10 dark:bg-blue-500/20 backdrop-blur-sm z-50 flex items-center justify-center border-4 border-dashed border-blue-500">
+        <div class="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl">
+            <i class="fas fa-cloud-upload-alt text-5xl text-blue-500 mb-4"></i>
+            <p class="text-xl font-semibold text-gray-900 dark:text-white">Відпустіть для завантаження зображень</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                    {% if article.id %}Редагування статті{% else %}Створення нової статті{% endif %}
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Заповніть форму для {% if article.id %}редагування{% else %}створення{% endif %} статті</p>
+            </div>
+            <a href="{{ path('admin_article_index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                <i class="fas fa-arrow-left text-sm"></i>
+                Назад до списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    {{ form_start(form, {'attr': {'class': 'space-y-6', 'enctype': 'multipart/form-data'}}) }}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Основна картка -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Основна інформація</h2>
+                
+                <div class="space-y-4">
+                    <!-- Title -->
+                    <div>
+                        {{ form_label(form.title, 'Заголовок статті', {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                        }) }}
+                        {{ form_widget(form.title, {
+                            'attr': {
+                                'class': 'block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                                'placeholder': 'Введіть заголовок статті',
+                                'autocomplete': 'off',
+                                'id': 'article_title',
+                                'x-model': 'title',
+                                '@input.debounce.500ms': 'generateSlug()'
+                            }
+                        }) }}
+                        {{ form_errors(form.title) }}
+                    </div>
+
+                    <!-- Slug -->
+                    <div>
+                        {{ form_label(form.slug, 'URL-адреса (slug)', {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                        }) }}
+                        <div class="relative">
+                            {{ form_widget(form.slug, {
+                                'attr': {
+                                    'class': 'block w-full pl-24 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                                    'placeholder': 'avtomatychnyy-slug',
+                                    'id': 'article_slug',
+                                    'x-model': 'slug'
+                                }
+                            }) }}
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-400 dark:text-gray-500">/article/</span>
+                            </div>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Залиште порожнім для автоматичного створення
+                            </p>
+                            <button type="button" 
+                                    @click="generateSlug()"
+                                    class="text-sm text-primary-600 hover:text-primary-800">
+                                <i class="fas fa-sync-alt mr-1"></i>Згенерувати
+                            </button>
+                        </div>
+                        {{ form_errors(form.slug) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Контентна картка -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Контент</h2>
+                
+                <div class="space-y-6">
+                    <!-- Excerpt -->
+                    <div>
+                        {{ form_label(form.excerpt, 'Короткий опис', {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                        }) }}
+                        {{ form_widget(form.excerpt, {
+                            'attr': {
+                                'class': 'block w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                                'placeholder': 'Короткий опис статті для превью',
+                                'rows': 3,
+                                'id': 'article_excerpt'
+                            }
+                        }) }}
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Цей текст буде відображатися на головній сторінці та в картках статей
+                        </p>
+                        {{ form_errors(form.excerpt) }}
+                    </div>
+
+                    <!-- Content with CKEditor -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            {{ form_label(form.content, 'Основний вміст', {
+                                'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300'}
+                            }) }}
+                            <div class="flex items-center gap-2 text-sm">
+                                <button type="button" 
+                                        @click="toggleFullscreen()"
+                                        class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {{ form_widget(form.content, {
+                            'attr': {
+                                'class': 'hidden',
+                                'id': 'article_content'
+                            }
+                        }) }}
+                        <div id="editor-container">
+                            <textarea id="editor" placeholder="Текст вашої статті..."></textarea>
+                        </div>
+                        {{ form_errors(form.content) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploaded Images Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Завантажені зображення</h2>
+                
+                <!-- Upload Progress -->
+                <div x-show="uploadProgress.show" 
+                     x-cloak
+                     class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-300">
+                            Завантаження...
+                        </span>
+                        <span x-text="uploadProgress.percent + '%'" class="text-sm font-bold text-blue-600 dark:text-blue-400"></span>
+                    </div>
+                    <div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                        <div class="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                             :style="'width: ' + uploadProgress.percent + '%'"></div>
+                    </div>
+                    <p x-text="uploadProgress.message" class="mt-2 text-sm text-blue-700 dark:text-blue-300"></p>
+                </div>
+
+                <!-- Upload Area -->
+                <div @click="openFilePicker"
+                     @dragover.prevent="dragOver = true; showGlobalDragOverlay = false"
+                     @dragleave.prevent="dragOver = false"
+                     @drop.prevent="handleDrop($event, 'local')"
+                     :class="{'border-blue-500 bg-blue-50 dark:bg-blue-900/10': dragOver}"
+                     class="image-upload-area cursor-pointer rounded-lg p-8 text-center transition-all duration-200 mb-6">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Перетягніть зображення сюди або клікніть для завантаження
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Підтримуються JPG, PNG, GIF, WEBP (макс. 5MB)
+                    </p>
+                    <input type="file" 
+                           @change="handleFileSelect($event)"
+                           multiple 
+                           accept="image/*"
+                           class="hidden"
+                           id="fileInput">
+                </div>
+
+                <!-- Uploaded Images Grid -->
+                <div x-show="uploadedImages.length > 0" x-cloak>
+                    <h3 class="text-md font-semibold text-gray-900 dark:text-white mb-3">Завантажені зображення</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <template x-for="(image, index) in uploadedImages" :key="image.id">
+                            <div class="relative group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <img :src="image.url" 
+                                     :alt="image.alt"
+                                     class="w-full h-32 object-cover">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button @click="setAsCover(image.url)"
+                                            class="p-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white"
+                                            title="Встановити як обкладинку">
+                                        <i class="fas fa-star text-xs"></i>
+                                    </button>
+                                    <button @click="insertIntoEditor(image.url)"
+                                            class="p-2 bg-green-500 hover:bg-green-600 rounded-full text-white"
+                                            title="Вставити в текст">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                    <button @click="removeImage(index)"
+                                            class="p-2 bg-red-500 hover:bg-red-600 rounded-full text-white"
+                                            title="Видалити">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2">
+                                    <p class="text-xs truncate" x-text="image.alt"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Hidden fields for uploaded images -->
+                <input type="hidden" name="uploaded_images" :value="JSON.stringify(uploadedImages)">
+                <input type="hidden" name="removed_images" :value="JSON.stringify(removedImages)">
+            </div>
+        </div>
+
+        <!-- Right Column: Sidebar -->
+        <div class="space-y-6">
+            <!-- Автор -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Автор</h3>
+                
+                <div class="space-y-4">
+                    <!-- Author Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Автор статті
+                        </label>
+                        
+                        <!-- Current User Toggle -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Поточний користувач</span>
+                        </div>
+
+                        <!-- Author Dropdown -->
+                        <div x-show="!useCurrentUser">
+                        </div>
+
+                        <!-- Current User Info -->
+                        <div x-show="useCurrentUser" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                    {% if app.user.avatar %}
+                                        <img src="{{ asset('uploads/avatars/' ~ app.user.avatar) }}" 
+                                             alt="{{ app.user.username }}"
+                                             class="w-full h-full rounded-full object-cover">
+                                    {% else %}
+                                        <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">{{ app.user.username }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ app.user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media & Images -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Зображення обкладинки</h3>
+                
+                <div class="space-y-4">
+                    <!-- Cover Image Preview -->
+                    <div class="text-center">
+                        <div class="relative inline-block">
+                            <img :src="coverImage || '{{ asset('/uploads/noimage.png') }}'"
+                                 alt="Обкладинка статті"
+                                 class="w-full h-48 object-cover rounded-lg border border-gray-200 dark:border-gray-600">
+                            <button x-show="coverImage"
+                                    @click="clearCoverImage()"
+                                    class="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cover Image URL -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            URL зображення обкладинки
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text"
+                                   x-model="coverImage"
+                                   placeholder="https://example.com/image.jpg або виберіть з завантажених"
+                                   class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                            <button type="button"
+                                    @click="useLastUploadedAsCover()"
+                                    x-show="uploadedImages.length > 0"
+                                    class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        </div>
+                        {{ form_widget(form.coverImage, {
+                            'attr': {
+                                'class': 'hidden',
+                                'id': 'article_coverImage',
+                                'x-model': 'coverImage'
+                            }
+                        }) }}
+                    </div>
+
+                    <!-- Quick Select from Uploaded -->
+                    <div x-show="uploadedImages.length > 0" x-cloak class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Швидкий вибір з завантажених:
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(image, index) in uploadedImages.slice(0, 3)" :key="image.id">
+                                <button type="button"
+                                        @click="coverImage = image.url"
+                                        class="relative group">
+                                    <img :src="image.url"
+                                         :alt="image.alt"
+                                         class="w-16 h-16 object-cover rounded border-2"
+                                         :class="{'border-blue-500': coverImage === image.url, 'border-gray-200 dark:border-gray-600': coverImage !== image.url}">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded flex items-center justify-center transition">
+                                        <i class="fas fa-check text-white text-xs"></i>
+                                    </div>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                {{ form_errors(form.coverImage) }}
+            </div>
+
+            <!-- Taxonomies -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Категорії та теги</h3>
+                
+                <div class="space-y-4">
+                    <!-- Category -->
+                    <div>
+                        {{ form_label(form.category, 'Категорія', {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                        }) }}
+                        
+                        <div class="space-y-2">
+                            {{ form_widget(form.category, {
+                                'attr': {
+                                    'class': 'w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                                    'id': 'article_category'
+                                }
+                            }) }}
+                        </div>
+                        {{ form_errors(form.category) }}
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        {{ form_label(form.tags, 'Теги', {
+                            'label_attr': {'class': 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'}
+                        }) }}
+                        
+                        <div class="space-y-2">
+                            <!-- Manual tag input -->
+                            <div class="space-y-3">
+                                <div class="flex space-x-2">
+                                    <input type="text" 
+                                           x-model="newTag"
+                                           @keyup.enter="addNewTag()"
+                                           placeholder="Введіть новий тег..."
+                                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                    <button type="button" 
+                                            @click="addNewTag()"
+                                            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="(tag, index) in selectedTags" :key="tag">
+                                        <span class="tag-badge bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 px-3 py-1 rounded-full text-sm inline-flex items-center">
+                                            <span x-text="tag"></span>
+                                            <button type="button" 
+                                                    @click="removeTag(index)"
+                                                    class="ml-2 text-primary-600 dark:text-primary-300 hover:text-primary-800 dark:hover:text-primary-100">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        {{ form_widget(form.tags, {
+                            'attr': {
+                                'class': 'hidden',
+                                'id': 'article_tags',
+                                ':value': 'JSON.stringify(selectedTags)'
+                            }
+                        }) }}
+                        {{ form_errors(form.tags) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publish Settings -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Публікація</h3>
+                
+                <div class="space-y-4">
+
+                    <!-- Published Date -->
+                    <div x-show="status === 'published'">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Дата публікації
+                        </label>
+                        
+                        <div class="space-y-2">
+                            <!-- Date Picker -->
+                            <div class="relative">
+                                <input type="datetime-local"
+                                       x-model="publishedAt"
+                                       :disabled="status !== 'published'"
+                                       class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-calendar text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Date Buttons -->
+                            <div class="flex gap-2">
+                                <button type="button" 
+                                        @click="setPublishedDate('now')"
+                                        class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    Зараз
+                                </button>
+                                <button type="button" 
+                                        @click="setPublishedDate('tomorrow')"
+                                        class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    Завтра
+                                </button>
+                                <button type="button" 
+                                        @click="setPublishedDate('next_week')"
+                                        class="flex-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    Через тиждень
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <!-- Toggle Switch for Publish Now -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 cursor-pointer">
+                                Опублікувати відразу
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" x-text="publishMessage"></p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" 
+                                   x-model="publishNow"
+                                   @click="togglePublishNow()">
+                            <span class="toggle-slider" :class="{'disabled': status === 'published'}"></span>
+                        </label>
+                    </div>
+
+                    <!-- Save Buttons -->
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                        <button type="submit" 
+                                name="save"
+                                @click="prepareFormData()"
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                            <i class="fas fa-save"></i>
+                            {% if article.id %}Оновити статтю{% else %}Створити статтю{% endif %}
+                        </button>
+                        
+                        {% if not article.id or article.status != 'published' %}
+                        <button type="submit" 
+                                name="save_as_draft" 
+                                value="1"
+                                @click="prepareFormData()"
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                            <i class="fas fa-file-alt"></i>
+                            Зберегти як чернетку
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article Stats (for edit) -->
+            {% if article.id %}
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Статистика</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ article.views is defined ? article.views : 0 }}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Переглядів</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                            {{ article.commentCount is defined ? article.commentCount : 0 }}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Коментарів</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            {{ article.createdAt|date('d.m.Y') }}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Створено</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            {% if article.updatedAt is defined and article.updatedAt %}
+                                {{ article.updatedAt|date('d.m.Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Оновлено</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {{ form_end(form) }}
+</main>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+<!-- Flatpickr для datetime picker -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+<!-- Alpine.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<script>
+// Alpine.js компонент для форми статті
+function articleForm() {
+    return {
+        // Ініціалізаційні дані
+        title: '{{ article.title|default("")|escape('js') }}',
+        slug: '{{ article.slug|default("")|escape('js') }}',
+        coverImage: '{{ article.coverImage|default("")|escape('js') }}',
+        status: '{{ article.status|default("draft")|escape('js') }}',
+        publishedAt: '{{ article.publishedAt ? article.publishedAt|date("Y-m-d\\TH:i") : "" }}',
+        publishNow: {{ article.status == 'published' ? 'true' : 'false' }},
+        useCurrentUser: {{ (article.author and article.author.id == app.user.id) or not article.author ? 'true' : 'false' }},
+        
+        // Нові поля
+        dragOver: false,
+        showGlobalDragOverlay: true,
+        newTag: '',
+        selectedTags: {{ (article.tags is defined and article.tags) ? article.tags|map(t => t.name)|json_encode|raw : '[]' }},
+        uploadedImages: [],
+        removedImages: [],
+        uploadProgress: {
+            show: false,
+            percent: 0,
+            message: ''
+        },
+        
+        // Обчислювані властивості
+        get publishMessage() {
+            if (this.status === 'published') {
+                return 'Стаття вже опублікована';
+            }
+            return this.publishNow ? 'Стаття буде опублікована відразу' : 'Стаття буде збережена як чернетка';
+        },
+        
+        // Методи
+        async init() {
+            await this.$nextTick();
+            
+            // Завантаження існуючих зображень для редагування
+            {% if article.id and article.images is defined %}
+                {% for image in article.images %}
+                    this.uploadedImages.push({
+                        id: {{ image.id }},
+                        url: '{{ asset("uploads/articles/" ~ image.filename) }}',
+                        alt: '{{ image.alt|default("")|escape('js') }}',
+                        filename: '{{ image.filename|escape('js') }}',
+                        size: {{ image.size|default(0) }}
+                    });
+                {% endfor %}
+            {% endif %}
+            
+            // Ініціалізація CKEditor
+            this.initCKEditor();
+            
+            // Встановлення початкової дати публікації
+            if (!this.publishedAt && this.status === 'published') {
+                this.setPublishedDate('now');
+            }
+            
+            // Заповнюємо форму існуючими даними
+            this.fillExistingData();
+        },
+        
+        fillExistingData() {
+            // Заповнюємо поля форми даними з сервера
+            if (this.title) {
+                document.getElementById('article_title').value = this.title;
+            }
+            if (this.slug) {
+                document.getElementById('article_slug').value = this.slug;
+            }
+            if (this.coverImage) {
+                document.getElementById('article_coverImage').value = this.coverImage;
+            }
+            if (this.publishedAt) {
+                document.getElementById('article_publishedAt').value = this.publishedAt;
+            }
+        },
+        
+        initCKEditor() {
+            ClassicEditor
+                .create(document.querySelector('#editor'), {
+                    toolbar: {
+                        items: [
+                            'heading', '|', 
+                            'bold', 'italic', 'underline', 'strikethrough', '|',
+                            'link', 'blockQuote', 'codeBlock', '|',
+                            'bulletedList', 'numberedList', 'todoList', '|',
+                            'outdent', 'indent', '|',
+                            'undo', 'redo', '|',
+                            'imageUpload', 'mediaEmbed', '|',
+                            'insertTable', '|',
+                            'sourceEditing'
+                        ]
+                    },
+                    language: 'uk',
+                    licenseKey: '',
+                    simpleUpload: {
+                        uploadUrl: '{{ path("admin_article_upload") }}',
+                        headers: {
+                            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        }
+                    }
+                })
+                .then(editor => {
+                    window.editor = editor;
+                    
+                    // Завантажуємо існуючий контент
+                    const content = document.getElementById('article_content').value;
+                    editor.setData(content);
+                    
+                    // Оновлюємо hidden field при зміні контенту
+                    editor.model.document.on('change:data', () => {
+                        document.getElementById('article_content').value = editor.getData();
+                    });
+                })
+                .catch(error => {
+                    console.error('Помилка CKEditor:', error);
+                });
+        },
+        
+        generateSlug() {
+            if (this.slug.trim() === '') {
+                // Генерація slug з заголовка
+                let generatedSlug = this.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9а-яіїєґ\s-]/g, '')
+                    .replace(/[-\s]+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .replace(/ь|ъ/g, '')
+                    .replace(/[а-щьюяїієґ]/g, function(match) {
+                        const translit = {
+                            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g',
+                            'д': 'd', 'е': 'e', 'є': 'ye', 'ж': 'zh', 'з': 'z',
+                            'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k',
+                            'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+                            'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f',
+                            'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+                            'ю': 'yu', 'я': 'ya'
+                        };
+                        return translit[match] || match;
+                    });
+                
+                // Додаємо унікальний ідентифікатор
+                const uniqueId = Math.random().toString(36).substr(2, 6);
+                this.slug = generatedSlug ? generatedSlug + '-' + uniqueId : uniqueId;
+            }
+        },
+        
+        toggleCurrentUser() {
+            this.useCurrentUser = !this.useCurrentUser;
+            const authorSelect = document.getElementById('article_author');
+            
+            if (this.useCurrentUser) {
+                authorSelect.value = '{{ app.user.id }}';
+                authorSelect.disabled = true;
+            } else {
+                authorSelect.disabled = false;
+                if (authorSelect.value === '{{ app.user.id }}') {
+                    authorSelect.value = '';
+                }
+            }
+        },
+        
+        handleStatusChange() {
+            if (this.status === 'published') {
+                if (!this.publishedAt) {
+                    this.setPublishedDate('now');
+                }
+                this.publishNow = true;
+            } else {
+                this.publishNow = false;
+            }
+        },
+        
+        togglePublishNow() {
+            if (this.status === 'published') {
+                return;
+            }
+            
+            this.publishNow = !this.publishNow;
+            
+            if (this.publishNow) {
+                this.status = 'published';
+                if (!this.publishedAt) {
+                    this.setPublishedDate('now');
+                }
+            } else {
+                this.status = 'draft';
+            }
+        },
+        
+        setPublishedDate(type) {
+            const now = new Date();
+            let date = new Date();
+            
+            switch(type) {
+                case 'now':
+                    date = now;
+                    break;
+                case 'tomorrow':
+                    date.setDate(now.getDate() + 1);
+                    date.setHours(12, 0, 0);
+                    break;
+                case 'next_week':
+                    date.setDate(now.getDate() + 7);
+                    date.setHours(12, 0, 0);
+                    break;
+            }
+            
+            // Форматуємо для datetime-local input
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            this.publishedAt = `${year}-${month}-${day}T${hours}:${minutes}`;
+        },
+        
+        addNewTag() {
+            if (this.newTag.trim()) {
+                const tag = this.newTag.trim();
+                if (!this.selectedTags.includes(tag)) {
+                    this.selectedTags.push(tag);
+                }
+                this.newTag = '';
+            }
+        },
+        
+        removeTag(index) {
+            this.selectedTags.splice(index, 1);
+        },
+        
+        clearCoverImage() {
+            this.coverImage = '';
+            document.getElementById('article_coverImage').value = '';
+        },
+        
+        useLastUploadedAsCover() {
+            if (this.uploadedImages.length > 0) {
+                const lastImage = this.uploadedImages[this.uploadedImages.length - 1];
+                this.coverImage = lastImage.url;
+            }
+        },
+        
+        openFilePicker() {
+            document.getElementById('fileInput').click();
+        },
+        
+        async handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            await this.uploadFiles(files);
+            event.target.value = '';
+        },
+        
+        async handleDrop(event, type = 'global') {
+            event.preventDefault();
+            this.dragOver = false;
+            this.showGlobalDragOverlay = false;
+            
+            const files = Array.from(event.dataTransfer.files);
+            const imageFiles = files.filter(file => file.type.startsWith('image/'));
+            
+            if (imageFiles.length > 0) {
+                await this.uploadFiles(imageFiles);
+            } else if (files.length > 0) {
+                this.showNotification('Можна завантажувати тільки зображення', 'error');
+            }
+        },
+        
+        async uploadFiles(files) {
+            for (const file of files) {
+                await this.uploadSingleFile(file);
+            }
+        },
+        
+        async uploadSingleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                this.showNotification(`${file.name}: не є зображенням`, 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                this.showNotification(`${file.name}: занадто великий (макс. 5MB)`, 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('article_id', '{{ article.id ? article.id : "" }}');
+            
+            try {
+                this.uploadProgress.show = true;
+                this.uploadProgress.percent = 0;
+                this.uploadProgress.message = `Завантаження ${file.name}...`;
+                
+                const response = await fetch('{{ path("admin_article_upload") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.uploadProgress.percent = 100;
+                    this.uploadProgress.message = 'Завантаження завершено!';
+                    
+                    // Додаємо зображення до списку
+                    this.uploadedImages.push({
+                        id: data.image.id || 'temp_' + Date.now(),
+                        url: data.image.url,
+                        alt: data.image.alt || file.name,
+                        filename: file.name,
+                        size: file.size
+                    });
+                    
+                    this.showNotification(`${file.name} успішно завантажено`, 'success');
+                    
+                    // Автоматично вставляємо перше зображення як обкладинку
+                    if (this.uploadedImages.length === 1 && !this.coverImage) {
+                        this.coverImage = data.image.url;
+                    }
+                } else {
+                    throw new Error(data.message || 'Невідома помилка');
+                }
+            } catch (error) {
+                console.error('Помилка завантаження:', error);
+                this.showNotification(`Помилка завантаження ${file.name}: ${error.message}`, 'error');
+            } finally {
+                setTimeout(() => {
+                    this.uploadProgress.show = false;
+                    this.uploadProgress.percent = 0;
+                    this.uploadProgress.message = '';
+                }, 1000);
+            }
+        },
+        
+        removeImage(index) {
+            const image = this.uploadedImages[index];
+            this.uploadedImages.splice(index, 1);
+            
+            // Якщо це було зображення обкладинки, очищуємо
+            if (this.coverImage === image.url) {
+                this.coverImage = '';
+            }
+            
+            // Додаємо до списку видалених
+            this.removedImages.push(image);
+            
+            this.showNotification('Зображення видалено', 'info');
+        },
+        
+        setAsCover(imageUrl) {
+            this.coverImage = imageUrl;
+            this.showNotification('Зображення встановлено як обкладинку', 'success');
+        },
+        
+        insertIntoEditor(imageUrl) {
+            if (window.editor) {
+                const imageHtml = `<figure class="image"><img src="${imageUrl}" alt=""></figure>`;
+                window.editor.execute('insertText', imageHtml);
+                this.showNotification('Зображення вставлено в текст', 'success');
+            }
+        },
+        
+        toggleFullscreen() {
+            const editorElement = document.querySelector('.ck-editor');
+            if (!editorElement) return;
+            
+            const isFullscreen = editorElement.classList.contains('ck-fullscreen');
+            editorElement.classList.toggle('ck-fullscreen', !isFullscreen);
+            document.body.classList.toggle('ck-fullscreen-body', !isFullscreen);
+        },
+        
+        prepareFormData() {
+            // Оновлюємо всі приховані поля
+            document.getElementById('article_content').value = window.editor ? window.editor.getData() : '';
+            document.getElementById('article_coverImage').value = this.coverImage;
+            document.getElementById('article_publishedAt').value = this.publishedAt;
+            document.getElementById('article_tags').value = JSON.stringify(this.selectedTags);
+            
+            // Перевірка обов'язкових полів
+            if (!this.title.trim()) {
+                this.showNotification('Будь ласка, введіть заголовок статті', 'error');
+                event.preventDefault();
+                return false;
+            }
+            
+            return true;
+        },
+        
+        showNotification(message, type = 'info') {
+            const types = {
+                success: { icon: 'fa-check-circle', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300' },
+                error: { icon: 'fa-exclamation-circle', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300' },
+                warning: { icon: 'fa-exclamation-triangle', bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300' },
+                info: { icon: 'fa-info-circle', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-300' }
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 animate-fade-in ${types[type].bg} ${types[type].text} border border-current/20`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fas ${types[type].icon}"></i>
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            class="ml-4 hover:opacity-70 transition-opacity">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+    }
+}
+
+// Ініціалізація при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', function() {
+    // Додаємо стилі для CKEditor fullscreen
+    const style = document.createElement('style');
+    style.textContent = `
+        [x-cloak] { display: none !important; }
+        .ck-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            border: none !important;
+            border-radius: 0 !important;
+        }
+        .ck-fullscreen-body { overflow: hidden !important; }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

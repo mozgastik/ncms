@@ -1,0 +1,12 @@
+<twig:ea:Modal
+    id="modal-batch-action"
+    title="{{ 'batch_action_modal.title'|trans(domain: 'EasyAdminBundle') }}"
+    description="{{ 'batch_action_modal.content'|trans(domain: 'EasyAdminBundle') }}"
+>
+    <twig:block name="footer">
+        <twig:ea:Modal:Close>{{ 'action.cancel'|trans([], 'EasyAdminBundle') }}</twig:ea:Modal:Close>
+        <twig:ea:Button type="button" variant="danger" icon="internal:check" data-bs-dismiss="modal" id="modal-batch-action-button">
+            {{ 'batch_action_modal.action'|trans(domain: 'EasyAdminBundle') }}
+        </twig:ea:Button>
+    </twig:block>
+</twig:ea:Modal>

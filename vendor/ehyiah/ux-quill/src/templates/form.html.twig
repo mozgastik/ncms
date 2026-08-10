@@ -1,0 +1,46 @@
+{% block quill_widget %}
+    {%- set controller_name = (attr['data-controller']|default('') ~ ' ehyiah--ux-quill--quill')|trim -%}
+    {% set data_set = "data-ehyiah--ux-quill--quill" %}
+
+    {% if form.vars is defined  %}
+        {% if form.vars['quill_assets']['styleSheets'] is defined %}
+            {% set style_sheets = form.vars['quill_assets']['styleSheets'] %}
+            {% for style_sheet in style_sheets %}
+                <link rel="stylesheet" href="{{ style_sheet }}">
+            {% endfor %}
+        {% endif %}
+
+        {% if form.vars['quill_assets']['scripts'] is defined %}
+            {% set scripts = form.vars['quill_assets']['scripts'] %}
+            {% for script in scripts %}
+                <script src="{{ script }}"></script>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+
+    <div class="quill-container"
+         data-controller="{{ controller_name }}"
+         {{ data_set }}-toolbar-options-value="{{ attr['quill_options'] }}"
+         {{ data_set }}-extra-options-value="{{ attr['quill_extra_options'] }}"
+         {{ data_set }}-modules-options-value="{{ attr['quill_modules_options'] }}"
+    >
+
+        <div
+            data-live-ignore {# necessary when using live component because otherwise quill instance is not re-attached after live component reload the DOM #}
+        >
+            <div>
+                <input type="hidden"
+                       value="{{ value }}"
+                        {{ block('widget_attributes') }}
+                       {{ data_set }}-target="input"
+                >
+            </div>
+
+            <div class="quill-editor"
+                 id="{{ id }}_editor"
+                 {{ data_set }}-target="editorContainer"
+            >
+            </div>
+        </div>
+    </div>
+{% endblock %}

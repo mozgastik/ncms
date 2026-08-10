@@ -1,0 +1,14 @@
+{% props
+    label = null,
+    renderLabelRaw = false,
+    icon = null,
+    htmlAttributes = {},
+%}
+
+{% set has_label = label is ea_is_not_empty %}
+{% if has_label or icon is not empty %}
+    <li {{ attributes.defaults({class: 'dropdown-header'}|merge(htmlAttributes)) }}>
+        {%- if icon %}<twig:ea:Icon {{ ...attributes.nested('icon').defaults({name: icon}) }} /> {% endif -%}
+        {%- if has_label -%}<span {{ attributes.nested('label') }}>{{ renderLabelRaw ? label|raw : label }}</span>{%- endif -%}
+    </li>
+{% endif %}

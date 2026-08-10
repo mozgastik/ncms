@@ -1,0 +1,740 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Нова стаття{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        background: white;
+        color: #1f2937;
+    }
+    .dark .form-control, .dark .form-select {
+        background: #1f2937;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .ql-toolbar.ql-snow {
+        background: #f8fafc;
+        border-color: #d1d5db;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .dark .ql-toolbar.ql-snow {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    .ql-container.ql-snow {
+        border-color: #d1d5db;
+        border-radius: 0 0 0.5rem 0.5rem;
+        min-height: 400px;
+        background: white;
+        color: #1f2937;
+    }
+    .dark .ql-container.ql-snow {
+        background: #111827;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+    .ql-editor {
+        min-height: 400px;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+    .dark .ql-editor {
+        color: #e5e7eb;
+    }
+    .dark .ql-editor.ql-blank::before {
+        color: #6b7280;
+    }
+    .dark .ql-snow .ql-stroke {
+        stroke: #d1d5db;
+    }
+    .dark .ql-snow .ql-fill {
+        fill: #d1d5db;
+    }
+    .dark .ql-snow .ql-picker {
+        color: #d1d5db;
+    }
+    .dark .ql-snow .ql-picker-options {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .slug-preview {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    .slug-preview span {
+        font-family: monospace;
+        background: #f3f4f6;
+        padding: 0.125rem 0.25rem;
+        border-radius: 0.25rem;
+    }
+    .dark .slug-preview span {
+        background: #374151;
+        color: #9ca3af;
+    }
+
+    .cover-url-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .cover-url-group input {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .dark .cover-url-group input {
+        background: #1f2937;
+        border-color: #374151;
+        color: white;
+    }
+    .cover-url-group input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .cover-url-group button {
+        padding: 0.5rem 1rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    .cover-url-group button:hover {
+        background: #2563eb;
+        transform: scale(1.02);
+    }
+
+    .cover-preview-container {
+        position: relative;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+    .cover-preview-container img {
+        width: 150px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        border: 2px solid #3b82f6;
+    }
+    .cover-preview-container .remove-cover {
+        position: absolute;
+        top: -0.5rem;
+        right: -0.5rem;
+        background: #ef4444;
+        color: white;
+        border-radius: 9999px;
+        width: 1.5rem;
+        height: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    .cover-preview-container .remove-cover:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #3b82f6, #7c3aed);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    .btn-submit:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+    .btn-preview {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    .btn-preview:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+    }
+    .btn-cancel {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+        display: block;
+    }
+    .btn-cancel:hover {
+        background: #d1d5db;
+    }
+    .dark .btn-cancel {
+        background: #374151;
+        color: #e5e7eb;
+    }
+    .dark .btn-cancel:hover {
+        background: #4b5563;
+    }
+
+    /* Превью модал */
+    .preview-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .preview-modal.active {
+        display: flex;
+        animation: fadeIn 0.3s ease-out;
+    }
+    .preview-content {
+        background: white;
+        border-radius: 1rem;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .dark .preview-content {
+        background: #1f2937;
+    }
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .dark .preview-header {
+        border-color: #374151;
+    }
+    .preview-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        max-height: 65vh;
+    }
+    .preview-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .dark .preview-footer {
+        border-color: #374151;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-down {
+        animation: slideDown 0.3s ease-out;
+    }
+
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="max-w-6xl mx-auto px-4 py-8" 
+     x-data="articleForm()" 
+     x-init="init()"
+     x-cloak>
+
+    <h1 class="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        ✍️ Нова стаття
+    </h1>
+
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'id': 'articleForm', 'class': 'space-y-6'}}) }}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Ліва колонка -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Заголовок -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.title, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.title, {'attr': {
+                    'class': 'form-control',
+                    'x-model': 'title',
+                    '@input': 'generateSlug()',
+                    'placeholder': 'Введіть заголовок статті...',
+                    'id': 'article_title'
+                }}) }}
+                {{ form_errors(form.title) }}
+            </div>
+
+            <!-- Slug -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.slug, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                <div class="flex gap-2">
+                    {{ form_widget(form.slug, {'attr': {
+                        'class': 'form-control flex-1',
+                        'x-model': 'slug',
+                        'placeholder': 'custom-slug',
+                        'id': 'article_slug'
+                    }}) }}
+                    <button type="button" @click="generateSlug()" 
+                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition whitespace-nowrap">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="slug-preview mt-1" x-show="slug && !editSlug">
+                    <span>🔗 /article/<span x-text="slug"></span></span>
+                    <button type="button" @click="editSlug = true" class="ml-2 text-blue-600 hover:underline text-xs">редагувати</button>
+                </div>
+                <div x-show="editSlug" x-cloak class="mt-2">
+                    <input type="text" 
+                           x-model="slug"
+                           placeholder="custom-slug"
+                           class="form-control text-sm font-mono">
+                    <p class="text-xs text-gray-500 mt-1">Введіть свій варіант URL</p>
+                </div>
+                {{ form_errors(form.slug) }}
+            </div>
+
+            <!-- Короткий опис -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.excerpt, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.excerpt, {'attr': {
+                    'class': 'form-control',
+                    'rows': 3,
+                    'x-model': 'excerpt',
+                    'placeholder': 'Короткий опис для превью...',
+                    'id': 'article_excerpt'
+                }}) }}
+                {{ form_errors(form.excerpt) }}
+                <p class="text-xs text-gray-500 mt-1">✏️ Цей текст буде відображатися в картках статей</p>
+            </div>
+
+            <!-- Контент з Quill -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.content, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                <div id="editor" style="min-height: 400px; max-height: 600px;"></div>
+                {{ form_widget(form.content, {'attr': {
+                    'class': 'hidden', 
+                    'id': 'user_article_content',
+                    'x-model': 'content'
+                }}) }}
+                {{ form_errors(form.content) }}
+                <div class="text-xs text-gray-500 mt-2 flex justify-between">
+                    <span>📝 Використовуйте панель інструментів для форматування</span>
+                    <span x-text="'📊 Символів: ' + contentLength"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Права колонка -->
+        <div class="space-y-6">
+            <!-- Категорія -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                {{ form_label(form.category, null, {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+                {{ form_widget(form.category, {'attr': {
+                    'class': 'form-select',
+                    'x-model': 'category'
+                }}) }}
+                {{ form_errors(form.category) }}
+            </div>
+
+            <!-- Теги -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+                <label class="block text-sm font-medium mb-2">
+                    🏷️ Теги
+                    <span class="text-xs text-gray-500 font-normal" x-text="selectedTags.length ? '(' + selectedTags.length + ' вибрано)' : ''"></span>
+                </label>
+                {{ form_widget(form.tags, {'attr': {'class': 'form-select'}}) }}
+            </div>
+
+            <!-- Обкладинка -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6">
+    <h3 class="text-lg font-semibold mb-4">🖼️ Обкладинка статті</h3>
+
+    <!-- Завантаження через файл -->
+    <div class="mb-3">
+        {{ form_label(form.coverImageFile, 'Завантажити обкладинку', {'label_attr': {'class': 'block text-sm font-medium mb-2'}}) }}
+        {{ form_widget(form.coverImageFile, {'attr': {
+            'class': 'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-blue-400',
+            'accept': 'image/*',
+            '@change': 'handleCoverImage($event)'
+        }}) }}
+        {{ form_errors(form.coverImageFile) }}
+    </div>
+
+    <!-- Додавання через URL -->
+    <div>
+        <label class="block text-sm font-medium mb-2">Або вставте URL зображення</label>
+        <div class="cover-url-group">
+            <input type="url" 
+                   x-model="coverUrlInput"
+                   placeholder="https://example.com/image.jpg"
+                   @keydown.enter.prevent="addCoverFromUrl()">
+            <button type="button" @click="addCoverFromUrl()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <p class="text-xs text-red-500 mt-1" x-show="coverUrlError" x-text="coverUrlError"></p>
+    </div>
+
+    <!-- Приховане поле для передачі URL -->
+    <input type="hidden" name="cover_image_url" id="cover_image_url" x-model="coverImage">
+
+    <!-- Прев'ю обкладинки -->
+    <div x-show="coverImage || coverImagePreview" x-cloak class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <p class="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">🖼️ Поточна обкладинка:</p>
+        <div class="cover-preview-container">
+            <img :src="coverImagePreview || coverImage" alt="Обкладинка" @error="coverImage = null">
+            <button class="remove-cover" @click="clearCoverImage()">✕</button>
+        </div>
+    </div>
+</div>
+
+            <!-- Кнопки -->
+            <div class="space-y-3">
+                <button type="button" @click="showPreview()" class="btn-preview">
+                    <i class="fas fa-eye mr-2"></i> Попередній перегляд
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane mr-2"></i> Відправити на модерацію
+                </button>
+                <a href="{{ path('user_articles') }}" class="btn-cancel">
+                    <i class="fas fa-times mr-2"></i> Скасувати
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+
+<!-- Модальне вікно превью -->
+<div class="preview-modal" id="previewModal">
+    <div class="preview-content animate-slide-down">
+        <div class="preview-header">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-eye text-blue-500"></i> Попередній перегляд
+            </h3>
+            <button @click="closePreview()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="preview-body" id="previewBody">
+            <div class="text-center text-gray-500 py-8">Завантаження...</div>
+        </div>
+        <div class="preview-footer">
+            <button @click="closePreview()" 
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                Закрити
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+function articleForm() {
+    return {
+        // Основні дані
+        title: '',
+        slug: '',
+        excerpt: '',
+        coverImage: '',
+        coverImagePreview: '',
+        category: '',
+        editSlug: false,
+        selectedTags: [],
+        quill: null,
+        contentLength: 0,
+        content: '',
+        coverUrlInput: '',
+        coverUrlError: '',
+        csrfToken: '{{ csrf_token('article_form') }}',
+        
+        // Генерація slug
+        generateSlug() {
+            if (!this.title.trim() || this.editSlug) return;
+            
+            const translit = {
+                'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ye',
+                'ж':'zh','з':'z','и':'y','і':'i','ї':'yi','й':'y','к':'k','л':'l',
+                'м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u',
+                'ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ю':'yu','я':'ya'
+            };
+            
+            let slug = this.title.toLowerCase()
+                .split('')
+                .map(char => translit[char] || char)
+                .join('')
+                .replace(/[^a-z0-9-]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '')
+                .substring(0, 100);
+            
+            this.slug = slug;
+        },
+        
+        // Quill ініціалізація
+        initQuill() {
+            const editorElement = document.getElementById('editor');
+            const hiddenField = document.getElementById('user_article_content');
+            
+            if (typeof Quill === 'undefined' || !editorElement || this.quill) return;
+            
+            this.quill = new Quill(editorElement, {
+                theme: 'snow',
+                placeholder: 'Текст вашої статті...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        [{ 'header': [1, 2, 3, false] }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+            
+            // Встановлюємо початковий контент
+            if (hiddenField.value) {
+                this.quill.root.innerHTML = hiddenField.value;
+                this.content = hiddenField.value;
+                this.contentLength = hiddenField.value.replace(/<[^>]*>/g, '').length;
+            }
+            
+            // Оновлюємо при зміні
+            this.quill.on('text-change', () => {
+                const html = this.quill.root.innerHTML;
+                hiddenField.value = html;
+                this.content = html;
+                this.contentLength = html.replace(/<[^>]*>/g, '').length;
+            });
+            
+            // Обробник для вставки зображень
+            const toolbar = this.quill.getModule('toolbar');
+            if (toolbar) {
+                toolbar.addHandler('image', () => {
+                    const url = prompt('Вставте URL зображення:');
+                    if (url) {
+                        const range = this.quill.getSelection() || { index: this.quill.getLength() };
+                        this.quill.insertEmbed(range.index, 'image', url);
+                    }
+                });
+            }
+            
+            // Обробка відправки форми
+            const form = document.getElementById('articleForm');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    const content = this.quill.root.innerHTML;
+                    hiddenField.value = content;
+                    
+                    // Перевіряємо чи є контент
+                    const cleanContent = content.replace(/<[^>]*>/g, '').trim();
+                    if (!cleanContent) {
+                        e.preventDefault();
+                        alert('Будь ласка, заповніть текст статті');
+                        editorElement.style.border = '2px solid #ef4444';
+                        editorElement.style.borderRadius = '0.5rem';
+                        setTimeout(() => {
+                            editorElement.style.border = '';
+                        }, 3000);
+                        return false;
+                    }
+                    return true;
+                });
+            }
+        },
+        
+        // Обкладинка
+        handleCoverImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.coverImagePreview = e.target.result;
+                    this.coverImage = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        
+        addCoverFromUrl() {
+            if (!this.coverUrlInput.trim()) {
+                this.coverUrlError = 'Будь ласка, введіть URL зображення';
+                return;
+            }
+            
+            try {
+                const url = new URL(this.coverUrlInput);
+                if (!url.protocol.startsWith('http')) {
+                    throw new Error('Невірний протокол');
+                }
+                
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+                const isImage = imageExtensions.some(ext => url.pathname.toLowerCase().endsWith(ext));
+                
+                if (!isImage) {
+                    this.coverUrlError = 'URL має вказувати на зображення (jpg, png, gif, webp, svg)';
+                    return;
+                }
+                
+                this.coverUrlError = '';
+                this.coverImage = this.coverUrlInput;
+                this.coverImagePreview = this.coverUrlInput;
+                this.coverUrlInput = '';
+            } catch (error) {
+                this.coverUrlError = 'Невірний URL: ' + error.message;
+            }
+        },
+        
+        clearCoverImage() {
+            this.coverImage = '';
+            this.coverImagePreview = '';
+            this.coverUrlError = '';
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) fileInput.value = '';
+        },
+        
+        // Попередній перегляд
+        async showPreview() {
+            const modal = document.getElementById('previewModal');
+            const body = document.getElementById('previewBody');
+            
+            modal.classList.add('active');
+            body.innerHTML = '<div class="text-center text-gray-500 py-8">Завантаження...</div>';
+            
+            const data = {
+                title: this.title || 'Без заголовку',
+                content: this.content || '',
+                excerpt: this.excerpt || '',
+                coverImage: this.coverImage || this.coverImagePreview || ''
+            };
+            
+            try {
+                const response = await fetch('{{ path('user_article_preview') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    body.innerHTML = result.html;
+                } else {
+                    body.innerHTML = '<div class="text-red-500 py-8 text-center">Помилка завантаження</div>';
+                }
+            } catch (error) {
+                body.innerHTML = '<div class="text-red-500 py-8 text-center">Помилка: ' + error.message + '</div>';
+            }
+        },
+        
+        closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        },
+        
+        // Ініціалізація
+        init() {
+            // Ініціалізація Quill
+            setTimeout(() => {
+                this.initQuill();
+            }, 100);
+            
+            // Відстежуємо категорію
+            const categoryField = document.getElementById('user_article_category');
+            if (categoryField) {
+                this.category = categoryField.value || '';
+                categoryField.addEventListener('change', (e) => {
+                    this.category = e.target.value;
+                });
+            }
+            
+            // Відстежуємо зміни тегів
+            const tagsField = document.querySelector('select[name="user_article[tags]"]');
+            if (tagsField) {
+                tagsField.addEventListener('change', (e) => {
+                    const options = e.target.selectedOptions;
+                    this.selectedTags = Array.from(options).map(opt => opt.text);
+                });
+                const options = tagsField.selectedOptions;
+                this.selectedTags = Array.from(options).map(opt => opt.text);
+            }
+            
+            // Відстежуємо обкладинку
+            this.$watch('coverImage', (value) => {
+                if (!value) {
+                    this.coverImagePreview = '';
+                }
+            });
+            
+            // Закриття модалки по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') this.closePreview();
+            });
+            
+            // Закриття по кліку поза модалкою
+            document.getElementById('previewModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) this.closePreview();
+            });
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Article form loaded');
+});
+</script>
+{% endblock %}

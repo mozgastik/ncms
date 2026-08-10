@@ -9,16 +9,6 @@
     array (
     ),
   ),
-  '@hotwired/turbo' => 
-  array (
-    'version' => '7.3.0',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   'quill2-emoji' => 
   array (
     'version' => '0.1.2',
@@ -58,7 +48,7 @@
   ),
   'lodash-es' => 
   array (
-    'version' => '4.17.21',
+    'version' => '4.18.1',
     'dependencies' => 
     array (
     ),
@@ -91,7 +81,7 @@
   ),
   'eventemitter3' => 
   array (
-    'version' => '5.0.1',
+    'version' => '5.0.4',
     'dependencies' => 
     array (
     ),
@@ -149,7 +139,27 @@
     array (
     ),
   ),
+  'quill/dist/quill.snow.css.map' => 
+  array (
+    'version' => '2.0.3',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
   'quill/dist/quill.bubble.css' => 
+  array (
+    'version' => '2.0.3',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'quill/dist/quill.bubble.css.map' => 
   array (
     'version' => '2.0.3',
     'dependencies' => 
@@ -161,7 +171,7 @@
   ),
   'axios' => 
   array (
-    'version' => '1.14.0',
+    'version' => '1.18.1',
     'dependencies' => 
     array (
     ),
@@ -210,6 +220,16 @@
     array (
     ),
   ),
+  'quill-html-edit-button/src/styles.css' => 
+  array (
+    'version' => '3.0.0',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
   'highlight.js' => 
   array (
     'version' => '11.11.1',
@@ -232,7 +252,7 @@
   ),
   'katex' => 
   array (
-    'version' => '0.16.44',
+    'version' => '0.16.47',
     'dependencies' => 
     array (
     ),
@@ -242,7 +262,7 @@
   ),
   'katex/dist/katex.min.css' => 
   array (
-    'version' => '0.16.44',
+    'version' => '0.16.47',
     'dependencies' => 
     array (
     ),
@@ -310,29 +330,9 @@
       59 => '/dist/fonts/KaTeX_Typewriter-Regular.ttf',
     ),
   ),
-  'quill/dist/quill.snow.css.map' => 
+  '@hotwired/turbo' => 
   array (
-    'version' => '2.0.3',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'quill/dist/quill.bubble.css.map' => 
-  array (
-    'version' => '2.0.3',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'quill-html-edit-button/src/styles.css' => 
-  array (
-    'version' => '3.0.0',
+    'version' => '8.0.23',
     'dependencies' => 
     array (
     ),

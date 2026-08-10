@@ -65,6 +65,11 @@ user_article_show:
     requirements:
         id: '\d+'
 
+user_article_preview:
+    path: /user/article/preview
+    controller: App\Controller\User\UserArticleController::preview
+    methods: ['POST']
+
 # ============================================
 # API МАРШРУТИ ДЛЯ ЗОБРАЖЕНЬ
 # ============================================

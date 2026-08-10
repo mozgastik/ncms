@@ -1,0 +1,213 @@
+    <!-- Сайдбар -->
+    <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen bg-surface-0 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800 shadow-xl lg:shadow-none transition-all duration-300 ease-in-out"
+          style="width: 256px;">
+        <!-- Overlay для мобільної версії -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 lg:hidden hidden z-30"></div>
+        
+        <!-- Контейнер сайдбару -->
+        <div class="relative h-full flex flex-col">
+            <!-- Кнопка згортання/розгортання -->
+            <button id="sidebar-toggle"
+                    title="Згорнути меню"
+                    class="absolute -right-3 top-6 z-50 w-6 h-6 flex items-center justify-center bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 focus-ring">
+                <i class="fas fa-chevron-left text-surface-600 dark:text-surface-400 text-sm"></i>
+            </button>
+            
+            <!-- Логотип -->
+            <div class="p-4 lg:p-6 border-b border-surface-200 dark:border-surface-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-newspaper text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-surface-500 whitespace-nowrap">Адмін-панель</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Меню навигации -->
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-surface-300 dark:scrollbar-thumb-surface-700 scrollbar-track-transparent">
+                <!-- Головне -->
+                <div class="space-y-1"><p class="px-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                        Головне
+                    </p>
+                    <a href="{{ path('admin_dashboard') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') == 'admin_dashboard' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-tachometer-alt w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Панель керування
+                        </span>
+                    </a>
+                </div>
+                
+                <!-- Управління контентом -->
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                        Управління контентом
+                    </p>
+                    
+                    <!-- Статті -->
+                    <a href="{{ path('admin_article_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_article' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-newspaper w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Статті
+                        </span>
+                    </a>
+                    
+                    <!-- Категорії -->
+                    <a href="{{ path('admin_category_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_category' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-folder w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Категорії
+                        </span>
+                    </a>
+                    
+                    <!-- Теги -->
+                    <a href="{{ path('admin_tag_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_tag' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-tags w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Теги
+                        </span>
+                    </a>
+                    
+                    <!-- Коментарі -->
+                    <a href="{{ path('admin_comment_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_comment' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-comments w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Коментарі
+                        </span>
+                        {% if pending_comments is defined and pending_comments > 0 %}
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                                {{ pending_comments }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+                
+                <!-- Блоки та вміст -->
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                        Блоки та вміст
+                    </p>
+                    
+                    <!-- Блог -->
+                    {% if path('admin_blog_index') is defined %}
+                    <a href="{{ path('admin_blog_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_blog' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-blog w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Блог (Новини)
+                        </span>
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Цитати -->
+                    {% if path('admin_quote_index') is defined %}
+                    <a href="{{ path('admin_quote_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_quote' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-quote-right w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Цитати
+                        </span>
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Слайдер -->
+                    {% if path('admin_slider_index') is defined %}
+                    <a href="{{ path('admin_slider_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_slider' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-images w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Слайдер
+                        </span>
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Галерея -->
+                    {% if path('admin_gallery_index') is defined %}
+                    <a href="{{ path('admin_gallery_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_gallery' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-photo-video w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Галерея
+                        </span>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Система -->
+                <div class="space-y-1">
+                    <p class="px-3 text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                        Система
+                    </p>
+                    
+                    <!-- Користувачі -->
+                    <a href="{{ path('admin_user_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_user' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-users w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Користувачі
+                        </span>
+                    </a>
+                    
+                    <!-- Налаштування -->
+                    {% if path('admin_settings_index') is defined %}
+                    <a href="{{ path('admin_settings_index') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_settings' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-cog w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Налаштування
+                        </span>
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Статистика -->
+                    {% if path('admin_stats') is defined %}
+                    <a href="{{ path('admin_stats') }}" 
+                       class="flex items-center px-3 py-2 rounded-lg text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors
+                             {% if app.request.attributes.get('_route') starts with 'admin_stats' %}bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400{% endif %}">
+                        <i class="fas fa-chart-line w-5 mr-3"></i>
+                        <span class="whitespace-nowrap">
+                            Статистика
+                        </span>
+                    </a>
+                    {% endif %}
+                </div>
+            </nav>
+            
+            <!-- Информация о пользователе -->
+            <div class="p-4 border-t border-surface-200 dark:border-surface-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/30 dark:to-primary-800/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-user text-primary-600 dark:text-primary-400"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-surface-900 dark:text-surface-100 truncate">
+                            {{ app.user.username }}
+                        </p>
+                        <p class="text-xs text-surface-500 truncate">Адміністратор</p>
+                    </div>
+                    <a href="{{ path('app_logout') }}" 
+                       title="Вийти"
+                       class="p-2 text-surface-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors flex-shrink-0 focus-ring">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </aside>

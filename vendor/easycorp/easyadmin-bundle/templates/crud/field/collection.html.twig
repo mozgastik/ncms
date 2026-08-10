@@ -1,0 +1,9 @@
+{# @var ea \EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext #}
+{# @var field \EasyCorp\Bundle\EasyAdminBundle\Dto\FieldDto #}
+{# @var entity \EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto #}
+{# this is a bit ugly, but Twig doesn't have a 'is numeric' test #}
+{% if field.formattedValue matches '/^\\d+$/' %}
+    <twig:ea:Badge variant="secondary">{{ field.formattedValue }}</twig:ea:Badge>
+{% else %}
+    {{ field.formattedValue }}
+{% endif %}

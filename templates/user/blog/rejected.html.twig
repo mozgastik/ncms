@@ -1,0 +1,382 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Відхилені блоги{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <!-- Хлібні крихти -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{{ path('user_blog_index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-home mr-2"></i>
+                        Мої блоги
+                    </a>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Відхилені</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
+            Відхилені блоги
+        </h1>
+        <p class="text-lg text-gray-600 max-w-3xl">
+            Блоги, які не пройшли модерацію. Ви можете відредагувати та повторно відправити їх
+        </p>
+    </div>
+
+    {% if rejected|length > 0 %}
+        <!-- Warning Alert -->
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="shrink-0">
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-2xl text-amber-600"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                        Чому блоги відхиляються?
+                    </h3>
+                    <p class="text-gray-700 mb-4">
+                        Найчастіші причини відхилення блогів модераторами:
+                    </p>
+                    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-times text-red-500 mt-1 text-sm"></i>
+                            <span>Порушення правил спільноти</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-times text-red-500 mt-1 text-sm"></i>
+                            <span>Низька якість контенту</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-times text-red-500 mt-1 text-sm"></i>
+                            <span>Розміщення реклами без дозволу</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-times text-red-500 mt-1 text-sm"></i>
+                            <span>Порушення авторських прав</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-times text-red-500 mt-1 text-sm"></i>
+                            <span>Образливий або неприйнятний контент</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rejected Posts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {% for post in rejected %}
+                <!-- Rejected Post Card -->
+                <div class="bg-white rounded-xl shadow-sm border-2 border-red-200 overflow-hidden hover:shadow-lg transition-all duration-300">
+                    <!-- Card Header -->
+                    <div class="bg-gradient-to-r from-red-600 to-red-500 text-white px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg">Відхилено</h3>
+                                    <p class="text-sm text-white/80">
+                                        {{ post.updatedAt|date('d.m.Y H:i') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-6">
+                        <!-- Title -->
+                        <h4 class="text-xl font-bold text-gray-900 mb-4">
+                            {{ post.title }}
+                        </h4>
+
+                        <!-- Moderator Notes -->
+                        {% if post.moderatorNotes %}
+                            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-comment-alt text-red-600"></i>
+                                    <span class="font-semibold text-red-700">Коментар модератора:</span>
+                                </div>
+                                <p class="text-gray-700 whitespace-pre-line">
+                                    {{ post.moderatorNotes }}
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Excerpt -->
+                        {% if post.excerpt %}
+                            <p class="text-gray-600 mb-6 line-clamp-3">
+                                {{ post.excerpt|slice(0, 150) }}{% if post.excerpt|length > 150 %}...{% endif %}
+                            </p>
+                        {% endif %}
+
+                        <!-- Stats -->
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <div class="border border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors duration-200">
+                                <div class="text-2xl font-bold text-gray-900 mb-1">
+                                    {{ post.viewCount }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Переглядів
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors duration-200">
+                                <div class="text-2xl font-bold text-gray-900 mb-1">
+                                    {{ post.getLikeCount() }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Лайків
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors duration-200">
+                                <div class="text-2xl font-bold text-gray-900 mb-1">
+                                    {{ post.comments|length }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Коментарів
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="space-y-3">
+                            <button onclick="window.location.href='{{ path('user_blog_edit', {'id': post.id}) }}'"
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg">
+                                <i class="fas fa-edit"></i>
+                                Виправити та відправити знову
+                            </button>
+                            
+                            <div class="flex gap-2">
+                                <button onclick="window.location.href='{{ path('user_blog_show', {'id': post.id}) }}'"
+                                        class="flex-1 inline-flex items-center justify-center gap-2 border border-blue-600 hover:bg-blue-50 text-blue-600 hover:text-blue-700 font-medium py-3 px-4 rounded-lg transition-all duration-200">
+                                    <i class="fas fa-eye"></i>
+                                    Переглянути
+                                </button>
+                                
+                                <button onclick="changeToDraft({{ post.id }})"
+                                        class="flex-1 inline-flex items-center justify-center gap-2 border border-gray-600 hover:bg-gray-50 text-gray-600 hover:text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-200">
+                                    <i class="fas fa-save"></i>
+                                    В чернетки
+                                </button>
+                                
+                                <button onclick="openDeleteModal({{ post.id }})"
+                                        class="inline-flex items-center justify-center w-12 border border-red-600 hover:bg-red-50 text-red-600 hover:text-red-700 font-medium py-3 px-4 rounded-lg transition-all duration-200">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div class="text-sm text-gray-500">
+                                    <div class="flex items-center gap-2">
+                                        <i class="far fa-calendar"></i>
+                                        <span>Створено: {{ post.createdAt|date('d.m.Y') }}</span>
+                                    </div>
+                                </div>
+                                {% if post.category %}
+                                    <span class="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium py-1.5 px-3 rounded-lg transition-colors duration-200">
+                                        {{ post.category.name }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <div id="deleteModal{{ post.id }}" 
+                     class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95">
+                        <!-- Modal Header -->
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-gray-900">Видалити відхилений блог</h3>
+                                <button onclick="closeDeleteModal({{ post.id }})"
+                                        class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors duration-200">
+                                    <i class="fas fa-times text-gray-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Body -->
+                        <div class="p-6">
+                            <p class="text-gray-700 mb-4">
+                                Видалити відхилений блог <strong>"{{ post.title }}"</strong>?
+                            </p>
+                            {% if post.moderatorNotes %}
+                                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                                    <div class="font-semibold text-amber-800 mb-2">
+                                        Причина відхилення:
+                                    </div>
+                                    <p class="text-gray-700 text-sm">
+                                        {{ post.moderatorNotes }}
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+                            <button onclick="closeDeleteModal({{ post.id }})"
+                                    class="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors duration-200">
+                                Скасувати
+                            </button>
+                            <form method="post" action="{{ path('user_blog_delete', {'id': post.id}) }}" 
+                                  class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ post.id) }}">
+                                <button type="submit"
+                                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                    Видалити
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-16 px-4">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6">
+                <i class="fas fa-check-circle text-4xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">
+                Немає відхилених блогів
+            </h3>
+            <p class="text-gray-600 max-w-md mx-auto mb-8">
+                Всі ваші блоги успішно проходять модерацію або знаходяться в чернетках
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ path('user_blog_new') }}" 
+                   class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 hover:shadow-lg">
+                    <i class="fas fa-plus"></i>
+                    Створити блог
+                </a>
+                <a href="{{ path('user_blog_drafts') }}" 
+                   class="inline-flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-medium py-3 px-6 rounded-lg transition-all duration-200">
+                    <i class="fas fa-file-alt"></i>
+                    Мої чернетки
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function changeToDraft(postId) {
+    if (confirm('Перемістити цей блог в чернетки для подальшого редагування?')) {
+        fetch(`/user/blog/${postId}/status/draft`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `_token={{ csrf_token('status') }}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Помилка: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Помилка мережі');
+        });
+    }
+}
+
+function openDeleteModal(postId) {
+    const modal = document.getElementById(`deleteModal${postId}`);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.querySelector('.transform').classList.remove('scale-95');
+        modal.querySelector('.transform').classList.add('scale-100');
+    }, 10);
+}
+
+function closeDeleteModal(postId) {
+    const modal = document.getElementById(`deleteModal${postId}`);
+    modal.querySelector('.transform').classList.remove('scale-100');
+    modal.querySelector('.transform').classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Close modal on outside click
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fixed')) {
+        const modal = e.target;
+        modal.querySelector('.transform').classList.remove('scale-100');
+        modal.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 300);
+    }
+});
+</script>
+
+<style>
+/* Custom styles */
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* Modal backdrop */
+.fixed {
+    backdrop-filter: blur(4px);
+}
+
+/* Custom colors */
+.bg-primary {
+    background-color: #3b82f6;
+}
+
+.bg-primary\/90 {
+    background-color: rgba(59, 130, 246, 0.9);
+}
+
+/* Hover effects */
+.hover\:shadow-lg:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Transition utilities */
+.transition-all {
+    transition-property: all;
+}
+
+.duration-300 {
+    transition-duration: 300ms;
+}
+
+/* Gradient border effect */
+.border-red-200 {
+    border-color: #fecaca;
+}
+</style>
+{% endblock %}

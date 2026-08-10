@@ -1,0 +1,99 @@
+{
+    "name": "easycorp/easyadmin-bundle",
+    "type": "symfony-bundle",
+    "description": "Admin generator for Symfony applications",
+    "keywords": ["backend", "admin", "generator"],
+    "homepage": "https://github.com/EasyCorp/EasyAdminBundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Project Contributors",
+            "homepage": "https://github.com/EasyCorp/EasyAdminBundle/graphs/contributors"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "doctrine/doctrine-bundle": "^2.18|^3.2",
+        "doctrine/dbal": "^3.10|^4.4",
+        "doctrine/orm": "^2.20|^3.6",
+        "symfony/asset": "^6.4|^7.0|^8.0",
+        "symfony/cache": "^6.4.33|^7.0|^8.0",
+        "symfony/config": "^6.4.32|^7.0|^8.0",
+        "symfony/dependency-injection": "^6.4.32|^7.0|^8.0",
+        "symfony/deprecation-contracts": "^3.0",
+        "symfony/doctrine-bridge": "^6.4.32|^7.0|^8.0",
+        "symfony/event-dispatcher": "^6.4.32|^7.0|^8.0",
+        "symfony/filesystem": "^6.4.30|^7.0|^8.0",
+        "symfony/form": "^6.4.32|^7.0|^8.0",
+        "symfony/framework-bundle": "^6.4.33|^7.0|^8.0",
+        "symfony/http-foundation": "^6.4.33|^7.0|^8.0",
+        "symfony/http-kernel": "^6.4.33|^7.0|^8.0",
+        "symfony/intl": "^6.4.32|^7.0|^8.0",
+        "symfony/property-access": "^6.4.32|^7.0|^8.0",
+        "symfony/security-bundle": "^6.4.32|^7.0|^8.0",
+        "symfony/string": "^6.4.30|^7.0|^8.0",
+        "symfony/translation": "^6.4.32|^7.0|^8.0",
+        "symfony/twig-bundle": "^6.4.32|^7.0|^8.0",
+        "symfony/twig-bridge": "^6.4.32|^7.1.9|^7.2|^8.0",
+        "symfony/uid": "^6.4.32|^7.0|^8.0",
+        "symfony/ux-twig-component": "^2.32|^3.0",
+        "symfony/validator": "^6.4.33|^7.0|^8.0",
+        "twig/extra-bundle": "^3.23",
+        "twig/html-extra": "^3.23",
+        "twig/twig": "^3.23"
+    },
+    "require-dev": {
+        "dama/doctrine-test-bundle": "^8.2",
+        "doctrine/doctrine-fixtures-bundle": "^3.4|3.5.x-dev|^4.0",
+        "moneyphp/money": "^4.8",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0",
+        "psr/log": "^1.0|^2.0|^3.0",
+        "symfony/browser-kit": "^6.4.32|^7.0|^8.0",
+        "symfony/css-selector": "^6.4.24|^7.0|^8.0",
+        "symfony/debug-bundle": "^6.4.27|^7.0|^8.0",
+        "symfony/dom-crawler": "^6.4.32|^7.0|^8.0",
+        "symfony/expression-language": "^6.4.32|^7.0|^8.0",
+        "symfony/phpunit-bridge": "^6.4.26|^7.0|^8.0",
+        "symfony/process": "^6.4.33|^7.0|^8.0",
+        "symfony/web-link": "^6.4.32|^7.0|^8.0",
+        "vincentlanglet/twig-cs-fixer": "^3.10",
+        "league/flysystem": "^3.10",
+        "zenstruck/foundry": "^2.3"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/flex": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "EasyCorp\\Bundle\\EasyAdminBundle\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "/tests/Functional/Apps/*/config/reference.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Unit\\": "tests/Unit/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Functional\\": "tests/Functional/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Functional\\Apps\\DefaultApp\\": "tests/Functional/Apps/DefaultApp/src/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Functional\\Apps\\SecuredApp\\": "tests/Functional/Apps/SecuredApp/src/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Functional\\Apps\\AdminRouteApp\\": "tests/Functional/Apps/AdminRouteApp/src/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\Functional\\Apps\\CustomizationApp\\": "tests/Functional/Apps/CustomizationApp/src/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\TestUtils\\": "tests/TestUtils/",
+            "EasyCorp\\Bundle\\EasyAdminBundle\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "5.0.x-dev"
+        }
+    }
+}

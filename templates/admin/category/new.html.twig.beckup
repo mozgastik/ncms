@@ -1,0 +1,363 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Нова категорія - Адмін панель{% endblock %}
+
+{% block body %}
+<main class="flex-1 p-4 lg:p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-bold text-surface-900">Створення нової категорії</h1>
+                <p class="text-surface-500 mt-1">Заповніть форму нижче для створення нової категорії</p>
+            </div>
+            <a href="{{ path('admin_category_index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 border border-surface-300 text-surface-700 font-medium rounded-lg hover:bg-surface-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                <i class="fas fa-arrow-left text-sm"></i>
+                <span>Назад до списку</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="max-w-4xl">
+        <div class="bg-surface-0 rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+            <!-- Form Header -->
+            <div class="px-6 py-4 border-b border-surface-200 bg-surface-50">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                        <i class="fas fa-folder-plus text-primary-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-surface-900">Інформація про категорію</h3>
+                        <p class="text-sm text-surface-500">Основні дані нової категорії</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Body -->
+            <div class="p-6">
+                {{ form_start(form, {'attr': {'class': 'space-y-6', 'id': 'category-form'}}) }}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Column -->
+                        <div class="space-y-6">
+                            <!-- Name Field -->
+                            <div class="space-y-2">
+                                {{ form_label(form.name, null, {
+                                    'label_attr': {
+                                        'class': 'block text-sm font-medium text-surface-700'
+                                    }
+                                }) }}
+                                <div class="relative">
+                                    {{ form_widget(form.name, {
+                                        'attr': {
+                                            'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400',
+                                            'placeholder': 'Наприклад: Програмування',
+                                            'id': 'category_name'
+                                        }
+                                    }) }}
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <i class="fas fa-heading text-surface-400"></i>
+                                    </div>
+                                </div>
+                                {{ form_errors(form.name) }}
+                                <p class="text-sm text-surface-500">Введіть назву категорії, яка буде відображатися на сайті</p>
+                            </div>
+                            
+                            <!-- Slug Field -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    {{ form_label(form.slug, null, {
+                                        'label_attr': {
+                                            'class': 'block text-sm font-medium text-surface-700'
+                                        }
+                                    }) }}
+                                    <button type="button" 
+                                            id="generate-slug-btn"
+                                            class="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                                        <i class="fas fa-magic text-xs"></i>
+                                        Згенерувати автоматично
+                                    </button>
+                                </div>
+                                <div class="relative">
+                                    {{ form_widget(form.slug, {
+                                        'attr': {
+                                            'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400 font-mono text-sm',
+                                            'placeholder': 'programuvannya',
+                                            'id': 'category_slug'
+                                        }
+                                    }) }}
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <i class="fas fa-link text-surface-400"></i>
+                                    </div>
+                                </div>
+                                {{ form_errors(form.slug) }}
+                                <div class="text-sm">
+                                    <p class="text-surface-500">URL-адреса категорії. Залиште порожнім для автоматичної генерації</p>
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <span class="text-surface-400">Попередній перегляд:</span>
+                                        <code class="text-xs bg-surface-100 text-surface-700 px-2 py-1 rounded">
+                                            <span id="slug-preview-base">/category/</span>
+                                            <span id="slug-preview" class="font-medium">—</span>
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column -->
+                        <div class="space-y-6">
+                            <!-- Description Field -->
+                            <div class="space-y-2">
+                                {{ form_label(form.description, null, {
+                                    'label_attr': {
+                                        'class': 'block text-sm font-medium text-surface-700'
+                                    }
+                                }) }}
+                                {{ form_widget(form.description, {
+                                    'attr': {
+                                        'class': 'block w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder:text-surface-400',
+                                        'placeholder': 'Короткий опис категорії...',
+                                        'rows': '8'
+                                    }
+                                }) }}
+                                {{ form_errors(form.description) }}
+                                <p class="text-sm text-surface-500">Короткий опис категорії. Підтримує HTML-розмітку</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Footer -->
+                    <div class="pt-6 border-t border-surface-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="text-sm text-surface-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Категорія буде доступна відразу після створення
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <a href="{{ path('admin_category_index') }}" 
+                                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-surface-300 text-surface-700 font-medium rounded-lg hover:bg-surface-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition">
+                                    <i class="fas fa-times text-sm"></i>
+                                    <span>Скасувати</span>
+                                </a>
+                                <button type="submit" 
+                                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                                    <i class="fas fa-save text-sm"></i>
+                                    <span>Зберегти категорію</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+        
+        <!-- Quick Tips -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5">
+                <div class="flex items-start gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-lightbulb text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-900 mb-1">Поради щодо назв</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Використовуйте зрозумілі та короткі назви</li>
+                            <li>• Уникайте спеціальних символів</li>
+                            <li>• Назва має відображати зміст категорії</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-5">
+                <div class="flex items-start gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-chart-line text-green-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-900 mb-1">SEO рекомендації</h4>
+                        <ul class="text-sm text-green-800 space-y-1">
+                            <li>• URL має бути зрозумілим для користувачів</li>
+                            <li>• Використовуйте ключові слова в описі</li>
+                            <li>• Унікальні назви покращують пошук</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('category_name');
+    const slugInput = document.getElementById('category_slug');
+    const generateSlugBtn = document.getElementById('generate-slug-btn');
+    const slugPreview = document.getElementById('slug-preview');
+    
+    // Функція для генерації slug з кирилиці
+    function generateSlug(text) {
+        if (!text) return '';
+        
+        // Транслітерація з кирилиці на латиницю
+        const translitMap = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g',
+            'д': 'd', 'е': 'e', 'є': 'ie', 'ж': 'zh', 'з': 'z',
+            'и': 'y', 'і': 'i', 'ї': 'i', 'й': 'i', 'к': 'k',
+            'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+            'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f',
+            'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+            'ь': '', 'ю': 'iu', 'я': 'ia',
+            'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'H', 'Ґ': 'G',
+            'Д': 'D', 'Е': 'E', 'Є': 'Ye', 'Ж': 'Zh', 'З': 'Z',
+            'И': 'Y', 'І': 'I', 'Ї': 'Yi', 'Й': 'Y', 'К': 'K',
+            'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P',
+            'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F',
+            'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch',
+            'Ь': '', 'Ю': 'Yu', 'Я': 'Ya'
+        };
+        
+        // Конвертація тексту
+        let slug = text.toString().toLowerCase().trim();
+        
+        // Транслітерація
+        slug = slug.replace(/[а-яґєії]/g, function(char) {
+            return translitMap[char] || char;
+        });
+        
+        // Транслітерація для великих літер
+        slug = slug.replace(/[А-ЯҐЄІЇ]/g, function(char) {
+            return (translitMap[char] || char).toLowerCase();
+        });
+        
+        // Заміна пробілів на тире
+        slug = slug.replace(/\s+/g, '-');
+        
+        // Видалення всіх небажаних символів
+        slug = slug.replace(/[^a-z0-9\-]/g, '');
+        
+        // Видалення множинних тире
+        slug = slug.replace(/\-\-+/g, '-');
+        
+        // Видалення тире на початку та в кінці
+        slug = slug.replace(/^-+/, '').replace(/-+$/, '');
+        
+        return slug;
+    }
+    
+    // Генерація slug при кліку на кнопку
+    generateSlugBtn.addEventListener('click', function() {
+        const nameValue = nameInput.value.trim();
+        if (nameValue) {
+            const generatedSlug = generateSlug(nameValue);
+            slugInput.value = generatedSlug;
+            slugPreview.textContent = generatedSlug || '—';
+            showNotification('URL згенеровано автоматично', 'success');
+        } else {
+            showNotification('Спочатку введіть назву категорії', 'warning');
+            nameInput.focus();
+        }
+    });
+    
+    // Оновлення прев'ю slug при введенні
+    slugInput.addEventListener('input', function() {
+        const slugValue = slugInput.value.trim();
+        slugPreview.textContent = slugValue || '—';
+    });
+    
+    // Автоматична генерація slug при введенні назви (опціонально)
+    let timeoutId;
+    nameInput.addEventListener('input', function() {
+        clearTimeout(timeoutId);
+        
+        // Генеруємо slug тільки якщо поле slug порожнє
+        if (!slugInput.value.trim()) {
+            timeoutId = setTimeout(() => {
+                const nameValue = nameInput.value.trim();
+                if (nameValue) {
+                    const generatedSlug = generateSlug(nameValue);
+                    slugInput.value = generatedSlug;
+                    slugPreview.textContent = generatedSlug || '—';
+                }
+            }, 800); // Затримка 800мс
+        }
+    });
+    
+    // Валідація форми перед відправкою
+    const form = document.getElementById('category-form');
+    form.addEventListener('submit', function(event) {
+        const nameValue = nameInput.value.trim();
+        const slugValue = slugInput.value.trim();
+        
+        if (!nameValue) {
+            event.preventDefault();
+            showNotification('Будь ласка, введіть назву категорії', 'error');
+            nameInput.focus();
+            return;
+        }
+        
+        // Автоматична генерація slug якщо порожній
+        if (!slugValue) {
+            const generatedSlug = generateSlug(nameValue);
+            slugInput.value = generatedSlug;
+            showNotification('URL згенеровано автоматично', 'info');
+        }
+    });
+    
+    // Функція для показу сповіщень
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 animate-fade-in ${
+            type === 'success' 
+                ? 'bg-green-100 text-green-800 border border-green-200' 
+                : type === 'warning'
+                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                : type === 'info'
+                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                : 'bg-red-100 text-red-800 border border-red-200'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i class="fas ${
+                    type === 'success' ? 'fa-check-circle' 
+                    : type === 'warning' ? 'fa-exclamation-triangle'
+                    : type === 'info' ? 'fa-info-circle'
+                    : 'fa-exclamation-circle'
+                }"></i>
+                <span class="font-medium">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-4 text-current hover:opacity-70 transition-opacity">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+    
+    // Ініціалізація прев'ю
+    slugPreview.textContent = slugInput.value.trim() || '—';
+});
+</script>
+
+<style>
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

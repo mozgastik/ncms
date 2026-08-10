@@ -1,0 +1,108 @@
+{# templates/admin/ad/edit.html.twig #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Редагування банера - Адмін панель{% endblock %}
+
+{% block body %}
+<main class="flex-1 p-2 sm:p-3 md:p-4 lg:p-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-(--color-surface-900) dark:text-(--color-surface-100)">
+                Редагування банера «{{ ad.title }}»
+            </h1>
+            <a href="{{ path('admin_ad_index') }}" class="text-sm text-(--color-surface-600) dark:text-(--color-surface-400) hover:text-(--color-primary-600) dark:hover:text-(--color-primary-400)">
+                ← Назад до списку
+            </a>
+        </div>
+
+        <div class="bg-(--color-surface-0) dark:bg-(--color-surface-800) rounded-xl shadow-(--shadow-md) border border-(--color-surface-200) dark:border-(--color-surface-700) p-6">
+            {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+            
+            {# Ті ж поля, що й у new.html.twig #}
+            {# Можна винести в окремий include, але для простоти скопіюємо #}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.title.vars.label|default('Назва') }}</label>
+                    {{ form_widget(form.title, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.zone.vars.label|default('Зона') }}</label>
+                    {{ form_widget(form.zone, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                    {{ form_errors(form.zone) }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.type.vars.label|default('Тип') }}</label>
+                {{ form_widget(form.type, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                {{ form_errors(form.type) }}
+            </div>
+
+            <div x-data="{ type: '{{ form.type.vars.value|default('image') }}' }">
+                <div x-show="type === 'html' || type === 'script'" x-cloak>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.code.vars.label|default('Код') }}</label>
+                    {{ form_widget(form.code, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all', 'rows': 8}}) }}
+                    {{ form_errors(form.code) }}
+                </div>
+
+                <div x-show="type === 'image'">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.image.vars.label|default('URL зображення') }}</label>
+                            {{ form_widget(form.image, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                            {{ form_errors(form.image) }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.link.vars.label|default('Посилання') }}</label>
+                            {{ form_widget(form.link, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                            {{ form_errors(form.link) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.priority.vars.label|default('Пріоритет') }}</label>
+                    {{ form_widget(form.priority, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                    {{ form_errors(form.priority) }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.startAt.vars.label|default('Початок') }}</label>
+                    {{ form_widget(form.startAt, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                    {{ form_errors(form.startAt) }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-(--color-surface-700) dark:text-(--color-surface-300) mb-2">{{ form.endAt.vars.label|default('Кінець') }}</label>
+                    {{ form_widget(form.endAt, {'attr': {'class': 'w-full px-4 py-2.5 rounded-xl border border-(--color-surface-300) dark:border-(--color-surface-600) bg-(--color-surface-0) dark:bg-(--color-surface-800) text-(--color-surface-900) dark:text-(--color-surface-100) focus:ring-2 focus:ring-(--color-primary-500)/50 focus:border-(--color-primary-500) transition-all'}}) }}
+                    {{ form_errors(form.endAt) }}
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 pt-4 border-t border-(--color-surface-200) dark:border-(--color-surface-700)">
+                <div class="flex items-center gap-2">
+                    {{ form_widget(form.isActive, {'attr': {'class': 'rounded border-(--color-surface-300) text-(--color-primary-600) focus:ring-(--color-primary-500)'}}) }}
+                    <label class="text-sm text-(--color-surface-700) dark:text-(--color-surface-300)">{{ form.isActive.vars.label|default('Активний') }}</label>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="px-6 py-3 bg-(--gradient-primary) text-(--color-surface-0) font-semibold rounded-xl hover:shadow-lg hover-scale transition-all duration-(--transition-base)">
+                    💾 Оновити банер
+                </button>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('{{ form.type.vars.id }}');
+});
+</script>
+{% endblock %}

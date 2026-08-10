@@ -1,0 +1,194 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Користувач {{ user.username }} - Адмін панель{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-user mr-2"></i>Користувач: {{ user.username }}
+            </h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ path('admin_user_index') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Назад
+            </a>
+            <a href="{{ path('admin_user_edit', {'id': user.id}) }}" 
+               class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
+                <i class="fas fa-edit mr-2"></i>Редагувати
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Profile -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="bg-blue-600 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-white">Профіль</h2>
+                </div>
+                <div class="p-6 text-center">
+                    <!-- Avatar -->
+                    <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                        {% if user.avatar %}
+                            <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" 
+                                 alt="{{ user.username }}" 
+                                 class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                <i class="fas fa-user text-5xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- User Info -->
+                    <h3 class="text-xl font-bold text-gray-800">{{ user.username }}</h3>
+                    <p class="text-gray-600">{{ user.fullName }}</p>
+                    <p class="text-gray-600">{{ user.mail }}</p>
+                    
+                    <!-- Status Badges -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-2">
+                        {% if user.isActive %}
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                Активний
+                            </span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                                Неактивний
+                            </span>
+                        {% endif %}
+                        
+                        {% for role in user.roles %}
+                            {% if role == 'ROLE_ADMIN' %}
+                                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                                    Адмін
+                                </span>
+                            {% elseif role == 'ROLE_SUPER_ADMIN' %}
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                                    Супер-адмін
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Info & Comments -->
+        <div class="lg:col-span-2">
+            <!-- User Information -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div class="bg-blue-600 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-white">Інформація</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">ID</p>
+                                <p class="text-gray-800">{{ user.id }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Ім'я користувача</p>
+                                <p class="text-gray-800">{{ user.username }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Повне ім'я</p>
+                                <p class="text-gray-800">{{ user.fullName|default('Не вказано') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Email</p>
+                                <p class="text-gray-800">{{ user.mail }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Про себе</p>
+                                <p class="text-gray-800">{{ user.bio|default('Не вказано') }}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Дата народження</p>
+                                <p class="text-gray-800">{{ user.birthDate ? user.birthDate|date('d.m.Y') : 'Не вказано' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Вік</p>
+                                <p class="text-gray-800">{{ user.age|default('Не вказано') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Дата реєстрації</p>
+                                <p class="text-gray-800">{{ user.createdAt|date('d.m.Y H:i') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Останнє оновлення</p>
+                                <p class="text-gray-800">{{ user.updatedAt ? user.updatedAt|date('d.m.Y H:i') : 'Немає' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="bg-blue-600 px-6 py-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-white">
+                            Коментарі ({{ user.comments|length }})
+                        </h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    {% if user.comments|length > 0 %}
+                        <div class="space-y-4">
+                            {% for comment in user.comments|slice(0, 5) %}
+                                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-gray-800 font-medium">
+                                            {{ comment.content|slice(0, 50) }}{{ comment.content|length > 50 ? '...' : '' }}
+                                        </p>
+                                        <span class="text-sm text-gray-500">
+                                            {{ comment.createdAt|date('d.m.Y H:i') }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm text-gray-600">
+                                            Стаття: {{ comment.article.title|slice(0, 30) }}{{ comment.article.title|length > 30 ? '...' : '' }}
+                                        </p>
+                                        {% if comment.isApproved %}
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                                Схвалено
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                                                В очікуванні
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if user.comments|length > 5 %}
+                            <div class="text-center mt-6">
+                                <a href="#" 
+                                   class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                                    Показати всі коментарі
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="text-gray-400 mb-4">
+                                <i class="fas fa-comments text-4xl"></i>
+                            </div>
+                            <p class="text-gray-600">Користувач ще не залишав коментарів</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

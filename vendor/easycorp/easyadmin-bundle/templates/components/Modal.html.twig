@@ -1,0 +1,67 @@
+{#
+This component creates modal windows using Bootstrap modal JavaScript logic
+but with a modern look and feel inspired by libraries like shadcn.
+
+To open/close the modal use the `<twig:ea:Modal:Trigger target="#id">` and
+`<twig:ea:Modal:Close>` helpers.
+
+Usage examples:
+
+    # a confirmation dialog opened by a trigger button
+    <twig:ea:Modal:Trigger target="#delete-modal" variant="danger" icon="internal:delete">Delete</twig:ea:Modal:Trigger>
+
+    <twig:ea:Modal id="delete-modal" title="Delete this item?" description="This action cannot be undone.">
+        <twig:block name="footer">
+            <twig:ea:Modal:Close>Cancel</twig:ea:Modal:Close>
+            <twig:ea:Button variant="danger" data-bs-dismiss="modal">Delete</twig:ea:Button>
+        </twig:block>
+    </twig:ea:Modal>
+
+    # custom body content and a wider window
+    <twig:ea:Modal id="details-modal" size="lg">
+        <twig:block name="body"><p>Any markup you need goes here.</p></twig:block>
+        <twig:block name="footer">
+            <twig:ea:Modal:Close>Close</twig:ea:Modal:Close>
+        </twig:block>
+    </twig:ea:Modal>
+
+    # confirmation style with an icon stacked on top
+    <twig:ea:Modal id="warn-modal" topIcon="internal:circle-exclamation" title="Are you sure?">
+        <twig:block name="footer">
+            <twig:ea:Modal:Close>No</twig:ea:Modal:Close>
+            <twig:ea:Button variant="primary" data-bs-dismiss="modal">Yes</twig:ea:Button>
+        </twig:block>
+    </twig:ea:Modal>
+#}
+
+{% props
+    title = null, # the main text shown in the modal window
+    description = null, # the smaller optional text shown below the title
+    size = null, # window width; values: `sm` 320px, default 380px, `lg` 512px, `xl` 800px
+    icon = null, # name of the optional icon shown at the top left of the window
+    topIcon = null, # name of the optional icon shown on top of the modal contents
+    headerClass = '', # custom CSS class(es) added to the modal header HTML element
+    bodyClass = '', # custom CSS class(es) added to the modal body HTML element
+    footerClass = '' # custom CSS class(es) added to the modal footer HTML element
+%}
+{% set modalIcon = topIcon ?? icon %}
+<div {{ attributes.defaults({class: 'modal fade', tabindex: '-1'}) }}>
+    <div class="modal-dialog {{ size ? 'modal-dialog-' ~ size }}">
+        <div class="modal-content">
+            {% if block('header') is not empty %}
+                <div class="modal-header {{ headerClass }}">{% block header %}{% endblock %}</div>
+            {% endif %}
+            <div class="modal-body {{ bodyClass }} {{ modalIcon ? (topIcon ? 'modal-body--top-icon' : 'modal-body--icon') }}">
+                {% if modalIcon %}<span class="modal-icon {{ topIcon ? 'modal-icon--top' }}"><twig:ea:Icon name="{{ modalIcon }}" /></span>{% endif %}
+                <div class="modal-body-content">
+                    {% if title %}<h4>{{ title|raw }}</h4>{% endif %}
+                    {% if description %}<p>{{ description|raw }}</p>{% endif %}
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
+            {% if block('footer') is not empty %}
+                <div class="modal-footer {{ footerClass }}">{% block footer %}{% endblock %}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>

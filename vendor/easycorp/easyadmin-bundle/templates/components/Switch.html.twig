@@ -1,0 +1,33 @@
+{% props
+    checked = false, # true|false (default: false) whether the switch is on
+    disabled = false, # true|false (default: false)
+    name = null, # input name attribute (for form submission)
+    value = '1', # value submitted when the switch is checked (default: '1')
+    id = null, # input id attribute (to wire an external <label for="...">)
+    required = false, # true|false (default: false)
+    size = 'md', # sm|md (string or Option\Size enum) (default: 'md')
+    variant = null, # null|success|warning|danger - colors the checked state (matches the button colors)
+    ariaLabel = null, # accessible name when there is no visible label
+%}
+
+{% set size_value = size.value is defined ? size.value : size %}
+{% set variant_value = variant.value is defined ? variant.value : variant %}
+{% set css_class = html_classes('ea-switch',
+    size_value != 'md' ? 'ea-switch-' ~ size_value,
+    variant_value in ['success', 'warning', 'danger'] ? 'ea-switch-' ~ variant_value,
+    {
+        'ea-switch-disabled': disabled,
+    },
+) %}
+
+<span class="{{ css_class }}">
+    <input type="checkbox" role="switch" class="ea-switch-input"
+        {% if id %}id="{{ id }}"{% endif %}
+        {% if name %}name="{{ name }}"{% endif %}
+        value="{{ value }}"
+        {{ checked ? 'checked' }} {{ disabled ? 'disabled' }} {{ required ? 'required' }}
+        {% if ariaLabel %}aria-label="{{ ariaLabel }}"{% endif %}
+        autocomplete="off"
+        {{ attributes.without('class') }}>
+    <span class="ea-switch-track" aria-hidden="true"><span class="ea-switch-thumb"></span></span>
+</span>{#--#}
