@@ -7,7 +7,7 @@ if (!Encore.isRuntimeEnvironmentConfigured()) {
 
 Encore
     // ВАЖЛИВО: Правильний шлях для сервера
-    .setOutputPath('public_html/build/')
+    .setOutputPath('public/build/')
     .setPublicPath('/build')
     
     // Не додавайте enableStimulusBridge якщо немає контролерів

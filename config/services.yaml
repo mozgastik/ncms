@@ -3,6 +3,7 @@ parameters:
     blog_upload_directory: '%kernel.project_dir%/public/uploads/blogs'
     avatars_directory: '%kernel.project_dir%/public/uploads/avatars'
     articles_directory: '%kernel.project_dir%/public/uploads/articles'
+    videos_directory: '%kernel.project_dir%/public/uploads/videos'
     app.upload_public_path: '/uploads'
     app.max_file_size: 5242880
     vapid_public_key: '%env(VAPID_PUBLIC_KEY)%'
@@ -115,11 +116,3 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
         tags: ['console.command']
-
-   
-    # ============================================
-    # ALIASES
-    # ============================================
-    # ВИДАЛІТЬ АБО ЗАКОМЕНТУЙТЕ ЦІ РЯДКИ:
-    # file_uploader: '@App\Service\FileUploader'
-    # image_service: '@App\Service\ImageService'
