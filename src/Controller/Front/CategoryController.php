@@ -5,7 +5,6 @@ namespace App\Controller\Front;
 
 use App\Entity\Article\Category;
 use App\Repository\ArticleRepository;
-use App\Repository\BlogPostRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\VideoRepository;
 use App\Service\CategoryManager;

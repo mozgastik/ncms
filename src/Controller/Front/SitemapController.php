@@ -3,7 +3,6 @@
 namespace App\Controller\Front;
 
 use App\Repository\ArticleRepository;
-use App\Repository\BlogPostRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\PageRepository;
 use App\Repository\TagRepository;
@@ -18,7 +17,6 @@ class SitemapController extends AbstractController
     #[Route('/sitemap.xml', name: 'app_sitemap', defaults: ['_format' => 'xml'])]
     public function index(
         ArticleRepository $articleRepository,
-        BlogPostRepository $blogRepository,
         VideoRepository $videoRepository,
         CategoryRepository $categoryRepository,
         TagRepository $tagRepository,
@@ -41,17 +39,6 @@ class SitemapController extends AbstractController
                 'changefreq' => 'daily',
                 'priority' => '0.8',
                 'lastmod' => $article->getUpdatedAt() ?? $article->getPublishedAt() ?? $article->getCreatedAt(),
-            ];
-        }
-
-        // Блоги
-        $blogs = $blogRepository->findBy(['status' => 'published']);
-        foreach ($blogs as $blog) {
-            $urls[] = [
-                'loc' => $this->generateUrl('blog_show', ['slug' => $blog->getSlug()], UrlGeneratorInterface::ABSOLUTE_URL),
-                'changefreq' => 'daily',
-                'priority' => '0.7',
-                'lastmod' => $blog->getUpdatedAt() ?? $blog->getPublishedAt(),
             ];
         }
 
