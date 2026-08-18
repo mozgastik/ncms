@@ -3,12 +3,10 @@
 namespace App\Controller\Front;
 
 use App\Entity\Article\Article;
-use App\Entity\Blog\BlogPost;
 use App\Entity\System\Video;
 use App\Repository\ArticleRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\TagRepository;
-use App\Repository\BlogPostRepository;
 use App\Repository\LikeRepository;
 use App\Repository\VideoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,7 +20,6 @@ class HomeController extends AbstractController
         ArticleRepository $articleRepository, 
         CategoryRepository $categoryRepository, 
         TagRepository $tagRepository,
-        BlogPostRepository $blogRepository,
         LikeRepository $likeRepository,
         VideoRepository $videoRepository
     ): Response
@@ -55,12 +52,6 @@ class HomeController extends AbstractController
             3
         );
         
-        // Блоги користувачів (останні опубліковані)
-        $blogs = $blogRepository->findBy(
-            ['status' => BlogPost::STATUS_PUBLISHED],
-            ['publishedAt' => 'DESC'],
-            6
-        );
         
         // ВІДЕО (виправлено!)
         $videos = $videoRepository->findBy(
@@ -79,14 +70,13 @@ class HomeController extends AbstractController
         $todayCount = $articleRepository->countTodayArticles();
         $publishedCount = $articleRepository->count(['status' => Article::STATUS_PUBLISHED]);
         $topViewed = $articleRepository->findOneBy(['status' => Article::STATUS_PUBLISHED], ['views' => 'DESC']);
-        $commentCount = 0;
+        $commentCount = 0; // Тут потрібно додати логіку підрахунку коментарів
 
         return $this->render('components/home/index.html.twig', [
             'featuredArticles' => $featuredArticles,
             'latestArticles' => $latestArticles,
             'popularArticles' => $popularArticles,
             'recommendedArticles' => $recommendedArticles,
-            'blogs' => $blogs,
             'tags' => $tags,
             'categories' => $categories,
             'todayCount' => $todayCount,

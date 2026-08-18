@@ -361,22 +361,8 @@ class Article
     public function setModerator(?User $moderator): static { $this->moderator = $moderator; return $this; }
 
     // ============================================
-    // VICH UPLOADER GETTERS & SETTERS (ОДИН БЛОК)
+    // VICH UPLOADER GETTERS & SETTERS
     // ============================================
-
-    public function getCoverImageFile(): ?File
-    {
-        return $this->coverImageFile;
-    }
-
-    public function setCoverImageFile(?File $coverImageFile): static
-    {
-        $this->coverImageFile = $coverImageFile;
-        if ($coverImageFile) {
-            $this->updatedAt = new \DateTime();
-        }
-        return $this;
-    }
 
     public function getCoverImage(): ?string
     {
@@ -389,186 +375,28 @@ class Article
         return $this;
     }
 
-    /**
-     * Отримати URL обкладинки
-     */
+    public function getCoverImageFile(): ?File
+    {
+        return $this->coverImageFile;
+    }
+
+    public function setCoverImageFile(?File $coverImageFile): static
+    {
+        $this->coverImageFile = $coverImageFile;
+        
+        if ($coverImageFile) {
+            $this->updatedAt = new \DateTime();
+        }
+        
+        return $this;
+    }
+
     public function getCoverImageUrl(): ?string
     {
         if (!$this->coverImage) {
             return null;
         }
-        // Якщо це URL (додано через поле в шаблоні)
-        if (filter_var($this->coverImage, FILTER_VALIDATE_URL)) {
-            return $this->coverImage;
-        }
-        // Якщо це ім'я файлу (завантажено через VichUploader)
         return '/uploads/articles/' . $this->coverImage;
-    }
-
-    /**
-     * Перевірити наявність обкладинки
-     */
-    public function hasCoverImage(): bool
-    {
-        return $this->coverImage !== null && !empty($this->coverImage);
-    }
-
-    /**
-     * Отримати шлях до обкладинки
-     */
-    public function getCoverImagePath(): ?string
-    {
-        if (!$this->coverImage) {
-            return null;
-        }
-        return 'uploads/articles/' . $this->coverImage;
-    }
-
-    /**
-     * Отримати ім'я файлу обкладинки
-     */
-    public function getCoverImageFilename(): ?string
-    {
-        return $this->coverImage;
-    }
-
-    /**
-     * Перевірити чи обкладинка є URL
-     */
-    public function isCoverImageUrl(): bool
-    {
-        if (!$this->coverImage) {
-            return false;
-        }
-        return filter_var($this->coverImage, FILTER_VALIDATE_URL) !== false;
-    }
-
-    /**
-     * Отримати розмір обкладинки (якщо файл існує)
-     */
-    public function getCoverImageSize(): ?int
-    {
-        if (!$this->coverImage || $this->isCoverImageUrl()) {
-            return null;
-        }
-        
-        $projectDir = $this->getProjectDir();
-        $filePath = $projectDir . '/public/uploads/articles/' . $this->coverImage;
-        
-        if (file_exists($filePath)) {
-            return filesize($filePath);
-        }
-        
-        return null;
-    }
-
-    /**
-     * Отримати розмір обкладинки у форматованому вигляді
-     */
-    public function getCoverImageSizeFormatted(): string
-    {
-        $size = $this->getCoverImageSize();
-        if (!$size) {
-            return '0 KB';
-        }
-        
-        $units = ['B', 'KB', 'MB', 'GB'];
-        $index = 0;
-        
-        while ($size >= 1024 && $index < count($units) - 1) {
-            $size /= 1024;
-            $index++;
-        }
-        
-        return round($size, 2) . ' ' . $units[$index];
-    }
-
-    /**
-     * Отримати MIME тип обкладинки
-     */
-    public function getCoverImageMimeType(): ?string
-    {
-        if (!$this->coverImage || $this->isCoverImageUrl()) {
-            return null;
-        }
-        
-        $projectDir = $this->getProjectDir();
-        $filePath = $projectDir . '/public/uploads/articles/' . $this->coverImage;
-        
-        if (file_exists($filePath)) {
-            return mime_content_type($filePath);
-        }
-        
-        return null;
-    }
-
-    /**
-     * Отримати розміри обкладинки
-     */
-    public function getCoverImageDimensions(): ?array
-    {
-        if (!$this->coverImage || $this->isCoverImageUrl()) {
-            return null;
-        }
-        
-        $projectDir = $this->getProjectDir();
-        $filePath = $projectDir . '/public/uploads/articles/' . $this->coverImage;
-        
-        if (file_exists($filePath)) {
-            $imageInfo = getimagesize($filePath);
-            if ($imageInfo) {
-                return [
-                    'width' => $imageInfo[0],
-                    'height' => $imageInfo[1],
-                ];
-            }
-        }
-        
-        return null;
-    }
-
-    /**
-     * Отримати ширину обкладинки
-     */
-    public function getCoverImageWidth(): ?int
-    {
-        $dimensions = $this->getCoverImageDimensions();
-        return $dimensions['width'] ?? null;
-    }
-
-    /**
-     * Отримати висоту обкладинки
-     */
-    public function getCoverImageHeight(): ?int
-    {
-        $dimensions = $this->getCoverImageDimensions();
-        return $dimensions['height'] ?? null;
-    }
-
-    /**
-     * Отримати абсолютний шлях до обкладинки
-     */
-    public function getCoverImageAbsolutePath(): ?string
-    {
-        if (!$this->coverImage || $this->isCoverImageUrl()) {
-            return null;
-        }
-        
-        $projectDir = $this->getProjectDir();
-        return $projectDir . '/public/uploads/articles/' . $this->coverImage;
-    }
-
-    /**
-     * Перевірити чи існує файл обкладинки
-     */
-    public function coverImageFileExists(): bool
-    {
-        if (!$this->coverImage || $this->isCoverImageUrl()) {
-            return false;
-        }
-        
-        $filePath = $this->getCoverImageAbsolutePath();
-        return $filePath !== null && file_exists($filePath);
     }
 
     // ============================================
@@ -673,7 +501,7 @@ class Article
     }
 
     // ============================================
-    // IMAGES (ГАЛЕРЕЯ)
+    // IMAGES
     // ============================================
 
     public function getImages(): Collection { return $this->images; }
@@ -704,23 +532,6 @@ class Article
         })->first();
 
         return $featured ?: $this->images->first() ?: null;
-    }
-
-    public function getGalleryImages(): Collection
-    {
-        return $this->images->filter(function(Image $image) {
-            return !$image->isFeatured();
-        });
-    }
-
-    public function hasImages(): bool
-    {
-        return $this->images->count() > 0;
-    }
-
-    public function getImagesCount(): int
-    {
-        return $this->images->count();
     }
 
     // ============================================
@@ -1069,24 +880,16 @@ class Article
     {
         return $this->getArticleComments();
     }
-
     /**
-     * Спеціальний метод для серіалізації
-     * Виключаємо coverImageFile з серіалізації
-     */
-    public function __sleep(): array
-    {
-        $properties = array_keys(get_object_vars($this));
-        return array_diff($properties, ['coverImageFile']);
-    }
-
-    /**
-     * Допоміжний метод для отримання директорії проекту
-     */
-    private function getProjectDir(): string
-    {
-        // Цей метод потрібно викликати з контролера або через параметр
-        // Тимчасове рішення - повертаємо поточну директорію
-        return dirname(__DIR__, 3);
-    }
+ * Спеціальний метод для серіалізації
+ * Виключаємо coverImageFile з серіалізації
+ */
+public function __sleep(): array
+{
+    // Отримуємо всі властивості
+    $properties = array_keys(get_object_vars($this));
+    
+    // Видаляємо coverImageFile зі списку
+    return array_diff($properties, ['coverImageFile']);
+}
 }

@@ -22,7 +22,7 @@ class Favorite
     private ?User $user = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $entityType = null; // 'article' або 'blog'
+    private ?string $entityType = article; // 'article' або 'blog'
 
     #[ORM\Column(nullable: true)]
     private ?int $entityId = null;

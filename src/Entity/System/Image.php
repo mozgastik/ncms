@@ -2,7 +2,6 @@
 
 namespace App\Entity\System;
 
-use App\Entity\Blog\BlogPost;
 use App\Entity\Article\Article;
 use App\Entity\User\User;
 

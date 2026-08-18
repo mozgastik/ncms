@@ -5,8 +5,6 @@ namespace App\Entity\Article;
 
 use App\Entity\User\User;
 use App\Entity\System\Video;
-use App\Entity\Blog\BlogPost;
-
 use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,7 +18,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Category
 {
     public const TYPE_ARTICLE = 'article';
-    public const TYPE_BLOG = 'blog';
     public const TYPE_VIDEO = 'video';
     public const TYPE_ALL = 'all';
 
@@ -110,19 +107,11 @@ class Category
     #[ORM\OneToMany(targetEntity: Video::class, mappedBy: 'category')]
     private Collection $videos;
 
-    /**
-     * @var Collection<int, BlogPost>
-     */
-    #[ORM\OneToMany(targetEntity: BlogPost::class, mappedBy: 'category')]
-    private Collection $blogPosts;
-
-
     public function __construct()
     {
         $this->children = new ArrayCollection();
         $this->articles = new ArrayCollection();
         $this->videos = new ArrayCollection();
-        $this->blogPosts = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
     }
     
@@ -187,38 +176,6 @@ class Category
     public function getParent(): ?self { return $this->parent; }
     public function setParent(?self $parent): self { $this->parent = $parent; return $this; }
     
-    /**
-     * @return Collection<int, BlogPost>
-     */
-    public function getBlogPosts(): Collection
-    {
-        return $this->blogPosts;
-    }
-
-    public function addBlogPost(BlogPost $blogPost): self
-    {
-        if (!$this->blogPosts->contains($blogPost)) {
-            $this->blogPosts->add($blogPost);
-            $blogPost->setCategory($this);
-        }
-        return $this;
-    }
-
-    public function removeBlogPost(BlogPost $blogPost): self
-    {
-        if ($this->blogPosts->removeElement($blogPost)) {
-            if ($blogPost->getCategory() === $this) {
-                $blogPost->setCategory(null);
-            }
-        }
-        return $this;
-    }
-
-    // Оновіть метод підрахунку
-    public function getBlogPostsCount(): int
-    {
-        return $this->blogPosts->count();
-    }
 
     public function getTotalCount(): int
     {
@@ -360,12 +317,6 @@ class Category
     public function getArticlesCount(): int
     {
         // Тут буде логіка підрахунку статей
-        return 0;
-    }
-
-    public function getBlogsCount(): int
-    {
-        // Тут буде логіка підрахунку блогів
         return 0;
     }
 

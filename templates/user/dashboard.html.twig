@@ -328,23 +328,26 @@
                         <div class="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-purple-100 dark:border-purple-800">
                             <div class="flex items-center justify-between mb-3">
                                 <div>
-                                    <p class="text-sm text-purple-600 dark:text-purple-400 font-medium">Мої блоги</p>
-                                    <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">{{ user.blogs|default([])|length }}</p>
+                                    <p class="text-sm text-purple-600 dark:text-purple-400 font-medium">Мої новини</p>
+                                    {% set articleCount = app.user.articles|default([])|length %}
+                                    {% if articleCount > 0 %}
+                                    <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">{{ articleCount }}</p>
+                                    {% endif %}
                                 </div>
                                 <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-800 flex items-center justify-center">
                                     <i class="fas fa-pen-fancy text-purple-600 dark:text-purple-400 text-xl"></i>
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                <a href="{{ path('user_blog_index') }}" 
+                                <a href="{{ path('user_articles') }}" 
                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-all duration-300 hover:scale-105">
                                     <i class="fas fa-list"></i>
-                                    Всі блоги
+                                    Всі новини
                                 </a>
-                                <a href="{{ path('user_blog_new') }}" 
+                                <a href="{{ path('user_article_new') }}" 
                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-all duration-300 hover:scale-105">
                                     <i class="fas fa-plus"></i>
-                                    Новий
+                                    Написати новину
                                 </a>
                             </div>
                         </div>
@@ -477,12 +480,12 @@
                             Швидкі дії
                         </h3>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <a href="{{ path('user_blog_new') }}" 
+                            <a href="{{ path('user_article_new') }}" 
                                class="quick-action flex flex-col items-center gap-2 p-4 bg-white dark:bg-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 border border-gray-200 dark:border-gray-600">
                                 <div class="action-icon w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
                                     <i class="fas fa-pen text-lg"></i>
                                 </div>
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Написати блог</span>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Написати новину</span>
                                 <span class="text-[10px] text-gray-400 dark:text-gray-500">Нова стаття</span>
                             </a>
                             

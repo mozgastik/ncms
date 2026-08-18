@@ -3,7 +3,6 @@
 namespace App\Entity\Admin;
 
 use App\Entity\Article\Article;
-use App\Entity\Blog\BlogPost;
 use App\Repository\TagRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -62,17 +61,11 @@ class Tag
     #[ORM\ManyToMany(targetEntity: Article::class, mappedBy: 'tags')]
     private Collection $articles;
     
-    /**
-     * @var Collection<int, BlogPost>
-     */
-    #[ORM\ManyToMany(targetEntity: BlogPost::class, mappedBy: 'tags')]
-    private Collection $blogPosts;
-
+    
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->articles = new ArrayCollection();
-        $this->blogPosts = new ArrayCollection();
     }
 
     #[ORM\PreUpdate]
@@ -129,10 +122,6 @@ class Tag
         return $this->articleUsageCount;
     }
 
-    public function getBlogUsageCount(): int
-    {
-        return $this->blogUsageCount;
-    }
 
     public function incrementArticleUsage(): static
     {
@@ -150,21 +139,7 @@ class Tag
         return $this;
     }
 
-    public function incrementBlogUsage(): static
-    {
-        $this->blogUsageCount++;
-        $this->totalUsageCount++;
-        return $this;
-    }
-
-    public function decrementBlogUsage(): static
-    {
-        if ($this->blogUsageCount > 0) {
-            $this->blogUsageCount--;
-            $this->totalUsageCount--;
-        }
-        return $this;
-    }
+   
 
     public function getCreatedAt(): \DateTimeImmutable
     {
@@ -259,32 +234,7 @@ class Tag
         return $this;
     }
 
-    /**
-     * @return Collection<int, BlogPost>
-     */
-    public function getBlogPosts(): Collection
-    {
-        return $this->blogPosts;
-    }
-
-    public function addBlogPost(BlogPost $blogPost): static
-    {
-        if (!$this->blogPosts->contains($blogPost)) {
-            $this->blogPosts->add($blogPost);
-            $this->incrementBlogUsage();
-        }
-
-        return $this;
-    }
-
-    public function removeBlogPost(BlogPost $blogPost): static
-    {
-        if ($this->blogPosts->removeElement($blogPost)) {
-            $this->decrementBlogUsage();
-        }
-
-        return $this;
-    }
+    
 
     /**
      * Отримати загальну кількість публікацій
@@ -300,9 +250,8 @@ class Tag
     public function getAllPosts(): array
     {
         $articles = $this->articles->toArray();
-        $blogPosts = $this->blogPosts->toArray();
         
-        return array_merge($articles, $blogPosts);
+        return array_merge($articles);
     }
 
     /**
@@ -343,19 +292,6 @@ class Tag
         return $this->totalUsageCount > 0;
     }
 
-    /**
-     * Отримати тип контенту, де тег використовується найбільше
-     */
-    public function getPrimaryContentType(): string
-    {
-        if ($this->articleUsageCount > $this->blogUsageCount) {
-            return 'article';
-        } elseif ($this->blogUsageCount > $this->articleUsageCount) {
-            return 'blog';
-        } else {
-            return 'mixed';
-        }
-    }
 
     /**
      * Отримати статистику використання тегу
@@ -365,7 +301,6 @@ class Tag
         return [
             'total' => $this->totalUsageCount,
             'articles' => $this->articleUsageCount,
-            'blogs' => $this->blogUsageCount,
             'is_active' => $this->isActive,
             'primary_type' => $this->getPrimaryContentType(),
         ];

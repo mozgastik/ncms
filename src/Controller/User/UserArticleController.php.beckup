@@ -7,7 +7,6 @@ use App\Entity\Article\Article;
 use App\Entity\Article\ArticleImage;
 use App\Form\UserArticleType;
 use App\Repository\ArticleRepository;
-use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -119,60 +118,41 @@ class UserArticleController extends AbstractController
         ]);
     }
 
-    
-    
-#[Route('/user/article/{id}/edit', name: 'user_article_edit', methods: ['GET', 'POST'])]
-public function edit(Request $request, Article $article, TagRepository $tagRepository): Response
-{
-    // Перевірка прав
-    if ($article->getAuthor() !== $this->getUser()) {
-        throw $this->createAccessDeniedException('Ця стаття не належить вам');
-    }
-    
-    // Перевірка статусу
-    if (!in_array($article->getStatus(), ['draft', 'rejected'])) {
-        $this->addFlash('warning', 'Цю статтю вже не можна редагувати');
-        return $this->redirectToRoute('user_articles');
-    }
-    
-    $form = $this->createForm(UserArticleType::class, $article);
-    $form->handleRequest($request);
-    
-    if ($form->isSubmitted() && $form->isValid()) {
-        // Оновлюємо обкладинку
-        $coverImageFile = $form->get('coverImageFile')->getData();
-        if ($coverImageFile) {
-            $article->setCoverImageFile($coverImageFile);
+    #[Route('/edit/{id}', name: 'user_article_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Article $article): Response
+    {
+        if ($article->getAuthor() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Ця стаття не належить вам');
         }
         
-        // Очищаємо HTML контент
-        $cleanContent = $this->htmlSanitizer->sanitize($article->getContent());
-        $article->setContent($cleanContent);
-        
-        if ($article->getExcerpt()) {
-            $cleanExcerpt = $this->htmlSanitizer->sanitize($article->getExcerpt());
-            $article->setExcerpt($cleanExcerpt);
+        if ($article->getStatus() !== Article::STATUS_DRAFT && $article->getStatus() !== Article::STATUS_REJECTED) {
+            $this->addFlash('error', 'Цю статтю вже не можна редагувати');
+            return $this->redirectToRoute('user_articles');
         }
         
-        $article->setReadingTime($this->calculateReadingTime($article->getContent()));
-        $article->setUpdatedAt(new \DateTime());
-        $article->setStatus(Article::STATUS_PENDING);
+        $form = $this->createForm(UserArticleType::class, $article);
+        $form->handleRequest($request);
         
-        $this->entityManager->flush();
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Оновлюємо обкладинку (якщо завантажено)
+            $coverImageFile = $form->get('coverImageFile')->getData();
+            if ($coverImageFile) {
+                $article->setCoverImageFile($coverImageFile);
+            }
+            
+            $article->setReadingTime($this->calculateReadingTime($article->getContent()));
+            $article->setStatus(Article::STATUS_PENDING);
+            $this->entityManager->flush();
+            
+            $this->addFlash('success', 'Статтю оновлено та відправлено на модерацію!');
+            return $this->redirectToRoute('user_articles');
+        }
         
-        $this->addFlash('success', 'Статтю оновлено та відправлено на модерацію!');
-        return $this->redirectToRoute('user_articles');
+        return $this->render('user/article/edit.html.twig', [
+            'form' => $form->createView(),
+            'article' => $article,
+        ]);
     }
-    
-    // Отримуємо всі теги
-    $allTags = $tagRepository->findAll();
-    
-    return $this->render('user/article/edit.html.twig', [
-        'form' => $form->createView(),
-        'article' => $article,
-        'tags' => $allTags, // ← Додаємо змінну для Twig
-    ]);
-}
 
     #[Route('/delete/{id}', name: 'user_article_delete', methods: ['POST'])]
     public function delete(Request $request, Article $article): Response
@@ -302,28 +282,6 @@ public function edit(Request $request, Article $article, TagRepository $tagRepos
         ]);
     }
 
-#[Route('/preview', name: 'user_article_preview', methods: ['POST'])]
-public function preview(Request $request): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
-    
-    $title = $data['title'] ?? 'Без заголовку';
-    $content = $data['content'] ?? '';
-    $excerpt = $data['excerpt'] ?? '';
-    $coverImage = $data['coverImage'] ?? '';
-    
-    $cleanContent = $this->htmlSanitizer->sanitize($content);
-    
-    return $this->json([
-        'success' => true,
-        'html' => $this->renderView('user/article/_preview.html.twig', [
-            'title' => $title,
-            'content' => $cleanContent,
-            'excerpt' => $excerpt,
-            'coverImage' => $coverImage,
-        ])
-    ]);
-}
     // ============================================
     // ДОПОМІЖНІ МЕТОДИ
     // ============================================

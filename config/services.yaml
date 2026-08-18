@@ -1,11 +1,11 @@
 parameters:
     app.upload_directory: '%kernel.project_dir%/public/uploads'
-    blog_upload_directory: '%kernel.project_dir%/public/uploads/blogs'
     avatars_directory: '%kernel.project_dir%/public/uploads/avatars'
     articles_directory: '%kernel.project_dir%/public/uploads/articles'
-    videos_directory: '%kernel.project_dir%/public/uploads/videos'
     app.upload_public_path: '/uploads'
     app.max_file_size: 5242880
+    app.locales: ['uk', 'ru', 'en']
+    app.default_locale: 'uk'
     vapid_public_key: '%env(VAPID_PUBLIC_KEY)%'
     vapid_private_key: '%env(VAPID_PRIVATE_KEY)%'
     vapid_subject: '%env(VAPID_SUBJECT)%'
@@ -17,7 +17,6 @@ parameters:
         - 'image/svg+xml'
     open_weather_api_key: '%env(OPEN_WEATHER_API_KEY)%'
     google_api_key: '%env(GOOGLE_API_KEY)%'
-    
 
 
 services:
@@ -35,10 +34,7 @@ services:
     App\Service\MaintenanceService:
         autowire: true
 
-    App\Service\ImageUploader:
-        arguments:
-            $targetDirectory: '%blog_upload_directory%'
-        autowire: true
+    
         
     App\Service\SettingsManager:
         autowire: true
@@ -116,3 +112,11 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
         tags: ['console.command']
+
+   
+    # ============================================
+    # ALIASES
+    # ============================================
+    # ВИДАЛІТЬ АБО ЗАКОМЕНТУЙТЕ ЦІ РЯДКИ:
+    # file_uploader: '@App\Service\FileUploader'
+    # image_service: '@App\Service\ImageService'

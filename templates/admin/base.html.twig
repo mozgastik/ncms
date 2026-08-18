@@ -137,19 +137,6 @@
                             <i class="fas fa-newspaper w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
                             <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Статті</span>
                         </a>
-                        <!-- Блог -->
-                        {% if path('admin_blog_index') is defined %}
-                        <a href="{{ path('admin_blog_index') }}" 
-                           @click="selected = 'blog'"
-                           :class="[
-                               selected === 'blog' ? 'bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-primary-600 dark:hover:text-primary-400',
-                               !isMobile && sidebarCollapsed ? 'lg:justify-center' : ''
-                           ]"
-                           class="flex items-center px-3 py-2 rounded-lg transition-colors duration-200">
-                            <i class="fas fa-blog w-5" :class="!isMobile && !sidebarCollapsed ? 'mr-3' : ''"></i>
-                            <span x-show="!isMobile && !sidebarCollapsed" class="whitespace-nowrap">Блоги</span>
-                        </a>
-                        {% endif %}
                         <!-- Відео -->
                     <a href="{{ path('admin_video_index') }}"
                     @click="selected = 'videos'"

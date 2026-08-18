@@ -160,13 +160,6 @@ user_favorites_article_remove:
     requirements:
         id: '\d+'
 
-# Видалити блог з обраного (AJAX)
-user_favorites_blog_remove:
-    path: /user/favorites/blog/{id}/remove
-    controller: App\Controller\User\UserController::removeBlogFavorite
-    methods: ['POST']
-    requirements:
-        id: '\d+'
 
 # Сповіщення користувача
 user_notifications:

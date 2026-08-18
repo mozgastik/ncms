@@ -14,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\Image;
 
 class UserArticleType extends AbstractType
 {
@@ -56,7 +57,7 @@ class UserArticleType extends AbstractType
                 'attr' => ['class' => 'select2'],
             ])
             // ============================================
-            // ПОЛЕ ДЛЯ ЗАВАНТАЖЕННЯ ОБКЛАДИНКИ - ВИПРАВЛЕНО
+            // ПОЛЕ ДЛЯ ЗАВАНТАЖЕННЯ ОБКЛАДИНКИ (ВИПРАВЛЕНО)
             // ============================================
             ->add('coverImageFile', FileType::class, [
                 'label' => 'Обкладинка статті',
@@ -73,7 +74,6 @@ class UserArticleType extends AbstractType
                             'image/svg+xml',
                         ],
                         mimeTypesMessage: 'Будь ласка, завантажте зображення у форматі JPEG, PNG, WEBP, GIF або SVG',
-                        maxSizeMessage: 'Файл занадто великий. Максимальний розмір 5MB',
                     )
                 ],
                 'attr' => [

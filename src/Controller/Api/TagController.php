@@ -26,25 +26,47 @@ class TagController extends AbstractController
         $this->tagRepository = $tagRepository;
     }
 
-    #[Route('/api/tags/list', name: 'api_tags_list', methods: ['GET'])]
-public function list(TagRepository $tagRepository): JsonResponse
-{
-    $tags = $tagRepository->findAll();
-    
-    $data = array_map(function($tag) {
-        return [
-            'id' => $tag->getId(),
-            'name' => $tag->getName(),
-            'color' => $tag->getColor() ?? '#6b7280',
-            'count' => count($tag->getArticles()),
-        ];
-    }, $tags);
-    
-    return $this->json([
-        'success' => true,
-        'tags' => $data,
-    ]);
-}
+    /**
+     * Отримати список всіх тегів з кількістю статей
+     */
+    #[Route('/list', name: 'api_tags_list', methods: ['GET'])]
+    public function list(Request $request): JsonResponse
+    {
+        // Отримуємо всі теги з кількістю
+        $tags = $this->tagRepository->findAllWithCount();
+        
+        // Отримуємо популярні теги (опціонально)
+        $limit = $request->query->getInt('limit', 0);
+        $popularTags = $this->tagRepository->findPopularTags($limit ?: 20);
+        
+        // Форматуємо відповідь
+        $data = array_map(function($tag) {
+            return [
+                'id' => $tag->getId(),
+                'name' => $tag->getName(),
+                'slug' => $tag->getSlug(),
+                'color' => $tag->getColor() ?? '#6b7280',
+                'description' => $tag->getDescription(),
+                'count' => $tag->getArticleCount(),
+                'createdAt' => $tag->getCreatedAt()?->format('Y-m-d H:i:s'),
+            ];
+        }, $tags);
+        
+        return $this->json([
+            'success' => true,
+            'tags' => $data,
+            'total' => count($data),
+            'popular' => array_map(function($tag) {
+                return [
+                    'id' => $tag->getId(),
+                    'name' => $tag->getName(),
+                    'slug' => $tag->getSlug(),
+                    'color' => $tag->getColor() ?? '#6b7280',
+                    'count' => $tag->getArticleCount(),
+                ];
+            }, $popularTags),
+        ]);
+    }
 
     /**
      * Пошук тегів за назвою

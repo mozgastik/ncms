@@ -6,8 +6,6 @@ use App\Entity\Article\Article;
 use App\Entity\Article\Like;
 use App\Entity\Article\ArticleComment;
 use App\Entity\Article\Category;
-use App\Entity\Blog\BlogPost;
-use App\Entity\Blog\BlogComment;
 use App\Entity\Notification\UserNotificationSettings;
 use App\Entity\Notification\PushSubscription;
 use App\Entity\System\Favorite;
@@ -80,17 +78,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(targetEntity: ArticleComment::class, mappedBy: 'user')]
     private Collection $articleComments;
-     /**
-     * @var Collection<int, BlogPost>
-     */
-    #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class, orphanRemoval: true)]
-    private Collection $blogPosts;
-
-    /**
-     * @var Collection<int, BlogComment>
-     */
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: BlogComment::class, orphanRemoval: true)]
-    private Collection $blogComments;
     /**
      * @var Collection<int, Article>
      */
@@ -122,19 +109,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
    * @ORM\JoinTable(name="user_favorite_articles")
    */
     private $favoriteArticles;
-
-   /**
-   * @ORM\ManyToMany(targetEntity=Blog::class)
-   * @ORM\JoinTable(name="user_favorite_blogs")
-   */
-    private $favoriteBlogs;
+    
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->roles = ['ROLE_USER'];
         $this->articleComments = new ArrayCollection();
-        $this->blogPosts = new ArrayCollection();
-        $this->blogComments = new ArrayCollection();
         $this->articles = new ArrayCollection();
         $this->favorites = new ArrayCollection();
         $this->favoriteArticles = new ArrayCollection();
@@ -591,64 +571,6 @@ public function getApprovedComments(): Collection
         return $this->getDisplayName();
     }
     
-    /**
-     * @return Collection<int, BlogPost>
-     */
-    public function getBlogPosts(): Collection
-    {
-        return $this->blogPosts;
-    }
-
-    public function addBlogPost(BlogPost $blogPost): static
-    {
-        if (!$this->blogPosts->contains($blogPost)) {
-            $this->blogPosts->add($blogPost);
-            $blogPost->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBlogPost(BlogPost $blogPost): static
-    {
-        if ($this->blogPosts->removeElement($blogPost)) {
-            // set the owning side to null (unless already changed)
-            if ($blogPost->getAuthor() === $this) {
-                $blogPost->setAuthor(null);
-            }
-        }
-
-        return $this;
-    }
-    /**
-     * @return Collection<int, BlogComment>
-     */
-    public function getBlogComments(): Collection
-    {
-        return $this->blogComments;
-    }
-
-    public function addBlogComment(BlogComment $blogComment): static
-    {
-        if (!$this->blogComments->contains($blogComment)) {
-            $this->blogComments->add($blogComment);
-            $blogComment->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBlogComment(BlogComment $blogComment): static
-    {
-        if ($this->blogComments->removeElement($blogComment)) {
-            // set the owning side to null (unless already changed)
-            if ($blogComment->getUser() === $this) {
-                $blogComment->setUser(null);
-            }
-        }
-
-        return $this;
-    }
 
       /**
      * @return Collection<int, Article>

@@ -29,16 +29,6 @@
                         {{ ((featuredArticles|default([])|length) + (latestArticles|default([])|length)) > 99 ? '99+' : (featuredArticles|default([])|length) + (latestArticles|default([])|length) }}
                     </span>
                 </button>
-                <button type="button" @click="switchTab('blogs')"
-                        :class="activeTab === 'blogs' ? 'bg-purple-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/80'"
-                        class="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-300 active:scale-95"
-                        aria-label="Блоги">
-                    <i class="fas fa-blog text-base"></i>
-                    <span class="leading-none">Блоги</span>
-                    <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-white dark:border-gray-900">
-                        {{ blogs|default([])|length > 99 ? '99+' : blogs|default([])|length }}
-                    </span>
-                </button>
                 <button type="button" @click="switchTab('video')"
                         :class="activeTab === 'video' ? 'bg-red-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/80'"
                         class="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-300 active:scale-95"
@@ -65,15 +55,6 @@
                         <i class="fas fa-shekel-sign text-xl"></i>
                         <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                             {{ (featuredArticles|default([])|length) + (latestArticles|default([])|length) }}
-                        </span>
-                    </button>
-                    <button @click="switchTab('blogs')"
-                            :class="activeTab === 'blogs' ? 'bg-purple-500 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'"
-                            class="relative w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 group"
-                            title="Блоги">
-                        <i class="fas fa-blog text-xl"></i>
-                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                            {{ blogs|default([])|length }}
                         </span>
                     </button>
                     <button @click="switchTab('video')"
@@ -130,140 +111,134 @@
                 </div>
 
                 <!-- Вкладка: Новини -->
-                <div x-show="activeTab === 'news'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-8">
-                    <!-- Заголовок новин -->
-                    <div class="mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/30 p-6 rounded-2xl border border-gray-200/50 dark:border-white/20 shadow-sm animate-slide-in">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white/90 flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 dark:from-blue-500/80 dark:to-cyan-600/80 text-white flex items-center justify-center shadow-md">
-                                    <i class="fas fa-shekel-sign text-center"></i>
-                                </div>
-                                <span class="text-gray-900 dark:text-white">Новини</span>
-                            </h2>
-                            {% if app.user %}
-                                <a href="{{ path('user_article_new') }}" class="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-500/80 dark:to-cyan-600/80 text-white rounded-2xl hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 group shadow-sm">
-                                    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    <span class="font-bold">Додати</span>
-                                </a>
-                            {% endif %}
+<div x-show="activeTab === 'news'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-8">
+    <!-- Заголовок новин -->
+    <div class="mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/30 p-6 rounded-2xl border border-gray-200/50 dark:border-white/20 shadow-sm animate-slide-in">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white/90 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 dark:from-blue-500/80 dark:to-cyan-600/80 text-white flex items-center justify-center shadow-md">
+                    <i class="fas fa-shekel-sign text-center"></i>
+                </div>
+                <span class="text-gray-900 dark:text-white">Новини</span>
+            </h2>
+            {% if app.user %}
+                <a href="{{ path('user_article_new') }}" class="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-500/80 dark:to-cyan-600/80 text-white rounded-2xl hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 group shadow-sm">
+                    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span class="font-bold">Додати</span>
+                </a>
+            {% endif %}
+        </div>
+        <p class="text-gray-600 dark:text-gray-300/70 max-w-3xl">Спільнота користувачів ділиться своїми думками, досвідом та ідеями.</p>
+    </div>
+
+    <!-- Перевірка на пустий стан - Головні новини -->
+    {% if featuredArticles|default([])|length > 0 %}
+        <section class="mb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {% for article in featuredArticles %}
+                    {% include 'components/article_card.html.twig' with {article: article, featured: true} %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- Перевірка на пустий стан - Сітка новин -->
+    {% if latestArticles|default([])|length > 0 or recommendedArticles|default([])|length > 0 %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Останні новини -->
+            <div class="lg:col-span-2">
+                <div class="mb-6 animate-slide-in" style="animation-delay: 0.1s">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white/90 mb-4 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-500/80 dark:to-pink-500/80 text-white flex items-center justify-center shadow-md">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300/70 max-w-3xl">Спільнота користувачів ділиться своїми думками, досвідом та ідеями.</p>
-                    </div>
-
-                    <!-- Головні новини -->
-                    {% if featuredArticles|default([])|length > 0 %}
-                        <section class="mb-12">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {% for article in featuredArticles %}
-                                    {% include 'components/article_card.html.twig' with {article: article, featured: true} %}
-                                {% endfor %}
-                            </div>
-                        </section>
-                    {% endif %}
-
-
-                    <!-- Сітка новин -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Останні новини -->
-                        <div class="lg:col-span-2">
-                            <div class="mb-6 animate-slide-in" style="animation-delay: 0.1s">
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white/90 mb-4 flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-500/80 dark:to-pink-500/80 text-white flex items-center justify-center shadow-md">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        <span class="text-gray-900 dark:text-white">Останні новини</span>
+                    </h2>
+                    <div class="space-y-4">
+                        {% for article in latestArticles|default([]) %}
+                            {% include 'components/article_card_small.html.twig' with {article: article} %}
+                        {% else %}
+                            <!-- Пустий стан для останніх новин -->
+                            <div class="text-center py-12 bg-white/70 dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700/50">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-2">Немає останніх новин</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">Новини ще не додані. Будьте першим, хто поділиться цікавою новиною!</p>
+                                {% if app.user %}
+                                    <a href="{{ path('user_article_new') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:shadow-lg transition-all duration-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
-                                    </div>
-                                    <span class="text-gray-900 dark:text-white">Останні новини</span>
-                                </h2>
-                                <div class="space-y-4">
-                                    {% for article in latestArticles|default([]) %}
-                                        {% include 'components/article_card_small.html.twig' with {article: article} %}
-                                    {% endfor %}
-                                </div>
-                                <div class="animate-fade-in" style="animation-delay: 0.3s">
-                                    {% include 'components/quote_widget.html.twig' %}
-                                </div>
+                                        Додати новину
+                                    </a>
+                                {% endif %}
                             </div>
-                        </div>
-
-                        <!-- Бічна панель -->
-                        <aside class="space-y-6">
-                            {% if categories|default([])|length > 0 %}
-                                {% include 'components/sidebar.html.twig' with {categories: categories} %}
-                            {% endif %}
-                            {% if recommendedArticles|default([])|length > 0 %}
-                                {% include 'components/recommended_sidebar.html.twig' with {articles: recommendedArticles} %}
-                            {% endif %}
-                        </aside>
+                        {% endfor %}
+                    </div>
+                    <div class="animate-fade-in" style="animation-delay: 0.3s">
+                        {% include 'components/quote_widget.html.twig' %}
                     </div>
                 </div>
+            </div>
 
-                <!-- Вкладка: Блоги -->
-                <div x-show="activeTab === 'blogs'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                    <div class="mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/30 p-6 rounded-2xl border border-gray-200/50 dark:border-white/20 shadow-sm animate-slide-in">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white/90 flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-500/80 dark:to-pink-600/80 text-white flex items-center justify-center shadow-md">
-                                    <i class="fas fa-blog w-5 text-center"></i>
-                                </div>
-                                <span class="text-gray-900 dark:text-white">Блоги спільноти</span>
-                            </h2>
-                            {% if app.user %}
-                                <a href="{{ path('user_blog_new') }}" class="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-500 to-pink-600 dark:from-purple-500/80 dark:to-pink-600/80 text-white rounded-2xl hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 group shadow-sm">
-                                    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    <span class="font-bold">Додати</span>
-                                </a>
-                            {% endif %}
+            <!-- Бічна панель -->
+            <aside class="space-y-6">
+                {% if categories|default([])|length > 0 %}
+                    {% include 'components/sidebar.html.twig' with {categories: categories} %}
+                {% endif %}
+                
+                {% if recommendedArticles|default([])|length > 0 %}
+                    {% include 'components/recommended_sidebar.html.twig' with {articles: recommendedArticles} %}
+                {% else %}
+                    <!-- Пустий стан для рекомендованих статей -->
+                    <div class="bg-white/70 dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700/50 p-6 text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full mb-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-300/70 max-w-3xl">Спільнота користувачів ділиться своїми думками, досвідом та ідеями.</p>
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Немає рекомендованих</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Скоро з'являться рекомендації</p>
                     </div>
+                {% endif %}
+            </aside>
+        </div>
+    {% else %}
+        <!-- ПОВНИЙ ПУСТИЙ СТАН - коли немає жодних новин -->
+        <div class="text-center py-16 bg-white/70 dark:bg-gray-900/30 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700/50">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6 shadow-lg">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white/90 mb-3">Новин поки що немає</h3>
+            <p class="text-gray-600 dark:text-gray-300/70 mb-6 max-w-md mx-auto">Скоро тут з'являться цікаві новини. Заходьте пізніше або створіть першу новину!</p>
+            {% if app.user %}
+                <a href="{{ path('user_article_new') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Створити першу новину
+                </a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                    </svg>
+                    Увійти
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
 
-                    {% if blogs|default([])|length > 0 %}
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div class="lg:col-span-2">
-                                <div class="mb-6 animate-slide-in" style="animation-delay: 0.1s">
-                                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white/90 mb-4 flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-500/80 dark:to-pink-500/80 text-white flex items-center justify-center shadow-md">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                            </svg>
-                                        </div>
-                                        <span class="text-gray-900 dark:text-white">Останні блоги</span>
-                                    </h2>
-                                    <div class="space-y-4">
-                                        {% for blog in blogs %}
-                                            {% include 'components/blog_card.html.twig' with {blog: blog} %}
-                                        {% endfor %}
-                                    </div>
-                                    <div class="animate-fade-in" style="animation-delay: 0.3s">
-                                        {% include 'components/quote_widget.html.twig' %}
-                                    </div>
-                                </div>
-                            </div>
-                            <aside class="space-y-6">
-                                {% if categories|default([])|length > 0 %}
-                                    {% include 'components/sidebar.html.twig' with {categories: categories} %}
-                                {% endif %}
-                                {% if recommendedArticles|default([])|length > 0 %}
-                                    {% include 'components/recommended_sidebar.html.twig' with {articles: recommendedArticles} %}
-                                {% endif %}
-                            </aside>
-                        </div>
-                    {% else %}
-                        {% include 'components/empty_state.html.twig' with {
-                            icon: '📝',
-                            title: 'Блогів поки що немає',
-                            message: 'Станьте першим автором блогу та поділіться своїми думками зі спільнотою!',
-                            button_text: 'Створити блог',
-                            button_link: path('user_blog_new'),
-                            show_button: app.user
-                        } %}
-                    {% endif %}
-                </div>
 
                 <!-- Вкладка: Відео -->
                 <div x-show="activeTab === 'video'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">

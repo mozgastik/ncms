@@ -1,5 +1,4 @@
 <?php
-// src/Repository/LikeRepository.php
 
 namespace App\Repository;
 
@@ -121,46 +120,7 @@ class LikeRepository extends ServiceEntityRepository
         return $this->countDislikesForArticleComment($commentId);
     }
 
-    // ========== МЕТОДИ ДЛЯ БЛОГ ПОСТІВ ==========
-
-    /**
-     * Підрахунок лайків для блог поста
-     */
-    public function countLikesForBlogPost(int $blogPostId): int
-    {
-        return $this->createQueryBuilder('l')
-            ->select('COUNT(l.id)')
-            ->where('l.blogPost = :blogPostId')
-            ->andWhere('l.isLike = true')
-            ->setParameter('blogPostId', $blogPostId)
-            ->getQuery()
-            ->getSingleScalarResult();
-    }
-
-    /**
-     * Підрахунок дизлайків для блог поста
-     */
-    public function countDislikesForBlogPost(int $blogPostId): int
-    {
-        return $this->createQueryBuilder('l')
-            ->select('COUNT(l.id)')
-            ->where('l.blogPost = :blogPostId')
-            ->andWhere('l.isLike = false')
-            ->setParameter('blogPostId', $blogPostId)
-            ->getQuery()
-            ->getSingleScalarResult();
-    }
-
-    /**
-     * Знайти голос користувача для блог поста
-     */
-    public function findUserVoteForBlogPost(User $user, $blogPost): ?Like
-    {
-        return $this->findOneBy([
-            'user' => $user,
-            'blogPost' => $blogPost
-        ]);
-    }
+   
 
     // ========== ЗАГАЛЬНІ МЕТОДИ ==========
 
